@@ -1,15 +1,11 @@
 import {
-  Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany,
+  Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn,
 } from 'typeorm';
-import { InventoryStock } from './inventory-stock.entity';
 
 @Entity('warehouses')
 export class Warehouse {
   @PrimaryGeneratedColumn('uuid')
   id: string;
-
-  @OneToMany(() => InventoryStock, stock => stock.warehouse)
-  inventoryStock?: InventoryStock[];
 
   @Column()
   code: string;

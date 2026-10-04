@@ -289,7 +289,7 @@ export class PurchaseService {
          WHERE p.product_id = ANY($1)`,
         [productIds],
       );
-      const productMap = new Map(products.map((p: any) => [p.product_id, p]));
+      const productMap = new Map<string, any>(products.map((p: any) => [p.product_id, p] as [string, any]));
       for (const item of itemsNeedingEnrichment) {
         const prod = productMap.get(item.productId);
         if (prod) {
@@ -463,7 +463,8 @@ export class PurchaseService {
       let subtotal = 0;
       for (const item of items) {
         const quantity = Number(item.quantity || 0);
-        const unitPrice = Number(item.buyingPrice || item.unitPrice || 0);
+        const itemData = item as PurchaseQuoteItem & { unitPrice?: number; hsnCode?: string };
+        const unitPrice = Number(item.buyingPrice || itemData.unitPrice || 0);
         const lineTotal = quantity * unitPrice;
         subtotal += lineTotal;
 
@@ -473,7 +474,7 @@ export class PurchaseService {
           productName: item.productName,
           productCode: item.productCode || item.sku,
           sku: item.sku,
-          hsnCode: item.hsnCode || '',
+          hsnCode: itemData.hsnCode || '',
           uomName: item.uom || '',
           quantity,
           unitPrice,

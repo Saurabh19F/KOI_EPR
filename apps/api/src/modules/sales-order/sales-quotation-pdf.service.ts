@@ -237,7 +237,7 @@ export class SalesQuotationPdfService {
 
     if (order.termsAndConditions) {
       doc.font('Helvetica').fontSize(8).text(order.termsAndConditions, 50, y, { width: pageWidth });
-      y += doc.heightOfString(order.termsAndConditions, { width: pageWidth, fontSize: 8 }) + 10;
+      y += doc.heightOfString(order.termsAndConditions, { width: pageWidth }) + 10;
     } else {
       // Default terms
       const defaultTerms = [
@@ -264,7 +264,7 @@ export class SalesQuotationPdfService {
       doc.font('Helvetica-Bold').fontSize(10).text('Notes:', 50, y);
       y += 14;
       doc.font('Helvetica').fontSize(8).text(order.notes, 50, y, { width: pageWidth });
-      y += doc.heightOfString(order.notes, { width: pageWidth, fontSize: 8 }) + 10;
+      y += doc.heightOfString(order.notes, { width: pageWidth }) + 10;
     }
 
     // ===== SIGNATURE SECTION =====

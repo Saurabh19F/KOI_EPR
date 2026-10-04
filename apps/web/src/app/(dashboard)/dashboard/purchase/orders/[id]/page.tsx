@@ -687,7 +687,9 @@ function EditableView({ order, orderId }: { order: any; orderId: string }) {
                       <td className={`py-1.5 px-2 border border-gray-200 text-right ${item.quotedPrice && price > Number(item.quotedPrice) ? 'bg-red-50 text-red-600 font-semibold' : ''}`}>
                         {item.quotedPrice ? formatCurrency(item.quotedPrice) : '-'}
                         {item.quotedPrice > 0 && price > Number(item.quotedPrice) && (
-                          <AlertTriangle className="inline-block h-3.5 w-3.5 ml-1 text-red-500" title="Best Price exceeds Quoted Price — needs approval" />
+                          <span title="Best Price exceeds Quoted Price - needs approval">
+                            <AlertTriangle className="inline-block h-3.5 w-3.5 ml-1 text-red-500" />
+                          </span>
                         )}
                       </td>
                       {/* Approved By Jatin Sir — read-only */}

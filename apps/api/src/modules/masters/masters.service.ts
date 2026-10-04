@@ -747,8 +747,8 @@ export class MastersService {
       portIds.length > 0 ? this.portRepo.find({ where: { id: In(portIds) } }) : [],
     ]);
 
-    const countryMap = new Map(countries.map(c => [c.id, c.name]));
-    const portMap = new Map(ports.map(p => [p.id, p.name]));
+    const countryMap = new Map<string, string>(countries.map(c => [c.id, c.name] as [string, string]));
+    const portMap = new Map<string, string>(ports.map(p => [p.id, p.name] as [string, string]));
 
     return customers.map(c => ({
       ...c,
