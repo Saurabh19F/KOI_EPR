@@ -1,0 +1,29 @@
+- generic [active] [ref=e1] [box=0,0,1440,1000]:
+  - button "Open Next.js Dev Tools" [ref=e7] [cursor=pointer] [box=22,946,32,32]
+  - alert [ref=e11] [box=-1,-1,1,1]
+  - generic [ref=e12] [box=0,0,1440,1000]:
+    - generic [ref=e13] [box=0,0,749,1000]:
+      - generic [ref=e18] [box=32,32,685,64]:
+        - img "KOI Logo" [ref=e19] [box=32,32,64,64]
+        - generic [ref=e20] [box=112,44,126,41]
+      - generic [ref=e25] [box=184,345,380,230]:
+        - generic [ref=e26] [box=153,781,63,230]: Sales & Enquiry Dashboard
+        - generic [ref=e34] [box=216,230,63,230]: Purchase & Order Tracking
+        - generic [ref=e42] [box=285,242,59,216]: MIS Reports & Executive Analytics
+        - generic [ref=e50] [box=350,253,56,203]: Dynamic Rate & Costing Engine
+        - generic [ref=e58] [box=410,264,52,190]: Product & Supplier Masters
+        - generic [ref=e66] [box=468,273,49,179]: Trade & Audit Reports
+      - generic [ref=e74] [box=32,833,685,136]:
+        - heading "Manage your business effortlessly." [level=2] [ref=e75] [box=32,833,685,64]: Manage your businesseffortlessly.
+        - paragraph [ref=e76] [box=32,901,340,39]: Import, export, purchase & sales — all under one powerful platform built for modern trade.
+        - generic [ref=e77] [box=32,952,685,17]
+    - generic [ref=e89] [box=904,318,380,365]:
+      - generic [ref=e90] [box=904,318,380,56]:
+        - generic [ref=e91] [box=904,318,380,32]
+        - paragraph [ref=e94] [box=904,354,380,20]: Sign in to continue to your dashboard
+      - generic [ref=e95] [box=904,398,380,212]:
+        - generic [ref=e96] [box=904,398,380,68]
+        - generic [ref=e104] [box=904,482,380,68]
+        - button "Sign in to Dashboard" [ref=e118] [cursor=pointer] [box=904,566,380,44]
+      - generic [ref=e123] [box=904,634,380,17]: KOI ERP
+      - paragraph [ref=e129] [box=904,666,380,16]: Need access? Contact your administrator

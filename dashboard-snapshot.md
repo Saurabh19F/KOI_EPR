@@ -1,0 +1,29 @@
+- generic [active] [ref=e1] [box=0,0,1440,1000]:
+  - button "Open Next.js Dev Tools" [ref=e7] [cursor=pointer] [box=22,946,32,32]
+  - alert [ref=e11] [box=-1,-1,1,1]
+  - generic [ref=e130] [box=0,0,1440,1000]:
+    - complementary [ref=e131] [box=0,0,256,1000]:
+      - link "KOI ERP Logo" [ref=e133] [cursor=pointer] [box=12,12,232,48]:
+        - /url: /dashboard
+        - img "KOI ERP Logo" [ref=e134] [box=43,12,171,48]
+      - navigation [ref=e135] [box=0,73,256,806]:
+        - link "Dashboard" [ref=e137] [cursor=pointer] [box=0,89,256,40]:
+          - /url: /dashboard
+        - button "Masters" [ref=e145] [cursor=pointer] [box=0,129,256,40]
+        - button "Sales" [ref=e155] [cursor=pointer] [box=0,169,256,40]
+        - button "Purchase" [ref=e164] [cursor=pointer] [box=0,209,256,40]
+        - button "Rate Calculation" [ref=e174] [cursor=pointer] [box=0,249,256,40]
+        - button "FMS" [ref=e182] [cursor=pointer] [box=0,289,256,40]
+        - button "MIS Review" [ref=e191] [cursor=pointer] [box=0,329,256,40]
+        - link "Reports" [ref=e198] [cursor=pointer] [box=0,369,256,40]:
+          - /url: /dashboard/reports
+        - button "Admin" [ref=e204] [cursor=pointer] [box=0,409,256,40]
+      - generic [ref=e211] [box=0,879,256,121]:
+        - generic [ref=e212] [box=16,896,224,40]
+        - button "Logout" [ref=e218] [cursor=pointer] [box=16,948,224,36]
+    - generic [ref=e222] [box=256,0,1184,1000]:
+      - banner [ref=e223] [box=256,0,1184,64]:
+        - generic [ref=e224] [box=280,13,503,38]
+        - generic [ref=e236] [box=1158,6,258,52]
+      - main [ref=e259] [box=256,64,1184,936]:
+        - generic [ref=e260] [box=280,88,1130,1011]

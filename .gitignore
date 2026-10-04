@@ -1,0 +1,33 @@
+# Dependencies
+node_modules/
+
+# Environments & secrets
+.env
+.env.local
+.env.development
+.env.production
+apps/api/.env
+apps/web/.env.local
+
+# Turbo
+.turbo/
+apps/*/.turbo/
+
+# Compile files
+*.tsbuildinfo
+dist/
+.next/
+uploads/
+
+# Python/test caches
+__pycache__/
+*.pyc
+
+# Local agent/tooling state
+.claude/
+.serena/
+.playwright-mcp/
+memory/
+scratch/
+videos/
+

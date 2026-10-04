@@ -1,0 +1,338 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --primary: #0f2f29;
+  --primary-hover: #173f37;
+  --accent: #9a6b36;
+  --accent-hover: #7a4f24;
+  --surface: #f6f3ec;
+  --surface-soft: #fbfaf6;
+  --line: #e5dfd4;
+  --sidebar-bg: #0d211d;
+  --sidebar-hover: #17352f;
+  --sidebar-active: #213f37;
+  --sidebar-text: #bdd0c8;
+  --sidebar-text-active: #ffffff;
+  --card-shadow: 0 1px 2px 0 rgb(15 23 42 / 0.06), 0 12px 24px -18px rgb(15 23 42 / 0.22);
+  --transition: all 0.2s ease-in-out;
+}
+
+/* Base styles */
+html {
+  background: var(--surface);
+}
+
+body {
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  @apply bg-[#f6f3ec] text-slate-800 antialiased;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-[#f1ece2];
+}
+
+::-webkit-scrollbar-thumb {
+  @apply rounded-full bg-[#c9bbaa];
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-[#ad9a83];
+}
+
+/* Focus states */
+*:focus-visible {
+  @apply outline-none ring-2 ring-[#9a6b36] ring-offset-2 ring-offset-[#f6f3ec];
+}
+
+/* Button styles */
+.btn-primary {
+  @apply rounded-lg bg-[#0f2f29] px-4 py-2 font-semibold text-white shadow-sm transition-colors hover:bg-[#173f37] focus:ring-2 focus:ring-[#9a6b36] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
+}
+
+.btn-secondary {
+  @apply rounded-lg border border-[#ded4c6] bg-white px-4 py-2 font-semibold text-slate-700 transition-colors hover:bg-[#fbfaf6] focus:ring-2 focus:ring-[#9a6b36] focus:ring-offset-2;
+}
+
+.btn-ghost {
+  @apply rounded-lg px-4 py-2 font-semibold text-slate-600 transition-colors hover:bg-[#efe8dc] hover:text-slate-950;
+}
+
+/* Card styles */
+.card {
+  @apply rounded-lg border border-[#e5dfd4] bg-white shadow-card transition-shadow hover:shadow-card-hover;
+}
+
+.card-header {
+  @apply border-b border-[#eee8de] px-4 py-3;
+}
+
+.card-body {
+  @apply p-4;
+}
+
+/* Input styles */
+.input {
+  @apply w-full rounded-lg border border-[#dcd4c8] bg-white px-3 py-2 text-sm transition-colors placeholder:text-slate-400 focus:border-[#9a6b36] focus:ring-2 focus:ring-[#9a6b36]/20;
+}
+
+.input-error {
+  @apply border-red-500 focus:border-red-500 focus:ring-red-500;
+}
+
+/* Label styles */
+.label {
+  @apply block text-sm font-medium text-slate-700 mb-1;
+}
+
+/* Badge styles */
+.badge {
+  @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+}
+
+.badge-success {
+  @apply bg-green-100 text-green-800;
+}
+
+.badge-warning {
+  @apply bg-yellow-100 text-yellow-800;
+}
+
+.badge-danger {
+  @apply bg-red-100 text-red-800;
+}
+
+.badge-info {
+  @apply bg-sky-100 text-sky-800;
+}
+
+.badge-gray {
+  @apply bg-gray-100 text-gray-800;
+}
+
+/* Table styles */
+.table-container {
+  @apply overflow-x-auto rounded-lg border border-[#e5dfd4] bg-white;
+}
+
+.table {
+  @apply w-full text-sm text-left;
+}
+
+.table thead {
+  @apply bg-[#fbfaf6];
+}
+
+.table th {
+  @apply px-4 py-3 text-left text-[11px] font-bold uppercase tracking-[0.12em] text-slate-500;
+}
+
+.table td {
+  @apply border-t border-[#eee8de] px-4 py-3;
+}
+
+.table tbody tr {
+  @apply transition-colors hover:bg-[#fbfaf6];
+}
+
+/* Sidebar styles */
+.sidebar {
+  @apply fixed left-0 top-0 z-40 h-screen w-64 bg-sidebar text-white transition-all duration-300;
+}
+
+.sidebar-item {
+  @apply flex items-center gap-3 px-4 py-3 text-slate-400 transition-colors hover:bg-sidebar-hover hover:text-white;
+}
+
+.sidebar-item.active {
+  @apply bg-sidebar-active text-white border-r-4 border-white;
+}
+
+/* Modal/Dialog styles */
+.modal-overlay {
+  @apply fixed inset-0 bg-black/50 z-50 flex items-center justify-center;
+}
+
+.modal-content {
+  @apply mx-4 max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-lg border border-[#e5dfd4] bg-white shadow-xl;
+}
+
+.modal-header {
+  @apply border-b border-[#eee8de] px-4 py-3;
+}
+
+.modal-body {
+  @apply p-4;
+}
+
+.modal-footer {
+  @apply flex justify-end gap-2 border-t border-[#eee8de] px-4 py-3;
+}
+
+/* Stats card */
+.stats-card {
+  @apply cursor-pointer rounded-lg border border-[#e5dfd4] bg-white p-4 shadow-card transition-shadow hover:shadow-card-hover;
+}
+
+.stats-icon {
+  @apply flex h-9 w-9 items-center justify-center rounded-lg;
+}
+
+/* Page header */
+.page-header {
+  @apply mb-6;
+}
+
+.page-title {
+  @apply text-2xl font-extrabold tracking-tight text-slate-950;
+}
+
+.page-subtitle {
+  @apply mt-1 text-sm text-slate-500;
+}
+
+/* Empty state */
+.empty-state {
+  @apply flex flex-col items-center justify-center py-12 text-center;
+}
+
+.empty-state-icon {
+  @apply w-16 h-16 text-gray-300 mb-4;
+}
+
+/* Loading skeleton */
+.skeleton {
+  @apply animate-pulse bg-gray-200 rounded;
+}
+
+/* Status indicator */
+.status-dot {
+  @apply w-2 h-2 rounded-full inline-block;
+}
+
+.status-dot-success {
+  @apply bg-green-500;
+}
+
+.status-dot-warning {
+  @apply bg-yellow-500;
+}
+
+.status-dot-danger {
+  @apply bg-red-500;
+}
+
+.status-dot-info {
+  @apply bg-blue-500;
+}
+
+/* Dropdown */
+.dropdown-menu {
+  @apply absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50;
+}
+
+.dropdown-item {
+  @apply block w-full px-4 py-2 text-sm text-left text-slate-700 hover:bg-gray-100 transition-colors;
+}
+
+/* Action buttons in tables */
+.action-btn {
+  @apply p-2 rounded-lg text-slate-400 hover:bg-gray-100 hover:text-slate-600 transition-colors;
+}
+
+/* Filter section */
+.filter-section {
+  @apply mb-4 rounded-lg border border-[#e5dfd4] bg-white p-3 shadow-card;
+}
+
+/* Tabs */
+.tabs {
+  @apply flex border-b border-gray-200 mb-6;
+}
+
+.tab {
+  @apply px-4 py-2 text-slate-600 font-medium border-b-2 border-transparent transition-colors hover:text-slate-900 hover:border-gray-300;
+}
+
+.tab.active {
+  @apply text-primary-600 border-primary-600;
+}
+
+/* Quick action cards */
+.quick-action-card {
+  @apply flex cursor-pointer flex-col items-center gap-2 rounded-lg border border-dashed border-[#dcd4c8] p-3 transition-all hover:border-primary-300 hover:bg-primary-50;
+}
+
+/* Progress bar */
+.progress-bar {
+  @apply h-2 bg-gray-200 rounded-full overflow-hidden;
+}
+
+.progress-fill {
+  @apply h-full bg-primary-500 transition-all duration-300;
+}
+
+/* Timeline */
+.timeline-item {
+  @apply relative pl-8 pb-6 border-l-2 border-gray-200;
+}
+
+.timeline-item:last-child {
+  @apply border-l-transparent;
+}
+
+.timeline-dot {
+  @apply absolute left-0 top-0 w-4 h-4 -translate-x-[9px] rounded-full bg-primary-500 border-4 border-white;
+}
+
+/* Login page custom animations */
+@keyframes floatUp {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-12px); }
+}
+@keyframes floatSlow {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-8px) rotate(3deg); }
+}
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeSlideRight {
+  from { opacity: 0; transform: translateX(-24px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.92); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.login-float { animation: floatUp 4s ease-in-out infinite; }
+.login-float-slow { animation: floatSlow 5s ease-in-out infinite; }
+.login-fade-up { animation: fadeSlideUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.login-fade-right { animation: fadeSlideRight 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.login-scale-in { animation: scaleIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.login-delay-1 { animation-delay: 0.1s; }
+.login-delay-2 { animation-delay: 0.2s; }
+.login-delay-3 { animation-delay: 0.3s; }
+.login-delay-4 { animation-delay: 0.4s; }
+.login-delay-5 { animation-delay: 0.5s; }
+.login-shimmer-btn {
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 3s ease-in-out infinite;
+}
