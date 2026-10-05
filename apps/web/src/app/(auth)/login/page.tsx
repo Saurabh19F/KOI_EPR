@@ -204,9 +204,18 @@ export default function LoginPage() {
           </div>
         </section>
 
-        <section className="flex min-h-screen items-center justify-center px-4 py-8 sm:px-6 lg:px-10">
-          <div className={`w-full max-w-[460px] ${mounted ? 'login-fade-up login-delay-1' : 'opacity-0'}`}>
-            <div className="mb-8 flex items-center justify-between lg:hidden">
+        <section className="relative flex min-h-screen items-center justify-center overflow-hidden px-4 py-5 sm:px-6 lg:px-10">
+          <div
+            className="absolute inset-0 opacity-[0.16] lg:hidden"
+            style={{
+              backgroundImage:
+                'linear-gradient(rgba(15,23,42,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(15,23,42,0.08) 1px, transparent 1px)',
+              backgroundSize: '28px 28px',
+            }}
+          />
+
+          <div className={`relative z-10 w-full max-w-[460px] ${mounted ? 'login-fade-up login-delay-1' : 'opacity-0'}`}>
+            <div className="mb-4 flex items-center justify-between lg:hidden">
               <div className="flex items-center gap-3">
                 <KoiLogo variant="icon" className="h-10 w-10 border-slate-200" />
                 <div>
@@ -217,16 +226,47 @@ export default function LoginPage() {
               <ShieldCheck className="h-5 w-5 text-emerald-700" />
             </div>
 
+            <div className="mb-4 rounded-xl border border-black/10 bg-white/85 p-3 shadow-lg shadow-slate-900/5 backdrop-blur lg:hidden">
+              <p className="mb-2 inline-flex items-center gap-2 rounded-full border border-[#d2a66c]/40 bg-[#fffaf2] px-2.5 py-1 text-[11px] font-semibold text-[#8a5b25]">
+                <Sparkles className="h-3 w-3" />
+                Operations command center
+              </p>
+              <h1 className="text-[1.7rem] font-bold leading-[1.05] tracking-tight text-slate-950">
+                Run ERP work from one clean desk.
+              </h1>
+              <p className="mt-2 text-[13px] leading-5 text-slate-600">
+                Fast access to sales, purchase, inventory, and rate workflows.
+              </p>
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                {workflowCards.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <div key={item.label} className="rounded-lg border border-black/10 bg-white px-2.5 py-2 shadow-sm">
+                      <div className="flex items-center gap-2">
+                        <span className={`flex h-7 w-7 items-center justify-center rounded-md ${item.bg} ${item.color}`}>
+                          <Icon className="h-3.5 w-3.5" />
+                        </span>
+                        <div className="min-w-0">
+                          <p className="truncate text-xs font-bold text-slate-950">{item.label}</p>
+                          <p className="truncate text-[10px] font-medium text-slate-500">{item.value}</p>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
             <div className="rounded-xl border border-black/10 bg-white p-4 shadow-2xl shadow-slate-900/10 sm:p-5">
-              <div className="mb-5">
+              <div className="mb-4 sm:mb-5">
                 <div className="mb-4 hidden items-center gap-3 lg:flex">
                   <KoiLogo variant="wordmark" />
                 </div>
                 <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#9a6b36]">
                   Sign in
                 </p>
-                <h2 className="mt-2 text-3xl font-bold tracking-tight text-slate-950">Welcome back</h2>
-                <p className="mt-2 text-sm leading-6 text-slate-500">
+                <h2 className="mt-2 text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">Welcome back</h2>
+                <p className="mt-1.5 text-sm leading-6 text-slate-500 sm:mt-2">
                   Enter your workspace credentials to continue.
                 </p>
               </div>
@@ -250,7 +290,7 @@ export default function LoginPage() {
                       type="email"
                       autoComplete="email"
                       placeholder="name@company.com"
-                      className="h-10 w-full rounded-lg border border-slate-200 bg-slate-50 pl-10 pr-4 text-sm font-medium text-slate-950 outline-none transition focus:border-emerald-600 focus:bg-white focus:ring-4 focus:ring-emerald-100"
+                      className="h-11 w-full rounded-lg border border-slate-200 bg-slate-50 pl-10 pr-4 text-sm font-medium text-slate-950 outline-none transition focus:border-emerald-600 focus:bg-white focus:ring-4 focus:ring-emerald-100 sm:h-10"
                       {...register('email', { onChange: clearError })}
                     />
                   </div>
@@ -278,7 +318,7 @@ export default function LoginPage() {
                       type={showPassword ? 'text' : 'password'}
                       autoComplete="current-password"
                       placeholder="Enter password"
-                      className="h-10 w-full rounded-lg border border-slate-200 bg-slate-50 pl-10 pr-11 text-sm font-medium text-slate-950 outline-none transition focus:border-emerald-600 focus:bg-white focus:ring-4 focus:ring-emerald-100"
+                      className="h-11 w-full rounded-lg border border-slate-200 bg-slate-50 pl-10 pr-11 text-sm font-medium text-slate-950 outline-none transition focus:border-emerald-600 focus:bg-white focus:ring-4 focus:ring-emerald-100 sm:h-10"
                       {...register('password', { onChange: clearError })}
                     />
                     <button
@@ -301,7 +341,7 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="group flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-[#10231f] px-4 text-sm font-bold text-white shadow-lg shadow-emerald-950/20 transition hover:bg-[#17352f] disabled:cursor-not-allowed disabled:opacity-60"
+                  className="group flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-[#10231f] px-4 text-sm font-bold text-white shadow-lg shadow-emerald-950/20 transition hover:bg-[#17352f] disabled:cursor-not-allowed disabled:opacity-60 sm:h-10"
                 >
                   {isLoading ? 'Signing in...' : 'Open dashboard'}
                   {!isLoading && <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />}
@@ -313,13 +353,13 @@ export default function LoginPage() {
                   <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">Quick access</p>
                   <CheckCircle2 className="h-4 w-4 text-emerald-700" />
                 </div>
-                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
                   {quickUsers.map((user) => (
                     <button
                       key={user.email}
                       type="button"
                       onClick={() => quickLogin(user.email)}
-                      className="rounded-lg border border-transparent bg-white px-2.5 py-1.5 text-left shadow-sm transition hover:border-[#d2a66c] hover:bg-[#fffaf2]"
+                      className="min-w-0 rounded-lg border border-transparent bg-white px-2 py-2 text-left shadow-sm transition hover:border-[#d2a66c] hover:bg-[#fffaf2] sm:px-2.5 sm:py-1.5"
                     >
                       <div className="mb-1 flex items-center gap-1.5">
                         <span className={`h-2 w-2 rounded-full ${user.tone}`} />
