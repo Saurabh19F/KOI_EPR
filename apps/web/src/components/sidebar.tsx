@@ -266,7 +266,7 @@ export function Sidebar() {
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       className={cn(
-        'flex h-screen flex-shrink-0 flex-col overflow-hidden bg-[#0d211d] text-white shadow-sidebar transition-all duration-300 ease-in-out',
+        'sticky top-0 flex h-screen flex-shrink-0 flex-col overflow-hidden bg-[#0d211d] text-white shadow-sidebar transition-all duration-300 ease-in-out',
         expanded ? 'w-64' : 'w-[68px]'
       )}
     >
