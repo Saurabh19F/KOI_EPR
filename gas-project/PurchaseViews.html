@@ -1,0 +1,72 @@
+<!-- purchasePanelView -->
+<div id="purchasePanelView" class="view hidden space-y-6">
+          <div
+            class="flex justify-between items-center bg-white dark:bg-[#111827] p-6 rounded-xl border border-slate-200 dark:border-[#1e293b] shadow-sm">
+            <div class="space-y-1">
+              <span class="text-xs font-extrabold text-indigo-600 dark:text-indigo-404 uppercase tracking-widest">Inbound Logistics Defects Console</span>
+              <h3 class="text-xl font-bold text-slate-800 dark:text-white">Purchase Reject Actions Panel</h3>
+            </div>
+            <span id="purchase-rejection-count" class="text-xs font-bold text-rose-600 dark:text-rose-455 bg-rose-50 dark:bg-rose-955/40 border border-rose-100 dark:border-rose-900/50 rounded-full px-3.5 py-1.5 uppercase tracking-wider font-semibold">0 Pending</span>
+          </div>
+
+          <div
+            class="bg-white dark:bg-[#111827] rounded-xl border border-slate-200 dark:border-[#1e293b] shadow-sm p-6 overflow-x-auto">
+            <table id="purchaseRejectionTable" class="w-full text-sm text-left" style="width:100%">
+              <thead
+                class="bg-slate-50 dark:bg-[#151c2c] text-slate-600 dark:text-slate-404 uppercase text-xs font-bold border-b border-slate-200 dark:border-[#1e293b]">
+                <tr>
+                  <th class="px-4 py-3">Receipt ID</th>
+                  <th class="px-4 py-3">Date</th>
+                  <th class="px-4 py-3">PO Number</th>
+                  <th class="px-4 py-3">Product ID</th>
+                  <th class="px-4 py-3">Warehouse</th>
+                  <th class="px-4 py-3 text-rose-600 font-semibold">Rejection Stage & Reason</th>
+                  <th class="px-4 py-3 text-rose-600 font-semibold">Rejected Qty</th>
+                  <th class="px-4 py-3">Action Type</th>
+                  <th class="px-4 py-3">Reference No</th>
+                  <th class="px-4 py-3 font-semibold">Resolution Status</th>
+                  <th class="px-4 py-3">Last Edit Status</th> <!-- 🟢 NEW -->
+                  <th class="px-4 py-3 text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100 dark:divide-[#1e293b] text-slate-700 dark:text-slate-300">
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+<!-- purchaseHistoryView -->
+<div id="purchaseHistoryView" class="view hidden space-y-6">
+          <div
+            class="flex justify-between items-center bg-white dark:bg-[#111827] p-6 rounded-xl border border-slate-200 dark:border-[#1e293b] shadow-sm">
+            <div class="space-y-1">
+              <span class="text-xs font-extrabold text-indigo-600 dark:text-indigo-404 uppercase tracking-widest">Defect Action Audit Logs</span>
+              <h3 class="text-xl font-bold text-slate-800 dark:text-white">Purchase Reject History Log</h3>
+            </div>
+          </div>
+
+          <div
+            class="bg-white dark:bg-[#111827] rounded-xl border border-slate-200 dark:border-[#1e293b] shadow-sm p-6 overflow-x-auto">
+            <table id="purchaseHistoryTable" class="w-full text-sm text-left" style="width:100%">
+              <thead
+                class="bg-slate-50 dark:bg-[#151c2c] text-slate-600 dark:text-slate-404 uppercase text-xs font-bold border-b border-slate-200 dark:border-[#1e293b]">
+                <tr>
+                  <th class="px-4 py-3">Receipt ID</th>
+                  <th class="px-4 py-3">Date</th>
+                  <th class="px-4 py-3">PO Number</th>
+                  <th class="px-4 py-3">Product ID</th>
+                  <th class="px-4 py-3">Warehouse</th>
+                  <th class="px-4 py-3 text-slate-605 font-semibold">Rejection Stage & Reason</th>
+                  <th class="px-4 py-3 text-rose-600 font-semibold">Rejected Qty</th>
+                  <th class="px-4 py-3 font-semibold">Action Type</th>
+                  <th class="px-4 py-3">Reference No</th>
+                  <th class="px-4 py-3 font-semibold">Resolution Status</th>
+                  <th class="px-4 py-3">Last Edit Status</th> <!-- 🟢 NEW -->
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100 dark:divide-[#1e293b] text-slate-700 dark:text-slate-300">
+              </tbody>
+            </table>
+          </div>
+        </div>
+

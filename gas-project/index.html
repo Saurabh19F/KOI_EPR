@@ -1,0 +1,1925 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nexus Stock IMS</title>
+
+  <!-- Tailwind Configuration -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              light: '#4f46e5',
+              dark: '#6366f1'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+  <!-- Select2 -->
+  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+  <!-- DataTables -->
+  <link rel="stylesheet" href="https://cdn.datatables.net/2.0.8/css/dataTables.tailwindcss.min.css">
+  <script src="https://cdn.datatables.net/2.0.8/js/dataTables.min.js"></script>
+  <script src="https://cdn.datatables.net/2.0.8/js/dataTables.tailwindcss.min.js"></script>
+
+  <!-- Icons & Alerts -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script id="lucide-primary"
+      src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js"
+      onerror="(function(){var s=document.createElement('script');s.src='https://unpkg.com/lucide@latest/dist/umd/lucide.min.js';s.onload=function(){if(window.safeCreateIcons)window.safeCreateIcons();};document.head.appendChild(s);}())"></script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght=300;400;500;600;700&display=swap');
+
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      transition: background-color 0.2s, color 0.2s;
+    }
+
+    #loadingOverlay {
+      z-index: 9999;
+    }
+
+    .nav-link {
+      position: relative;
+      transition: all 0.2s ease-in-out;
+      color: #94a3b8;
+    }
+
+    .nav-link:hover {
+      color: #f8fafc;
+      background-color: #1e293b;
+    }
+
+    .nav-link.active {
+      background-color: #1e1b4b;
+      color: #e0e7ff;
+      border-left: 4px solid #6366f1;
+    }
+
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    html.dark ::-webkit-scrollbar-track {
+      background: #0f172a;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+
+    html.dark ::-webkit-scrollbar-thumb {
+      background: #334155;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+
+    .form-input-styled {
+      display: block;
+      width: 100%;
+      border-radius: 0.5rem;
+      padding: 0.6rem 0.85rem;
+      font-size: 0.875rem;
+      transition: all 0.15s ease-in-out;
+      box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    }
+
+    .form-input-styled {
+      background-color: #ffffff;
+      border: 1px solid #cbd5e1;
+      color: #1e293b;
+    }
+
+    .form-input-styled:focus {
+      border-color: #4f46e5;
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+    }
+
+    html.dark .form-input-styled {
+      background-color: #1e293b;
+      border: 1px solid #334155;
+      color: #f8fafc;
+      box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.2);
+    }
+
+    html.dark .form-input-styled:focus {
+      border-color: #6366f1;
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
+    }
+
+    .swal2-popup {
+      border-radius: 0.75rem !important;
+      padding: 1.5rem !important;
+    }
+
+    .allocation-row-popup {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .delete-allocation-btn {
+      background-color: #ef4444;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      font-size: 14px;
+      line-height: 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: background-color 0.1s;
+    }
+
+    .delete-allocation-btn:hover {
+      background-color: #dc2626;
+    }
+
+    .select2-container {
+      width: 100% !important;
+    }
+
+    .select2-container .select2-selection--single {
+      height: 42px !important;
+      border-radius: 0.5rem !important;
+      display: flex;
+      align-items: center;
+      transition: all 0.15s ease-in-out;
+    }
+
+    .select2-container .select2-selection--single {
+      border: 1px solid #cbd5e1 !important;
+      background-color: #ffffff !important;
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+      color: #1e293b !important;
+      line-height: 42px !important;
+      padding-left: 0.75rem !important;
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+      height: 40px !important;
+    }
+
+    /* Multi-selects must visually align with date inputs and other filters. */
+    .select2-container .select2-selection--multiple {
+      height: 42px !important;
+      min-height: 42px !important;
+      max-height: 42px !important;
+      border: 1px solid #cbd5e1 !important;
+      border-radius: 0.5rem !important;
+      background-color: #ffffff !important;
+      overflow: hidden !important;
+      display: flex !important;
+      align-items: center !important;
+    }
+    .select2-container--default .select2-selection--multiple .select2-selection__rendered {
+      display: flex !important;
+      flex-wrap: nowrap !important;
+      align-items: center !important;
+      gap: 4px !important;
+      width: 100% !important;
+      height: 40px !important;
+      margin: 0 !important;
+      padding: 4px 8px !important;
+      overflow-x: auto !important;
+      overflow-y: hidden !important;
+    }
+    .select2-container--default .select2-selection--multiple .select2-selection__choice {
+      flex: 0 0 auto !important;
+      margin: 0 !important;
+      height: 28px !important;
+      line-height: 26px !important;
+      border-radius: 6px !important;
+    }
+    .select2-container--default .select2-search--inline .select2-search__field {
+      height: 28px !important;
+      line-height: 28px !important;
+      margin: 0 !important;
+      min-width: 125px !important;
+    }
+
+    .select2-dropdown {
+      border: 1px solid #cbd5e1 !important;
+      background-color: #ffffff !important;
+      border-radius: 0.5rem !important;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
+      color: #1e293b !important;
+      z-index: 99999 !important;
+    }
+
+    .select2-results__option--selectable {
+      background-color: #ffffff !important;
+      color: #1e293b !important;
+    }
+
+    .select2-container--default .select2-results__option--highlighted[aria-selected] {
+      background-color: #4f46e5 !important;
+      color: #ffffff !important;
+    }
+
+    html.dark .select2-container .select2-selection--single {
+      border: 1px solid #334155 !important;
+      background-color: #1e293b !important;
+    }
+    html.dark .select2-container .select2-selection--multiple {
+      border-color: #334155 !important;
+      background-color: #1e293b !important;
+    }
+
+    html.dark .select2-container--default .select2-selection--single .select2-selection__rendered {
+      color: #f8fafc !important;
+    }
+
+    html.dark .select2-dropdown {
+      border: 1px solid #334155 !important;
+      background-color: #1e293b !important;
+      color: #f8fafc !important;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5) !important;
+    }
+
+    html.dark .select2-results__option--selectable {
+      background-color: #1e293b !important;
+      color: #cbd5e1 !important;
+    }
+
+    html.dark .select2-container--default .select2-results__option--highlighted[aria-selected] {
+      background-color: #6366f1 !important;
+      color: #ffffff !important;
+    }
+
+    .dt-search input {
+      border: 1px solid #cbd5e1;
+      background-color: #ffffff;
+      color: #1e293b;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 0.875rem;
+      outline: none;
+      margin-bottom: 8px;
+    }
+
+    .dt-search input:focus {
+      border-color: #4f46e5;
+    }
+
+    html.dark .dt-search input {
+      border: 1px solid #334155;
+      background-color: #1e293b;
+      color: #f8fafc;
+    }
+
+    html.dark .dt-search input:focus {
+      border-color: #6366f1;
+    }
+
+    .dataTables_info,
+    .dataTables_paginate {
+      color: #64748b !important;
+    }
+
+    html.dark .dataTables_info,
+    html.dark .dataTables_paginate {
+      color: #94a3b8 !important;
+    }
+
+    @media (max-width: 1023px) {
+      .responsive-card-table thead {
+        display: none;
+      }
+
+      .responsive-card-table tr {
+        display: block;
+        margin-bottom: 1rem;
+        border: 1px solid #cbd5e1;
+        border-radius: 0.5rem;
+        padding: 1rem;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+        background-color: #ffffff;
+      }
+
+      html.dark .responsive-card-table tr {
+        border-color: #334155;
+        background-color: #111827;
+      }
+
+      .responsive-card-table td {
+        display: block;
+        text-align: right;
+        padding: 0.5rem 0.25rem;
+        border-bottom: 1px dotted #cbd5e1;
+        position: relative;
+        font-size: 0.875rem;
+      }
+
+      html.dark .responsive-card-table td {
+        border-bottom-color: #334155;
+      }
+
+      .responsive-card-table td:last-child {
+        border-bottom: none;
+      }
+
+      .responsive-card-table td::before {
+        content: attr(data-label);
+        position: absolute;
+        left: 0.25rem;
+        font-weight: 600;
+        text-align: left;
+        color: #64748b;
+      }
+
+      html.dark .responsive-card-table td::before {
+        color: #94a3b8;
+      }
+
+      .responsive-card-table td.action-cell {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        padding-top: 1rem;
+      }
+
+      .responsive-card-table td.action-cell::before {
+        content: "";
+      }
+    }
+
+    #viewsContainer button,
+    #sidebar button,
+    .swal2-actions button {
+      color: #ffffff !important;
+      font-weight: 600 !important;
+      opacity: 1 !important;
+    }
+
+    #viewsContainer button:hover,
+    .swal2-actions button:hover {
+      opacity: 0.9 !important;
+    }
+
+
+    /* Planner allocation tabs: both Pending and Allocated must remain readable. */
+    #viewsContainer .planner-status-tab.planner-tab-active {
+      display: inline-flex !important;
+      visibility: visible !important;
+      opacity: 1 !important;
+      background-color: #4f46e5 !important;
+      color: #ffffff !important;
+      border-color: #4f46e5 !important;
+    }
+
+    #viewsContainer .planner-status-tab.planner-tab-inactive {
+      display: inline-flex !important;
+      visibility: visible !important;
+      opacity: 1 !important;
+      background-color: #ffffff !important;
+      color: #4338ca !important;
+      border-color: #c7d2fe !important;
+    }
+
+    html.dark #viewsContainer .planner-status-tab.planner-tab-inactive {
+      background-color: #111827 !important;
+      color: #c7d2fe !important;
+      border-color: #475569 !important;
+    }
+
+    .dataTables_wrapper {
+      width: 100% !important;
+    }
+
+    table.dataTable {
+      width: 100% !important;
+      table-layout: auto !important;
+    }
+
+    @media (max-width: 1023px) {
+      #viewsContainer table.dataTable {
+        min-width: 600px;
+      }
+    }
+
+    .grid-table-scroll {
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    #prod-incoming-table,
+    #prod-stock-table {
+      width: 100% !important;
+      min-width: 100% !important;
+      table-layout: auto !important;
+    }
+
+    .font-mono-sku {
+      font-family: monospace;
+      font-weight: 600;
+      letter-spacing: -0.025em;
+    }
+
+    .col-sku-fixed {
+      width: 45% !important;
+      max-width: 250px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .col-qty-fixed {
+      width: 15% !important;
+    }
+
+    .col-action-fixed {
+      width: 20% !important;
+    }
+
+    @media print {
+      body {
+        background-color: white !important;
+        color: black !important;
+      }
+
+      #appView,
+      #sidebar,
+      #loginView,
+      #loadingOverlay,
+      .swal2-container,
+      header {
+        display: none !important;
+      }
+
+      #grnPrintModal {
+        position: absolute !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 100% !important;
+        height: auto !important;
+        display: block !important;
+        visibility: visible !important;
+        background: white !important;
+      }
+
+      #grnPrintModal .print-modal-close-trigger,
+      #grnPrintModal .border-b,
+      #modal-print-direct-btn {
+        display: none !important;
+      }
+
+      #grnPrintModalBody {
+        padding: 0 !important;
+        overflow: visible !important;
+        background: white !important;
+      }
+
+      .slip-card {
+        box-shadow: none !important;
+        border: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+      }
+
+      .print-btn-container {
+        display: none !important;
+      }
+    }
+
+    /* Low Stock Red Row Highlighting */
+    tr.low-stock-row,
+    tr.low-stock-row td {
+      background-color: rgba(254, 226, 226, 0.7) !important;
+    }
+
+    html.dark tr.low-stock-row,
+    html.dark tr.low-stock-row td {
+      background-color: rgba(136, 19, 55, 0.35) !important;
+    }
+
+    /* Table Alignment Fixes */
+    #stockTable td,
+    #stockTable th {
+      white-space: normal !important;
+      word-break: break-word !important;
+      vertical-align: middle !important;
+    }
+  
+    /* =========================================================
+       RESPONSIVE SYSTEM v5
+       Mobile: 0-767 | Tablet: 768-1023 | Desktop: 1024+
+       Desktop base UI remains untouched.
+       ========================================================= */
+
+    html, body {
+      max-width: 100%;
+    }
+
+    img, svg, video, canvas {
+      max-width: 100%;
+    }
+
+    button, input, select, textarea {
+      touch-action: manipulation;
+    }
+
+    /* ---------- DESKTOP: >= 1024px ----------
+       Original layout is preserved. */
+    @media (min-width: 1024px) {
+      #sidebar {
+        transform: translateX(0) !important;
+      }
+
+      #sidebarOverlay {
+        display: none !important;
+      }
+
+      #mainContent {
+        margin-left: 16rem !important;
+      }
+
+      #viewsContainer {
+        padding: 1.5rem;
+      }
+    }
+
+    /* ---------- TABLET: 768px - 1023px ---------- */
+    @media (min-width: 768px) and (max-width: 1023px) {
+      body {
+        overflow-x: hidden;
+      }
+
+      #mainContent {
+        margin-left: 0 !important;
+        width: 100%;
+        min-width: 0;
+      }
+
+      #sidebar {
+        width: 280px !important;
+      }
+
+      #viewsContainer {
+        padding: 1rem !important;
+        width: 100%;
+        min-width: 0;
+      }
+
+      header {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        padding: 0.875rem 1rem !important;
+      }
+
+      #viewTitle {
+        font-size: 1.05rem !important;
+        max-width: 40vw;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      #refreshDataBtn,
+      #themeToggleBtn,
+      #sidebarOpenBtn,
+      #sidebarCloseBtn {
+        min-width: 42px;
+        min-height: 42px;
+      }
+
+      /* Tablet keeps tables as tables, with horizontal scrolling if needed. */
+      .grid-table-scroll,
+      .overflow-x-auto {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      table.dataTable {
+        min-width: 760px;
+      }
+
+      .dt-layout-row {
+        gap: 0.75rem;
+      }
+
+      .dt-search input {
+        min-height: 40px;
+      }
+
+      .form-input-styled,
+      input,
+      select,
+      textarea {
+        font-size: 15px;
+      }
+
+      .swal2-popup {
+        width: min(92vw, 760px) !important;
+        max-height: 90vh !important;
+        overflow-y: auto !important;
+      }
+
+      #grnPrintModal > div,
+      .print-modal-box {
+        width: min(94vw, 900px) !important;
+        max-height: 92vh !important;
+      }
+    }
+
+    /* ---------- MOBILE: <= 767px ---------- */
+    @media (max-width: 767px) {
+      body {
+        overflow-x: hidden;
+        font-size: 14px;
+      }
+
+      #appView {
+        width: 100%;
+        overflow-x: hidden;
+      }
+
+      #mainContent {
+        margin-left: 0 !important;
+        width: 100%;
+        min-width: 0;
+      }
+
+      #viewsContainer {
+        padding: 0.65rem !important;
+        width: 100%;
+        min-width: 0;
+        overflow-x: hidden;
+      }
+
+      header {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        min-height: 58px;
+        padding: 0.65rem 0.75rem !important;
+      }
+
+      #viewTitle {
+        font-size: 0.95rem !important;
+        line-height: 1.2rem;
+        max-width: 37vw;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      #userName {
+        font-size: 11px !important;
+        max-width: 23vw;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      #userRole {
+        font-size: 9px !important;
+        max-width: 23vw;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      #userDepartment {
+        display: none !important;
+      }
+
+      #refreshDataBtn,
+      #themeToggleBtn,
+      #sidebarOpenBtn,
+      #sidebarCloseBtn {
+        min-width: 42px;
+        min-height: 42px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      #sidebar {
+        width: min(86vw, 310px) !important;
+        box-shadow: 0 18px 45px rgba(0,0,0,.38);
+      }
+
+      #sidebar .nav-link {
+        min-height: 46px;
+      }
+
+      /* Only direct mobile grids are stacked.
+         Do not override Tailwind grid classes globally. */
+      #viewsContainer .grid {
+        grid-template-columns: minmax(0, 1fr) !important;
+      }
+
+      #viewsContainer .flex-col-mobile {
+        flex-direction: column !important;
+      }
+
+      #viewsContainer .view,
+      #viewsContainer .role-dashboard,
+      #viewsContainer .grid > * {
+        min-width: 0;
+      }
+
+      /* Generic cards get tighter internal spacing only inside app views. */
+      #viewsContainer .p-6 {
+        padding: 0.9rem !important;
+      }
+
+      #viewsContainer .px-6 {
+        padding-left: 0.9rem !important;
+        padding-right: 0.9rem !important;
+      }
+
+      #viewsContainer .py-5 {
+        padding-top: 0.9rem !important;
+        padding-bottom: 0.9rem !important;
+      }
+
+      #viewsContainer .gap-6 {
+        gap: 0.75rem !important;
+      }
+
+      #viewsContainer .space-y-6 > :not([hidden]) ~ :not([hidden]) {
+        margin-top: 0.85rem !important;
+      }
+
+      /* Responsive card tables only.
+         Normal tables remain scrollable tables. */
+      .responsive-card-table {
+        min-width: 0 !important;
+        width: 100% !important;
+      }
+
+      .responsive-card-table thead {
+        display: none !important;
+      }
+
+      .responsive-card-table tbody,
+      .responsive-card-table tr,
+      .responsive-card-table td {
+        display: block !important;
+        width: 100% !important;
+      }
+
+      .responsive-card-table tr {
+        margin-bottom: 0.75rem;
+        padding: 0.75rem !important;
+        border-radius: 0.65rem;
+      }
+
+      .responsive-card-table td {
+        position: relative;
+        padding: 1.75rem 0.25rem 0.55rem !important;
+        text-align: left !important;
+        white-space: normal !important;
+        word-break: break-word;
+        min-height: 46px;
+      }
+
+      .responsive-card-table td::before {
+        content: attr(data-label);
+        position: absolute;
+        left: 0.25rem;
+        top: 0.35rem;
+        width: auto;
+        transform: none;
+        font-size: 10px;
+        line-height: 1rem;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+        font-weight: 700;
+        color: #64748b;
+      }
+
+      html.dark .responsive-card-table td::before {
+        color: #94a3b8;
+      }
+
+      .responsive-card-table td.action-cell {
+        padding-top: 0.6rem !important;
+        display: flex !important;
+        gap: 0.45rem;
+        flex-wrap: wrap;
+      }
+
+      .responsive-card-table td.action-cell::before {
+        content: none !important;
+      }
+
+      .responsive-card-table button,
+      .action-cell button,
+      #viewsContainer button {
+        min-height: 42px;
+      }
+
+      /* Non-card DataTables are horizontally scrollable on phones. */
+      .grid-table-scroll,
+      .overflow-x-auto,
+      .dt-container,
+      .dataTables_wrapper {
+        width: 100% !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      table.dataTable:not(.responsive-card-table) {
+        min-width: 720px;
+        width: 100% !important;
+        font-size: 12px;
+      }
+
+      .dt-layout-row {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 0.55rem !important;
+      }
+
+      .dt-layout-cell,
+      .dt-search {
+        width: 100% !important;
+      }
+
+      .dt-search input {
+        width: 100% !important;
+        min-height: 42px;
+        margin: 0 !important;
+      }
+
+      .dt-paging {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.25rem;
+      }
+
+      .dt-paging-button {
+        min-width: 38px !important;
+        min-height: 38px !important;
+      }
+
+      /* Forms */
+      .form-input-styled,
+      input,
+      select,
+      textarea {
+        font-size: 16px !important; /* avoids iOS zoom */
+      }
+
+      textarea {
+        min-height: 88px;
+      }
+
+      .allocation-row-popup {
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        gap: 0.55rem !important;
+      }
+
+      .allocation-row-popup .delete-allocation-btn {
+        width: 100% !important;
+        height: 40px !important;
+        line-height: 40px !important;
+        border-radius: 0.5rem !important;
+      }
+
+      /* SweetAlert */
+      .swal2-container {
+        padding: 0.5rem !important;
+      }
+
+      .swal2-popup {
+        width: calc(100vw - 1rem) !important;
+        max-width: none !important;
+        max-height: 92vh !important;
+        overflow-y: auto !important;
+        padding: 0.9rem !important;
+      }
+
+      .swal2-html-container {
+        margin: 0.6rem 0 0 !important;
+      }
+
+      .swal2-actions {
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        width: 100%;
+        gap: 0.45rem !important;
+      }
+
+      .swal2-actions button {
+        width: 100% !important;
+        min-height: 44px;
+        margin: 0 !important;
+      }
+
+      /* Login */
+      #loginView {
+        padding: 0.65rem !important;
+      }
+
+      #loginView > div {
+        width: 100%;
+        max-height: 96vh;
+        overflow-y: auto;
+      }
+
+      #loginView .p-8 {
+        padding: 1rem !important;
+      }
+
+      /* GRN print preview */
+      #grnPrintModal {
+        padding: 0.45rem !important;
+      }
+
+      #grnPrintModal > div,
+      .print-modal-box {
+        width: calc(100vw - 0.9rem) !important;
+        max-width: none !important;
+        max-height: 94vh !important;
+      }
+
+      #grnPrintModalBody {
+        padding: 0.65rem !important;
+      }
+
+      .slip-card {
+        padding: 0.8rem !important;
+      }
+
+      .slip-card .grid {
+        grid-template-columns: 1fr !important;
+      }
+    }
+
+  
+
+    /* ===== Enhanced Nexus dark theme ===== */
+    html.dark body {
+      background: radial-gradient(circle at 18% 0%, rgba(79,70,229,.13), transparent 30%),
+                  linear-gradient(135deg, #070b14 0%, #0b1220 55%, #0a0f1b 100%) !important;
+      color: #e5edf8;
+    }
+    html.dark #mainContent {
+      background: transparent !important;
+    }
+    html.dark header {
+      background: rgba(12,18,31,.94) !important;
+      border-color: #263247 !important;
+      box-shadow: 0 8px 28px rgba(0,0,0,.24);
+      backdrop-filter: blur(14px);
+    }
+    html.dark #sidebar {
+      background: linear-gradient(180deg,#080d18 0%,#0d1423 100%) !important;
+      border-right: 1px solid #202c40;
+      box-shadow: 14px 0 35px rgba(0,0,0,.22);
+    }
+    html.dark #viewsContainer .bg-white,
+    html.dark #viewsContainer [class*="dark:bg-[#111827]"] {
+      background-color: #111a2a !important;
+    }
+    html.dark #viewsContainer .rounded-xl,
+    html.dark #viewsContainer .rounded-2xl {
+      border-color: #26344a !important;
+      box-shadow: 0 10px 26px rgba(0,0,0,.16);
+    }
+    html.dark table thead,
+    html.dark table.dataTable thead {
+      background: #172235 !important;
+      color: #dbe7f7 !important;
+    }
+    html.dark table tbody tr {
+      border-color: #263247 !important;
+    }
+    html.dark table tbody tr:hover {
+      background: #162237 !important;
+    }
+    html.dark .form-input-styled,
+    html.dark input:not([type="checkbox"]):not([type="radio"]),
+    html.dark select,
+    html.dark textarea,
+    html.dark .dt-search input {
+      background-color: #0d1727 !important;
+      border-color: #31415b !important;
+      color: #eef5ff !important;
+    }
+    html.dark .form-input-styled:focus,
+    html.dark input:focus,
+    html.dark select:focus,
+    html.dark textarea:focus {
+      border-color: #818cf8 !important;
+      box-shadow: 0 0 0 3px rgba(99,102,241,.2) !important;
+    }
+    html.dark #refreshDataBtn,
+    html.dark #themeToggleBtn {
+      color: #d9e4f5 !important;
+      background: linear-gradient(145deg,#172237,#111a2b) !important;
+      border: 1px solid #33445f !important;
+      box-shadow: 0 6px 16px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.04);
+    }
+    html.dark #refreshDataBtn:hover,
+    html.dark #themeToggleBtn:hover {
+      color: #ffffff !important;
+      border-color: #818cf8 !important;
+      background: linear-gradient(145deg,#26345b,#1b2850) !important;
+      transform: translateY(-1px);
+      box-shadow: 0 8px 20px rgba(49,46,129,.28);
+    }
+    #refreshDataBtn, #themeToggleBtn {
+      transition: transform .18s ease, box-shadow .18s ease, background .18s ease, border-color .18s ease !important;
+      cursor: pointer;
+    }
+    #refreshDataBtn.ims-refreshing svg,
+    #refreshDataBtn.ims-refreshing i {
+      animation: imsSpin .8s linear infinite;
+    }
+    @keyframes imsSpin { to { transform: rotate(360deg); } }
+    html.dark .nav-link:hover { background: #172338 !important; }
+    html.dark .nav-link.active {
+      background: linear-gradient(90deg,#29235c,#1b2550) !important;
+      border-left-color: #818cf8 !important;
+      box-shadow: inset 0 0 0 1px rgba(129,140,248,.12);
+    }
+    html.dark .text-slate-500 { color: #9aabc2 !important; }
+    html.dark .text-slate-600 { color: #b2c0d3 !important; }
+
+
+    /* ==========================================================
+       NEXUS IMS RESPONSIVE EXPERIENCE v9
+       Mobile <= 767 | Tablet 768-1023 | Desktop >= 1024
+       ========================================================== */
+    :root { --ims-safe-bottom: env(safe-area-inset-bottom, 0px); }
+
+    html, body { max-width: 100%; }
+    body { min-width: 320px; }
+    #mainContent, #viewsContainer, .view, .role-dashboard { min-width: 0; }
+
+    /* General layout resilience */
+    #viewsContainer .flex.items-center.justify-between,
+    #viewsContainer .flex.justify-between.items-center {
+      gap: .75rem;
+      flex-wrap: wrap;
+    }
+    #viewsContainer input, #viewsContainer select, #viewsContainer textarea,
+    .swal2-popup input, .swal2-popup select, .swal2-popup textarea {
+      max-width: 100%;
+    }
+    #viewsContainer table td, #viewsContainer table th {
+      vertical-align: middle;
+    }
+
+    /* Medium desktop: keep the full desktop experience but waste less space */
+    @media (min-width: 1024px) and (max-width: 1365px) {
+      #sidebar { width: 15rem !important; }
+      #mainContent { margin-left: 15rem !important; }
+      #viewsContainer { padding: 1rem !important; }
+      header { padding-left: 1.1rem !important; padding-right: 1.1rem !important; }
+      #viewsContainer .p-6 { padding: 1.15rem !important; }
+      table.dataTable { font-size: 12px; }
+    }
+
+    /* Tablet improvements */
+    @media (min-width: 768px) and (max-width: 1023px) {
+      header > div:last-child { gap: .65rem !important; }
+      #viewsContainer .grid { gap: 1rem !important; }
+      #viewsContainer .p-6 { padding: 1rem !important; }
+      #viewsContainer button { min-height: 40px; }
+      .dt-container, .dataTables_wrapper { max-width: 100%; }
+      .swal2-popup .grid { grid-template-columns: repeat(2,minmax(0,1fr)) !important; }
+    }
+
+    /* Phone UX */
+    @media (max-width: 767px) {
+      /* Header becomes compact and touch friendly */
+      header {
+        display: grid !important;
+        grid-template-columns: minmax(0,1fr) auto;
+        gap: .45rem !important;
+        align-items: center !important;
+        padding: .55rem .65rem !important;
+      }
+      header > div:first-child { min-width: 0; gap: .45rem !important; }
+      header > div:last-child { gap: .35rem !important; min-width: 0; }
+      #viewTitle { max-width: 47vw !important; font-size: .95rem !important; }
+      #refreshDataBtn, #themeToggleBtn, #sidebarOpenBtn {
+        width: 42px !important; height: 42px !important;
+        min-width: 42px !important; padding: 0 !important;
+        border-radius: .7rem !important;
+      }
+      header .bg-indigo-50, header .dark\\:bg-indigo-950 { padding: .55rem !important; }
+      #userName { max-width: 24vw !important; font-size: 10px !important; line-height: 1.1 !important; }
+      #userRole { max-width: 24vw !important; font-size: 8px !important; line-height: 1.1 !important; }
+
+      /* Cards and section headers */
+      #viewsContainer { padding: .55rem !important; }
+      #viewsContainer .rounded-xl, #viewsContainer .rounded-2xl { border-radius: .8rem !important; }
+      #viewsContainer h1 { font-size: 1.15rem !important; }
+      #viewsContainer h2 { font-size: 1rem !important; }
+      #viewsContainer h3 { font-size: .95rem !important; }
+      #viewsContainer .text-2xl { font-size: 1.25rem !important; }
+      #viewsContainer .text-xl { font-size: 1.05rem !important; }
+
+      /* Toolbar/buttons: no clipped controls */
+      #viewsContainer .flex.gap-2,
+      #viewsContainer .flex.gap-3,
+      #viewsContainer .flex.gap-4,
+      #viewsContainer .flex.space-x-2,
+      #viewsContainer .flex.space-x-3,
+      #viewsContainer .flex.space-x-4 {
+        flex-wrap: wrap !important;
+      }
+      #viewsContainer .planner-status-tab { min-width: 0 !important; flex: 1 1 135px; }
+      #viewsContainer button:not(.dt-paging-button):not(#refreshDataBtn):not(#themeToggleBtn):not(#sidebarOpenBtn):not(#sidebarCloseBtn) {
+        white-space: normal;
+        line-height: 1.15;
+      }
+      #viewsContainer a, #viewsContainer button { max-width: 100%; }
+
+      /* Filters become a clean one-column form */
+      #viewsContainer form .grid,
+      .swal2-popup form .grid { grid-template-columns: 1fr !important; }
+      #viewsContainer label { line-height: 1.2; }
+      #viewsContainer input, #viewsContainer select, #viewsContainer textarea {
+        width: 100%; min-height: 44px;
+      }
+      #viewsContainer input[type="checkbox"], #viewsContainer input[type="radio"] {
+        width: auto !important; min-height: 0 !important;
+      }
+
+      /* Auto-responsive tables added by JS */
+      table.ims-auto-responsive {
+        min-width: 0 !important;
+        width: 100% !important;
+        border-collapse: separate !important;
+        border-spacing: 0 !important;
+      }
+      table.ims-auto-responsive thead { display: none !important; }
+      table.ims-auto-responsive tbody,
+      table.ims-auto-responsive tr,
+      table.ims-auto-responsive td { display: block !important; width: 100% !important; }
+      table.ims-auto-responsive tbody tr {
+        margin: 0 0 .7rem !important;
+        padding: .65rem .75rem !important;
+        border: 1px solid #dbe3ee !important;
+        border-radius: .75rem !important;
+        background: #fff !important;
+        box-shadow: 0 2px 8px rgba(15,23,42,.045);
+      }
+      html.dark table.ims-auto-responsive tbody tr {
+        background: #111a2a !important;
+        border-color: #29374d !important;
+      }
+      table.ims-auto-responsive tbody td {
+        position: relative !important;
+        min-height: 42px !important;
+        padding: 1.45rem .15rem .45rem !important;
+        border: 0 !important;
+        border-bottom: 1px dashed #e2e8f0 !important;
+        text-align: left !important;
+        white-space: normal !important;
+        overflow: visible !important;
+        text-overflow: clip !important;
+        overflow-wrap: anywhere !important;
+        word-break: break-word !important;
+        max-width: none !important;
+      }
+      html.dark table.ims-auto-responsive tbody td { border-bottom-color: #29374d !important; }
+      table.ims-auto-responsive tbody td:last-child { border-bottom: 0 !important; }
+      table.ims-auto-responsive tbody td::before {
+        content: attr(data-label);
+        display: block;
+        position: absolute;
+        top: .25rem; left: .15rem;
+        color: #64748b;
+        font-size: 9px;
+        line-height: 1rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: .055em;
+      }
+      html.dark table.ims-auto-responsive tbody td::before { color: #93a4ba; }
+      table.ims-auto-responsive tbody td.action-cell,
+      table.ims-auto-responsive tbody td[data-label="Action"],
+      table.ims-auto-responsive tbody td[data-label="Reprint"],
+      table.ims-auto-responsive tbody td[data-label="PDF Slip"] {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        gap: .45rem !important;
+        padding-top: 1.5rem !important;
+        justify-content: flex-start !important;
+      }
+      table.ims-auto-responsive tbody td.action-cell button,
+      table.ims-auto-responsive tbody td[data-label="Action"] button {
+        min-width: 118px;
+      }
+      table.ims-auto-responsive .truncate,
+      table.ims-auto-responsive [class*="max-w-"] {
+        max-width: 100% !important;
+        white-space: normal !important;
+        overflow: visible !important;
+        text-overflow: clip !important;
+      }
+
+      /* Once a table is cardified, its outer scroller must not create a fake horizontal page */
+      .overflow-x-auto:has(> table.ims-auto-responsive),
+      .grid-table-scroll:has(> table.ims-auto-responsive) {
+        overflow-x: visible !important;
+      }
+
+      /* DataTables controls */
+      .dt-container, .dataTables_wrapper { overflow: visible !important; }
+      .dt-layout-row { margin: .4rem 0 !important; }
+      .dt-info { font-size: 11px !important; }
+      .dt-paging { justify-content: center !important; }
+
+      /* Modals: usable with keyboard and small displays */
+      .swal2-popup {
+        border-radius: .9rem !important;
+        max-height: calc(100dvh - 1rem) !important;
+      }
+      .swal2-title { font-size: 1.25rem !important; line-height: 1.25 !important; }
+      .swal2-html-container { overflow-x: hidden !important; }
+      #grnPrintModal > div, .print-modal-box { height: min(94dvh, 900px); }
+      #grnPrintModal iframe { min-height: 70dvh !important; }
+
+      /* Sidebar respects notches/home indicator */
+      #sidebar { padding-bottom: var(--ims-safe-bottom); }
+      #sidebar ul { overscroll-behavior: contain; }
+
+      /* Prevent accidental horizontal page drift caused by long IDs */
+      #viewsContainer .font-mono { overflow-wrap: anywhere; word-break: break-word; }
+    }
+
+
+    /* ===== Mobile height compaction v9.1 =====
+       Do not force the app/view container to fill the whole viewport when
+       the current screen has less content. This removes the large empty
+       block below short tables/cards on phones. */
+    @media (max-width: 767px) {
+      html, body {
+        min-height: 0 !important;
+        height: auto !important;
+      }
+
+      #appView {
+        min-height: 0 !important;
+        height: auto !important;
+        flex: none !important;
+        align-items: flex-start !important;
+      }
+
+      #mainContent {
+        min-height: 0 !important;
+        height: auto !important;
+        flex: 0 0 auto !important;
+        align-self: flex-start !important;
+      }
+
+      #viewsContainer {
+        min-height: 0 !important;
+        height: auto !important;
+        flex: 0 0 auto !important;
+        flex-grow: 0 !important;
+        align-self: stretch !important;
+        padding-bottom: .55rem !important;
+      }
+
+      #viewsContainer > .view,
+      #viewsContainer > .role-dashboard,
+      #viewsContainer > section,
+      #viewsContainer > div:not(.swal2-container) {
+        min-height: 0 !important;
+        height: auto !important;
+      }
+
+      /* DataTables wrappers should end with their actual rows/pager instead
+         of inheriting/stretching a parent height. */
+      #viewsContainer .dt-container,
+      #viewsContainer .dataTables_wrapper,
+      #viewsContainer .grid-table-scroll,
+      #viewsContainer .overflow-x-auto {
+        min-height: 0 !important;
+        height: auto !important;
+      }
+    }
+
+    @media (max-width: 430px) {
+      #userName, #userRole { display: none !important; }
+      header > div:last-child { gap: .25rem !important; }
+      #viewTitle { max-width: 52vw !important; }
+      #viewsContainer { padding: .45rem !important; }
+      #viewsContainer .p-6 { padding: .75rem !important; }
+      .swal2-popup { width: calc(100vw - .6rem) !important; padding: .75rem !important; }
+    }
+
+
+
+    /* ===== Apps Script iframe-safe phone layout v9.2 =====
+       Some Apps Script/dev iframe contexts keep a desktop layout viewport even
+       when Chrome/device simulation is narrow. JS adds .ims-mobile-layout using
+       the effective screen/visual viewport width, so these rules still apply. */
+    html.ims-mobile-layout,
+    html.ims-mobile-layout body {
+      min-height: 0 !important;
+      height: auto !important;
+      overflow-x: hidden !important;
+    }
+    html.ims-mobile-layout #appView {
+      min-height: 0 !important;
+      height: auto !important;
+      display: block !important;
+    }
+    html.ims-mobile-layout #mainContent {
+      margin-left: 0 !important;
+      min-height: 0 !important;
+      height: auto !important;
+      width: 100% !important;
+      flex: none !important;
+    }
+    html.ims-mobile-layout #sidebar {
+      width: min(84vw, 285px) !important;
+      transform: translateX(-100%);
+      height: 100dvh !important;
+    }
+    html.ims-mobile-layout #sidebar:not(.-translate-x-full) { transform: translateX(0) !important; }
+    html.ims-mobile-layout #sidebarOpenBtn,
+    html.ims-mobile-layout #sidebarCloseBtn { display: inline-flex !important; }
+    html.ims-mobile-layout header {
+      display: grid !important;
+      grid-template-columns: minmax(0,1fr) auto !important;
+      gap: .4rem !important;
+      padding: .55rem .65rem !important;
+      min-height: 54px !important;
+    }
+    html.ims-mobile-layout header > div:last-child { gap: .3rem !important; }
+    html.ims-mobile-layout #viewTitle { max-width: 48vw !important; font-size: .95rem !important; }
+    html.ims-mobile-layout #userName,
+    html.ims-mobile-layout #userRole { display: none !important; }
+    html.ims-mobile-layout #refreshDataBtn,
+    html.ims-mobile-layout #themeToggleBtn,
+    html.ims-mobile-layout #sidebarOpenBtn {
+      width: 40px !important; height: 40px !important; min-width: 40px !important;
+      padding: 0 !important; display: inline-flex !important; align-items:center; justify-content:center;
+    }
+    html.ims-mobile-layout #viewsContainer {
+      padding: .5rem !important;
+      min-height: 0 !important;
+      height: auto !important;
+      flex: none !important;
+    }
+    html.ims-mobile-layout #viewsContainer > .view,
+    html.ims-mobile-layout #viewsContainer > .role-dashboard,
+    html.ims-mobile-layout #viewsContainer > section,
+    html.ims-mobile-layout #viewsContainer > div:not(.swal2-container) {
+      min-height: 0 !important; height: auto !important;
+    }
+    html.ims-mobile-layout #viewsContainer .p-6 { padding: .75rem !important; }
+    html.ims-mobile-layout #viewsContainer .px-6 { padding-left: .75rem !important; padding-right: .75rem !important; }
+    html.ims-mobile-layout #viewsContainer .py-5 { padding-top: .75rem !important; padding-bottom: .75rem !important; }
+    html.ims-mobile-layout #viewsContainer .grid { grid-template-columns: 1fr !important; gap: .65rem !important; }
+    html.ims-mobile-layout #viewsContainer .flex.gap-2,
+    html.ims-mobile-layout #viewsContainer .flex.gap-3,
+    html.ims-mobile-layout #viewsContainer .flex.gap-4,
+    html.ims-mobile-layout #viewsContainer .flex.space-x-2,
+    html.ims-mobile-layout #viewsContainer .flex.space-x-3,
+    html.ims-mobile-layout #viewsContainer .flex.space-x-4 { flex-wrap: wrap !important; }
+    html.ims-mobile-layout #viewsContainer input,
+    html.ims-mobile-layout #viewsContainer select,
+    html.ims-mobile-layout #viewsContainer textarea { width: 100% !important; max-width: 100% !important; }
+
+    /* Dense tables become vertical cards even when iframe layout width says desktop. */
+    html.ims-mobile-layout table.ims-auto-responsive {
+      min-width: 0 !important; width: 100% !important;
+      border-collapse: separate !important; border-spacing: 0 !important;
+    }
+    html.ims-mobile-layout table.ims-auto-responsive thead { display: none !important; }
+    html.ims-mobile-layout table.ims-auto-responsive tbody,
+    html.ims-mobile-layout table.ims-auto-responsive tr,
+    html.ims-mobile-layout table.ims-auto-responsive td { display: block !important; width: 100% !important; }
+    html.ims-mobile-layout table.ims-auto-responsive tbody tr {
+      margin: 0 0 .65rem !important; padding: .55rem .7rem !important;
+      border: 1px solid #dbe3ee !important; border-radius: .75rem !important;
+      background: #fff !important; box-shadow: 0 2px 8px rgba(15,23,42,.045);
+    }
+    html.dark.ims-mobile-layout table.ims-auto-responsive tbody tr { background:#111a2a !important; border-color:#29374d !important; }
+    html.ims-mobile-layout table.ims-auto-responsive tbody td {
+      position: relative !important; min-height: 38px !important;
+      padding: 1.3rem .1rem .38rem !important; border: 0 !important;
+      border-bottom: 1px dashed #e2e8f0 !important; text-align: left !important;
+      white-space: normal !important; overflow: visible !important; text-overflow: clip !important;
+      overflow-wrap: anywhere !important; word-break: break-word !important; max-width: none !important;
+    }
+    html.dark.ims-mobile-layout table.ims-auto-responsive tbody td { border-bottom-color:#29374d !important; }
+    html.ims-mobile-layout table.ims-auto-responsive tbody td:last-child { border-bottom:0 !important; }
+    html.ims-mobile-layout table.ims-auto-responsive tbody td::before {
+      content: attr(data-label); display:block; position:absolute; top:.18rem; left:.1rem;
+      color:#64748b; font-size:9px; line-height:1rem; font-weight:800; text-transform:uppercase; letter-spacing:.05em;
+    }
+    html.ims-mobile-layout table.ims-auto-responsive tbody td.action-cell,
+    html.ims-mobile-layout table.ims-auto-responsive tbody td[data-label=\"Action\"],
+    html.ims-mobile-layout table.ims-auto-responsive tbody td[data-label=\"Reprint\"],
+    html.ims-mobile-layout table.ims-auto-responsive tbody td[data-label=\"PDF Slip\"] {
+      display:flex !important; flex-wrap:wrap !important; gap:.4rem !important; justify-content:flex-start !important;
+    }
+    html.ims-mobile-layout .dt-container,
+    html.ims-mobile-layout .dataTables_wrapper,
+    html.ims-mobile-layout .grid-table-scroll,
+    html.ims-mobile-layout .overflow-x-auto { min-height:0 !important; height:auto !important; }
+    html.ims-mobile-layout .overflow-x-auto:has(> table.ims-auto-responsive),
+    html.ims-mobile-layout .grid-table-scroll:has(> table.ims-auto-responsive) { overflow-x:visible !important; }
+    html.ims-mobile-layout .dt-layout-row { margin:.3rem 0 !important; }
+    html.ims-mobile-layout .dt-info { font-size:11px !important; }
+    html.ims-mobile-layout .dt-paging { justify-content:center !important; flex-wrap:wrap !important; }
+
+
+
+    /* ===== V27 Professional ERP Login ===== */
+    #loginView {
+      background:
+        radial-gradient(circle at 12% 16%, rgba(79,70,229,.055), transparent 28%),
+        linear-gradient(180deg,#f5f7fb 0%,#edf1f6 100%) !important;
+    }
+    html.dark #loginView { background:#090d16 !important; }
+
+    .ims-login-shell {
+      max-width: 930px !important;
+      min-height: 500px;
+      border-radius: 16px !important;
+      border: 1px solid #d9e0ea !important;
+      box-shadow: 0 20px 55px rgba(15,23,42,.10) !important;
+      background:#fff;
+    }
+    html.dark .ims-login-shell {
+      background:#111827;
+      border-color:#263244 !important;
+      box-shadow:0 22px 60px rgba(0,0,0,.36) !important;
+    }
+
+    .ims-login-brand {
+      position:relative;
+      overflow:hidden;
+      background:linear-gradient(180deg,#111827 0%,#0f172a 100%) !important;
+      border-right:1px solid rgba(255,255,255,.06);
+    }
+    .ims-login-brand::after {
+      content:'';
+      position:absolute;
+      inset:auto -90px -110px auto;
+      width:260px;
+      height:260px;
+      border-radius:999px;
+      border:1px solid rgba(129,140,248,.12);
+      box-shadow:0 0 0 44px rgba(129,140,248,.025),0 0 0 88px rgba(129,140,248,.018);
+      pointer-events:none;
+    }
+    .ims-brand-content { position:relative; z-index:1; }
+    .ims-login-logo {
+      width:46px;
+      height:46px;
+      border-radius:12px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:#4f46e5;
+      color:#fff;
+      box-shadow:0 8px 18px rgba(79,70,229,.24);
+    }
+    .ims-login-brand-title {
+      font-size:24px;
+      line-height:1.3;
+      font-weight:750;
+      letter-spacing:-.02em;
+      color:#fff;
+      max-width:320px;
+    }
+    .ims-login-brand-copy {
+      color:#94a3b8;
+      font-size:12.5px;
+      line-height:1.7;
+      max-width:315px;
+    }
+    .ims-login-meta {
+      display:grid;
+      gap:0;
+      margin-top:28px;
+      border-top:1px solid rgba(255,255,255,.07);
+      border-bottom:1px solid rgba(255,255,255,.07);
+    }
+    .ims-login-meta-row {
+      display:flex;
+      align-items:center;
+      gap:11px;
+      color:#cbd5e1;
+      font-size:12px;
+      padding:11px 0;
+    }
+    .ims-login-meta-row + .ims-login-meta-row { border-top:1px solid rgba(255,255,255,.055); }
+    .ims-login-meta-icon {
+      width:28px;
+      height:28px;
+      border-radius:7px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:#172033;
+      color:#a5b4fc;
+      border:1px solid #29344a;
+      flex:0 0 auto;
+    }
+    .ims-login-form-wrap { padding: 44px 50px !important; }
+    .ims-login-kicker {
+      color:#4f46e5;
+      font-size:10px;
+      font-weight:800;
+      letter-spacing:.13em;
+      text-transform:uppercase;
+    }
+    .ims-login-input-wrap { position:relative; }
+    .ims-login-input-icon {
+      position:absolute;
+      left:14px;
+      top:50%;
+      transform:translateY(-50%);
+      width:17px;
+      height:17px;
+      color:#94a3b8;
+      pointer-events:none;
+    }
+    .ims-login-input {
+      padding-left:2.7rem !important;
+      min-height:48px;
+      border-radius:9px !important;
+      background:#fff !important;
+      font-size:14px !important;
+    }
+    html.dark .ims-login-input { background:#0f172a !important; }
+    .ims-login-input:focus { box-shadow:0 0 0 3px rgba(79,70,229,.09) !important; }
+    .ims-login-submit {
+      min-height:48px;
+      border-radius:9px !important;
+      background:#4f46e5 !important;
+      box-shadow:0 8px 18px rgba(79,70,229,.18) !important;
+    }
+    .ims-login-submit:hover { background:#4338ca !important; filter:none !important; }
+    .ims-login-security {
+      border-top:1px solid #e5e7eb;
+      padding-top:14px;
+      margin-top:0;
+    }
+    html.dark .ims-login-security { border-color:#263244; }
+    .ims-system-pill {
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:5px 9px;
+      border-radius:999px;
+      background:#f8fafc;
+      border:1px solid #e2e8f0;
+      color:#64748b;
+      font-size:10px;
+      font-weight:700;
+      letter-spacing:.04em;
+      text-transform:uppercase;
+    }
+    html.dark .ims-system-pill { background:#0f172a; border-color:#263244; color:#94a3b8; }
+
+    @media (max-width: 1023px) {
+      .ims-login-shell { max-width:500px !important; min-height:auto; }
+      .ims-login-form-wrap { padding:34px 26px !important; }
+    }
+</style>
+</head>
+
+<body class="h-full text-slate-800 dark:text-slate-300 bg-slate-50 dark:bg-[#0b0f19]">
+
+  <!-- LOADING SPINNER -->
+  <div id="loadingOverlay" class="fixed inset-0 flex items-center justify-center hidden">
+    <div
+      class="flex flex-col items-center bg-white dark:bg-[#111827] border border-slate-200 dark:border-[#334155] p-6 rounded-xl shadow-xl space-y-4">
+      <div
+        class="w-12 h-12 border-4 border-t-indigo-600 dark:border-t-indigo-404 border-slate-200 dark:border-slate-700 rounded-full animate-spin">
+      </div>
+      <p class="text-sm font-semibold text-slate-555 dark:text-slate-404">Processing Request...</p>
+    </div>
+  </div>
+
+  <!-- LOGIN VIEW -->
+  <div id="loginView" class="fixed inset-0 z-50 flex items-center justify-center p-4 transition-colors duration-200">
+    <div class="ims-login-shell flex w-full overflow-hidden transition-all duration-300">
+
+      <aside class="ims-login-brand hidden w-[40%] flex-col justify-between p-10 text-white lg:flex">
+        <div class="ims-brand-content">
+          <div class="flex items-center gap-3">
+            <div class="ims-login-logo"><i data-lucide="boxes" class="w-6 h-6"></i></div>
+            <div>
+              <div class="text-[10px] font-bold uppercase tracking-[.16em] text-slate-400">Inventory Management System</div>
+              <div class="text-[21px] font-extrabold tracking-tight text-white">Nexus Stock</div>
+            </div>
+          </div>
+
+          <div class="mt-14">
+            <div class="text-[10px] font-bold uppercase tracking-[.14em] text-indigo-300">Operations Platform</div>
+            <h1 class="ims-login-brand-title mt-3">Centralized control for planning, inventory and warehouse operations.</h1>
+            <p class="ims-login-brand-copy mt-3">Role-based access to live stock, material receiving, transfers and operational records.</p>
+
+            <div class="ims-login-meta">
+              <div class="ims-login-meta-row"><span class="ims-login-meta-icon"><i data-lucide="warehouse" class="w-4 h-4"></i></span><span>Multi-warehouse stock visibility</span></div>
+              <div class="ims-login-meta-row"><span class="ims-login-meta-icon"><i data-lucide="route" class="w-4 h-4"></i></span><span>Controlled material movement</span></div>
+              <div class="ims-login-meta-row"><span class="ims-login-meta-icon"><i data-lucide="file-check-2" class="w-4 h-4"></i></span><span>Complete operational audit trail</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="ims-brand-content flex items-center justify-between text-[10px] text-slate-500">
+          <span class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>System available</span>
+          <span>Secure access</span>
+        </div>
+      </aside>
+
+      <section class="ims-login-form-wrap w-full lg:w-[60%] flex items-center bg-white dark:bg-[#111827]">
+        <form id="login-form" class="w-full max-w-[380px] mx-auto space-y-6">
+          <div class="flex items-center justify-between gap-4">
+            <span class="ims-system-pill"><i data-lucide="shield-check" class="w-3.5 h-3.5"></i> Authorized users</span>
+          </div>
+
+          <div>
+            <div class="ims-login-kicker mb-2">Account Access</div>
+            <h2 class="text-[28px] font-extrabold tracking-tight text-slate-900 dark:text-white">Sign in to Nexus Stock</h2>
+            <p class="text-slate-500 dark:text-slate-400 text-sm mt-2">Use your assigned credentials to continue to your department dashboard.</p>
+          </div>
+
+          <div class="space-y-4">
+            <div>
+              <label for="username" class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">User ID</label>
+              <div class="ims-login-input-wrap">
+                <i data-lucide="user-round" class="ims-login-input-icon"></i>
+                <input id="username" name="username" type="text" autocomplete="username" required class="ims-login-input block w-full border border-slate-300 dark:border-[#334155] px-4 py-2.5 text-slate-900 dark:text-white placeholder-slate-400 focus:border-indigo-500 focus:outline-none" placeholder="Enter user ID">
+              </div>
+            </div>
+
+            <div>
+              <label for="password" class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">Password</label>
+              <div class="ims-login-input-wrap">
+                <i data-lucide="key-round" class="ims-login-input-icon"></i>
+                <input id="password" name="password" type="password" autocomplete="current-password" required class="ims-login-input block w-full border border-slate-300 dark:border-[#334155] px-4 py-2.5 text-slate-900 dark:text-white placeholder-slate-400 focus:border-indigo-500 focus:outline-none" placeholder="Enter password">
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between gap-3 pt-1">
+              <label class="flex items-center cursor-pointer select-none">
+                <input id="remember-me" type="checkbox" class="h-4 w-4 rounded border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-indigo-600 focus:ring-indigo-500/20">
+                <span class="ml-2 text-sm text-slate-600 dark:text-slate-400">Remember this device</span>
+              </label>
+              <span class="text-[11px] font-semibold text-slate-400">Role-based security</span>
+            </div>
+          </div>
+
+          <button type="submit" class="ims-login-submit w-full flex items-center justify-center gap-2 px-4 text-sm font-bold text-white transition-colors">
+            <span>Sign In</span><i data-lucide="arrow-right" class="w-4 h-4"></i>
+          </button>
+
+          <div class="ims-login-security flex items-start gap-2 text-[11px] leading-5 text-slate-400">
+            <i data-lucide="lock" class="w-4 h-4 mt-0.5 text-slate-400"></i>
+            <span>Access is limited to authorized users and assigned warehouse permissions.</span>
+          </div>
+        </form>
+      </section>
+    </div>
+  </div>
+
+  <!-- APP VIEW -->
+  <div id="appView" class="hidden min-h-screen flex flex-col lg:flex-row">
+
+    <nav id="sidebar"
+      class="fixed inset-y-0 left-0 z-30 flex flex-col w-64 h-screen bg-[#0f1322] text-slate-300 shadow-xl transition-transform duration-300 -translate-x-full lg:translate-x-0 border-r border-[#1a2035]">
+      <div class="flex items-center justify-between px-6 py-5 border-b border-[#1a2035]">
+        <div class="flex items-center space-x-2">
+          <div class="bg-indigo-600 p-1.5 rounded-lg text-white">
+            <i data-lucide="box" class="w-6 h-6"></i>
+          </div>
+          <span class="text-xl font-bold text-white tracking-tight">Nexus Stock</span>
+        </div>
+        <button id="sidebarCloseBtn" class="text-slate-404 hover:text-white lg:hidden"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+
+      <ul class="mt-6 space-y-1 px-3 flex-grow overflow-y-auto" id="departmentNavigation">
+        <!-- COMMON / REPORTS -->
+        <li class="department-heading" data-department-group="Common">
+          <div class="px-3 pt-2 pb-2 flex items-center gap-2 text-[11px] font-bold text-slate-500 uppercase tracking-[0.14em]">
+            <i data-lucide="panels-top-left" class="w-3.5 h-3.5"></i>
+            <span>Common & Reports</span>
+          </div>
+        </li>
+        <li class="nav-link rounded-lg px-4 py-3 hover:bg-[#1a2035] hover:text-white cursor-pointer flex items-center space-x-3 text-sm font-medium"
+          data-view="dashboardView" data-role="all" data-department="Common">
+          <i data-lucide="layout-dashboard" class="w-5 h-5"></i><span>Department Dashboard</span>
+        </li>
+        <li class="nav-link rounded-lg px-4 py-3 hover:bg-[#1a2035] hover:text-white cursor-pointer flex items-center space-x-3 text-sm font-medium"
+          data-view="stockReportView" data-role="Planner Purchase Warehouse Production Accounts" data-department="Common">
+          <i data-lucide="package" class="w-5 h-5"></i><span>Stock Report</span>
+        </li>
+        <li class="nav-link rounded-lg px-4 py-3 hover:bg-[#1a2035] hover:text-white cursor-pointer flex items-center space-x-3 text-sm font-medium"
+          data-view="grnHistoryView" data-role="Planner Purchase Warehouse Production Accounts" data-department="Common">
+          <i data-lucide="receipt" class="w-5 h-5"></i><span>Receiving History Log</span>
+        </li>
+        <li class="nav-link rounded-lg px-4 py-3 hover:bg-[#1a2035] hover:text-white cursor-pointer flex items-center space-x-3 text-sm font-medium"
+          data-view="transferHistoryView" data-role="Planner Purchase Warehouse Production Accounts" data-department="Common">
+          <i data-lucide="arrow-right-left" class="w-5 h-5"></i><span>Transfer History Log</span>
+        </li>
+
+        <!-- PLANNING DEPARTMENT -->
+        <li class="department-heading mt-4" data-department-group="Planning">
+          <div class="px-3 pt-2 pb-2 flex items-center gap-2 text-[11px] font-bold text-indigo-400/80 uppercase tracking-[0.14em]">
+            <i data-lucide="clipboard-list" class="w-3.5 h-3.5"></i>
+            <span>Planning Department</span>
+          </div>
+        </li>
+        <li class="nav-link rounded-lg px-4 py-3 hover:bg-[#1a2035] hover:text-white cursor-pointer flex items-center space-x-3 text-sm font-medium"
+          data-view="warehouseMgmtView" data-role="Planner" data-department="Planning">
+          <i data-lucide="building-2" class="w-5 h-5"></i><span>Warehouse Planning</span>
+        </li>
+
+        <!-- PURCHASE DEPARTMENT -->
+        <li class="department-heading mt-4" data-department-group="Purchase">
+          <div class="px-3 pt-2 pb-2 flex items-center gap-2 text-[11px] font-bold text-amber-400/80 uppercase tracking-[0.14em]">
+            <i data-lucide="shopping-cart" class="w-3.5 h-3.5"></i>
+            <span>Purchase Department</span>
+          </div>
+        </li>
+        <li class="nav-link rounded-lg px-4 py-3 hover:bg-[#1a2035] hover:text-white cursor-pointer flex items-center space-x-3 text-sm font-medium"
+          data-view="purchasePanelView" data-role="Planner Purchase" data-department="Purchase">
+          <i data-lucide="shield-alert" class="w-5 h-5"></i><span>Purchase Reject Actions</span>
+        </li>
+        <li class="nav-link rounded-lg px-4 py-3 hover:bg-[#1a2035] hover:text-white cursor-pointer flex items-center space-x-3 text-sm font-medium"
+          data-view="purchaseHistoryView" data-role="Planner Purchase" data-department="Purchase">
+          <i data-lucide="history" class="w-5 h-5"></i><span>Purchase Reject History</span>
+        </li>
+
+        <!-- WAREHOUSE DEPARTMENT -->
+        <li class="department-heading mt-4" data-department-group="Warehouse">
+          <div class="px-3 pt-2 pb-2 flex items-center gap-2 text-[11px] font-bold text-emerald-400/80 uppercase tracking-[0.14em]">
+            <i data-lucide="warehouse" class="w-3.5 h-3.5"></i>
+            <span>Warehouse Department</span>
+          </div>
+        </li>
+        <li class="nav-link rounded-lg px-4 py-3 hover:bg-[#1a2035] hover:text-white cursor-pointer flex items-center space-x-3 text-sm font-medium"
+          data-view="warehouseManagerView" data-role="Warehouse" data-department="Warehouse">
+          <i data-lucide="container" class="w-5 h-5"></i><span>Bin / Rack Management</span>
+        </li>
+
+        <!-- PRODUCTION DEPARTMENT -->
+        <li class="department-heading mt-4" data-department-group="Production">
+          <div class="px-3 pt-2 pb-2 flex items-center gap-2 text-[11px] font-bold text-violet-400/80 uppercase tracking-[0.14em]">
+            <i data-lucide="factory" class="w-3.5 h-3.5"></i>
+            <span>Production Department</span>
+          </div>
+        </li>
+        <li class="nav-link rounded-lg px-4 py-3 hover:bg-[#1a2035] hover:text-white cursor-pointer flex items-center space-x-3 text-sm font-medium"
+          data-view="logProductionView" data-role="Production" data-department="Production">
+          <i data-lucide="factory" class="w-5 h-5"></i><span>Production Tracking</span>
+        </li>
+
+        <!-- QUALITY DEPARTMENT -->
+        <li class="department-heading mt-4" data-department-group="Quality">
+          <div class="px-3 pt-2 pb-2 flex items-center gap-2 text-[11px] font-bold text-cyan-400/80 uppercase tracking-[0.14em]">
+            <i data-lucide="badge-check" class="w-3.5 h-3.5"></i>
+            <span>Quality Control Department</span>
+          </div>
+        </li>
+        <li class="nav-link rounded-lg px-4 py-3 hover:bg-[#1a2035] hover:text-white cursor-pointer flex items-center space-x-3 text-sm font-medium"
+          data-view="qcPendingView" data-role="Quality" data-department="Quality">
+          <i data-lucide="shield-alert" class="w-5 h-5"></i><span>Pending Inspections</span>
+        </li>
+        <li class="nav-link rounded-lg px-4 py-3 hover:bg-[#1a2035] hover:text-white cursor-pointer flex items-center space-x-3 text-sm font-medium"
+          data-view="qcHistoryView" data-role="Quality" data-department="Quality">
+          <i data-lucide="history" class="w-5 h-5"></i><span>Inspection History</span>
+        </li>
+      </ul>
+
+      <div class="mt-auto p-4 border-t border-[#1a2035] bg-[#070a14]">
+        <button id="logoutButton" class="w-full flex items-center justify-center space-x-2 rounded-lg py-2.5 px-4 bg-rose-600 hover:bg-rose-700 text-white text-sm font-semibold shadow-lg shadow-rose-600/10 transition duration-155">
+          <i data-lucide="log-out" class="w-4 h-4"></i>
+          <span>Sign Out</span>
+        </button>
+      </div>
+    </nav>
+
+    
+    <div id="sidebarOverlay"
+      class="fixed inset-0 z-20 bg-black/50 backdrop-blur-[1px] hidden lg:hidden"
+      aria-hidden="true"></div>
+
+    <main id="mainContent"
+      class="flex-1 min-w-0 transition-all duration-300 lg:ml-64 flex flex-col bg-slate-50 dark:bg-[#0b0f19]">
+      <header
+        class="flex items-center justify-between px-6 py-4 bg-white dark:bg-[#111827] border-b border-slate-200 dark:border-[#1e293b] transition-colors duration-200">
+        <div class="flex items-center space-x-3">
+          <button id="sidebarOpenBtn" class="text-slate-555 hover:text-indigo-600 lg:hidden focus:outline-none"><i data-lucide="menu" class="w-6 h-6"></i></button>
+          <h1 id="viewTitle" class="text-xl font-bold text-slate-800 dark:text-white">Dashboard</h1>
+        </div>
+
+        <div class="flex items-center space-x-5">
+          <button id="refreshDataBtn" type="button" class="text-slate-555 hover:text-indigo-600 dark:text-slate-404 dark:hover:text-indigo-400 focus:outline-none p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 transition" title="Refresh Application Data">
+            <i data-lucide="refresh-cw" class="w-5 h-5"></i>
+          </button>
+
+          <button id="themeToggleBtn" type="button" class="text-slate-555 hover:text-indigo-600 dark:text-slate-404 dark:hover:text-indigo-400 focus:outline-none p-1.5 rounded-lg border border-slate-200 dark:border-slate-800" title="Toggle System Theme">
+            <i id="themeToggleIcon" data-lucide="moon" class="w-5 h-5"></i>
+          </button>
+
+          <div class="flex items-center space-x-3">
+            <div class="text-right">
+              <span id="userName" class="text-sm font-bold text-slate-800 dark:text-white block">System Operator</span>
+              <span id="userRole" class="text-xs text-indigo-600 dark:text-indigo-404 font-semibold block uppercase tracking-wider">Administrator</span>
+              <span id="userDepartment" class="mt-1 inline-flex items-center justify-end gap-1 text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">
+                <i data-lucide="building" class="w-3 h-3"></i>
+                <span>Department</span>
+              </span>
+            </div>
+            <div
+              class="bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-404 p-2.5 rounded-full border border-indigo-100 dark:border-[#1e293b]0/50">
+              <i data-lucide="user" class="w-5 h-5"></i>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- VIEWS CONTAINER -->
+      <div id="viewsContainer" class="p-6 flex-grow">
+        <?!= include('CommonViews'); ?>
+        <?!= include('PlanningViews'); ?>
+        <?!= include('PurchaseViews'); ?>
+        <?!= include('WarehouseViews'); ?>
+        <?!= include('ProductionViews'); ?>
+        <?!= include('QualityViews'); ?>
+</div> <!-- /#viewsContainer -->
+    </main>
+  </div>
+
+  
+<?!= include('CommonScripts'); ?>
+
+
+  <!-- GRN PRINT PREVIEW MODAL -->
+  <div id="grnPrintModal" class="fixed inset-0 z-50 flex items-center justify-center hidden">
+    <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm print-modal-close-trigger"></div>
+    <div
+      class="relative w-full max-w-4xl h-[90vh] flex flex-col bg-white dark:bg-[#111827] border border-slate-200 dark:border-[#1e293b] rounded-2xl shadow-2xl overflow-hidden transition-all duration-300 transform scale-95 opacity-0 print-modal-box">
+      <!-- Modal Header -->
+      <div
+        class="flex items-center justify-between border-b border-slate-200 dark:border-[#1e293b] px-6 py-4 bg-slate-50 dark:bg-[#151c2c]">
+        <div>
+          <h3 class="text-lg font-bold text-slate-800 dark:text-white">GRN Slip Print Preview</h3>
+          <p class="text-xs text-slate-500 dark:text-slate-404">Review document layout parameters before printing or saving.</p>
+        </div>
+        <div class="flex items-center space-x-2">
+          <button id="modal-print-direct-btn" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-semibold flex items-center shadow-md">
+            <i data-lucide="printer" class="w-4 h-4 mr-1.5"></i> Print Document
+          </button>
+          <button type="button" class="text-slate-404 hover:text-slate-600 dark:hover:text-white p-2 print-modal-close-trigger">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+      </div>
+      <!-- Modal Body -->
+      <div id="grnPrintModalBody" class="flex-grow p-6 overflow-y-auto bg-slate-100 dark:bg-slate-955/40">
+        <!-- Injected Slip Content -->
+      </div>
+    </div>
+  </div>
+</body>
+
+</html>
+

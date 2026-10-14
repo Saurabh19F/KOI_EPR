@@ -1,0 +1,11 @@
+- generic [active] [ref=e1] [box=0,0,1038,559]:
+  - button "Open Next.js Dev Tools" [ref=e166] [cursor=pointer] [box=22,505,32,32]
+  - alert [ref=e2] [box=-1,-1,1,1]
+  - main [ref=e3] [box=0,0,1038,559]:
+    - generic [ref=e4] [box=0,0,1038,559]:
+      - generic [ref=e5] [box=0,0,561,559]:
+        - generic [ref=e7] [box=0,0,560,96]
+        - generic [ref=e17] [box=0,96,560,592]
+      - generic [ref=e82] [box=601,-72,397,703]:
+        - generic [ref=e83] [box=601,-72,397,669]
+        - paragraph [ref=e160] [box=601,617,397,14]: Protected by role-based access and session scoped tokens.

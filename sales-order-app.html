@@ -1,0 +1,1169 @@
+<title>KOI Sales Order</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@500;700&display=swap">
+<style>
+:root {
+  --navy: #1a2744;
+  --navy-light: #243454;
+  --amber: #d4932a;
+  --amber-hover: #bf8322;
+  --cream: #f7f5f0;
+  --cream-dark: #eae6dd;
+  --slate: #3d4f5f;
+  --slate-light: #6b7d8d;
+  --text: #2c2c2c;
+  --text-secondary: #5a5a5a;
+  --mint: #2a9d6e;
+  --mint-bg: #e8f5ee;
+  --coral: #d45a3a;
+  --coral-bg: #fceae5;
+  --surface: #ffffff;
+  --surface-alt: #f9f8f5;
+  --border: #d8d4cc;
+  --border-light: #e8e5de;
+  --shadow: rgba(26,39,68,0.08);
+  --shadow-md: rgba(26,39,68,0.12);
+  --radius: 6px;
+  --radius-lg: 10px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --navy: #0f1a2e;
+    --navy-light: #1a2744;
+    --cream: #1a1d22;
+    --cream-dark: #14171c;
+    --slate: #8a9bab;
+    --slate-light: #6b7d8d;
+    --text: #e2e0db;
+    --text-secondary: #9a9890;
+    --mint-bg: #162a20;
+    --coral-bg: #2e1a14;
+    --surface: #1e2228;
+    --surface-alt: #23272e;
+    --border: #333840;
+    --border-light: #2a2e36;
+    --shadow: rgba(0,0,0,0.25);
+    --shadow-md: rgba(0,0,0,0.35);
+  }
+}
+:root[data-theme="dark"] {
+  --navy: #0f1a2e;
+  --navy-light: #1a2744;
+  --cream: #1a1d22;
+  --cream-dark: #14171c;
+  --slate: #8a9bab;
+  --slate-light: #6b7d8d;
+  --text: #e2e0db;
+  --text-secondary: #9a9890;
+  --mint-bg: #162a20;
+  --coral-bg: #2e1a14;
+  --surface: #1e2228;
+  --surface-alt: #23272e;
+  --border: #333840;
+  --border-light: #2a2e36;
+  --shadow: rgba(0,0,0,0.25);
+  --shadow-md: rgba(0,0,0,0.35);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  background: var(--cream);
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.5;
+  min-height: 100vh;
+}
+
+/* Header */
+.app-header {
+  background: var(--navy);
+  color: #fff;
+  padding: 12px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.app-header .brand {
+  font-family: 'EB Garamond', Georgia, serif;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.app-header .brand .logo {
+  width: 32px; height: 32px;
+  background: var(--amber);
+  border-radius: 6px;
+  display: grid;
+  place-items: center;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--navy);
+}
+.app-header .nav-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: var(--radius);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+.btn-primary {
+  background: var(--amber);
+  color: #fff;
+}
+.btn-primary:hover { background: var(--amber-hover); }
+.btn-secondary {
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.2);
+}
+.btn-secondary:hover { background: rgba(255,255,255,0.18); }
+.btn-outline {
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+.btn-outline:hover { background: var(--surface-alt); border-color: var(--slate-light); }
+.btn-success {
+  background: var(--mint);
+  color: #fff;
+}
+.btn-success:hover { opacity: 0.9; }
+.btn-danger {
+  background: transparent;
+  color: var(--coral);
+  padding: 4px 6px;
+}
+.btn-danger:hover { background: var(--coral-bg); }
+.btn-icon {
+  padding: 6px;
+  background: transparent;
+  color: var(--slate-light);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+.btn-icon:hover { color: var(--text); background: var(--surface-alt); }
+
+/* Main container */
+.main {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 20px 24px 100px;
+}
+
+/* Section cards */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 1px 3px var(--shadow);
+  margin-bottom: 16px;
+}
+.card-header {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-light);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.card-header h2 {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--slate);
+}
+.card-body { padding: 16px; }
+
+/* Form grid */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+}
+.form-group { display: flex; flex-direction: column; gap: 3px; }
+.form-group label {
+  font-size: 10.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--slate-light);
+}
+.form-group input,
+.form-group select,
+.form-group textarea {
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 13px;
+  background: var(--surface);
+  color: var(--text);
+  transition: border-color 0.15s;
+  font-family: inherit;
+}
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: var(--amber);
+  box-shadow: 0 0 0 2px rgba(212,147,42,0.15);
+}
+.form-group select { cursor: pointer; }
+
+/* Header sections layout */
+.header-sections {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+}
+@media (max-width: 900px) {
+  .header-sections { grid-template-columns: 1fr; }
+}
+
+.section-divider {
+  border-left: 2px solid var(--border-light);
+  padding-left: 16px;
+}
+
+/* Product table */
+.table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+table.product-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+  min-width: 1100px;
+}
+table.product-table thead th {
+  padding: 8px 10px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--slate-light);
+  background: var(--surface-alt);
+  border-bottom: 2px solid var(--border);
+  text-align: left;
+  white-space: nowrap;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+table.product-table thead th.num { text-align: right; }
+table.product-table tbody td {
+  padding: 4px 6px;
+  border-bottom: 1px solid var(--border-light);
+  vertical-align: middle;
+}
+table.product-table tbody tr:hover {
+  background: var(--surface-alt);
+}
+table.product-table tbody td input,
+table.product-table tbody td select {
+  width: 100%;
+  padding: 5px 6px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  font-size: 12.5px;
+  background: transparent;
+  color: var(--text);
+  font-family: inherit;
+  font-variant-numeric: tabular-nums;
+}
+table.product-table tbody td input:focus,
+table.product-table tbody td select:focus {
+  outline: none;
+  border-color: var(--amber);
+  background: var(--surface);
+  box-shadow: 0 0 0 2px rgba(212,147,42,0.12);
+}
+table.product-table tbody td input:hover,
+table.product-table tbody td select:hover {
+  border-color: var(--border);
+}
+table.product-table tbody td.num input {
+  text-align: right;
+}
+table.product-table tbody td .computed {
+  text-align: right;
+  padding: 5px 6px;
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+.row-num {
+  font-size: 11px;
+  color: var(--slate-light);
+  font-weight: 600;
+  width: 28px;
+  text-align: center;
+}
+
+/* Search dropdown */
+.search-dropdown {
+  position: relative;
+}
+.search-dropdown .dropdown-list {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  max-height: 200px;
+  overflow-y: auto;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 4px 12px var(--shadow-md);
+  z-index: 50;
+  margin-top: 2px;
+}
+.search-dropdown.open .dropdown-list { display: block; }
+.dropdown-list .dd-item {
+  padding: 7px 10px;
+  cursor: pointer;
+  font-size: 12.5px;
+  border-bottom: 1px solid var(--border-light);
+}
+.dropdown-list .dd-item:hover {
+  background: var(--surface-alt);
+}
+.dropdown-list .dd-item .dd-sub {
+  font-size: 10.5px;
+  color: var(--slate-light);
+  margin-top: 1px;
+}
+
+/* Summary bar */
+.summary-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--surface);
+  border-top: 2px solid var(--amber);
+  box-shadow: 0 -2px 12px var(--shadow-md);
+  padding: 10px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  z-index: 100;
+}
+.summary-stats {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+}
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.stat-item .stat-label {
+  font-size: 9.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--slate-light);
+}
+.stat-item .stat-value {
+  font-size: 16px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+.stat-item .stat-value.highlight {
+  color: var(--mint);
+}
+
+/* Status badge */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+.badge-draft { background: var(--cream-dark); color: var(--slate); }
+.badge-active { background: var(--mint-bg); color: var(--mint); }
+
+/* Toast */
+.toast {
+  position: fixed;
+  top: 60px;
+  right: 24px;
+  background: var(--navy);
+  color: #fff;
+  padding: 10px 18px;
+  border-radius: var(--radius);
+  font-size: 13px;
+  font-weight: 500;
+  box-shadow: 0 4px 16px var(--shadow-md);
+  z-index: 200;
+  transform: translateY(-10px);
+  opacity: 0;
+  transition: all 0.25s ease;
+  pointer-events: none;
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+
+/* Modal */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  z-index: 150;
+  place-items: center;
+}
+.modal-overlay.open { display: grid; }
+.modal {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 8px 32px var(--shadow-md);
+  max-width: 600px;
+  width: 90vw;
+  max-height: 85vh;
+  overflow-y: auto;
+}
+.modal-head {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-light);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.modal-head h3 { font-size: 15px; font-weight: 700; }
+.modal-body { padding: 20px; }
+.modal-foot {
+  padding: 12px 20px;
+  border-top: 1px solid var(--border-light);
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+/* Print */
+.print-area { display: none; }
+@media print {
+  body * { visibility: hidden; }
+  .print-area, .print-area * { visibility: visible; }
+  .print-area {
+    display: block;
+    position: absolute;
+    top: 0; left: 0; width: 100%;
+  }
+  .print-area table { width: 100%; border-collapse: collapse; font-size: 11px; }
+  .print-area table th, .print-area table td {
+    border: 1px solid #333;
+    padding: 4px 6px;
+    text-align: left;
+  }
+  .print-area table th { background: #eee; font-weight: 700; }
+  .print-area .print-header { margin-bottom: 16px; }
+  .print-area .print-header h1 { font-family: 'EB Garamond', serif; font-size: 20px; }
+}
+
+/* Empty state */
+.empty-row td { text-align: center; padding: 24px; color: var(--slate-light); font-style: italic; }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .main { padding: 12px 12px 100px; }
+  .header-sections { grid-template-columns: 1fr; }
+  .section-divider { border-left: none; padding-left: 0; border-top: 1px solid var(--border-light); padding-top: 12px; }
+  .summary-stats { gap: 12px; flex-wrap: wrap; }
+  .summary-bar { flex-direction: column; align-items: stretch; }
+}
+</style>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- Header -->
+<header class="app-header">
+  <div class="brand">
+    <div class="logo">K</div>
+    Krishna Overseas Inc
+  </div>
+  <div class="nav-actions">
+    <span class="badge badge-draft" id="statusBadge">Draft</span>
+    <button class="btn btn-secondary" onclick="resetForm()">⟳ New Order</button>
+    <button class="btn btn-secondary" onclick="printOrder()">⎙ Print</button>
+    <button class="btn btn-primary" onclick="saveOrder()">✓ Save Order</button>
+  </div>
+</header>
+
+<!-- Main -->
+<div class="main">
+  <!-- Order Header Info -->
+  <div class="card">
+    <div class="card-header">
+      <h2>Sales Order Details</h2>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <span style="font-size:11px;color:var(--slate-light)">Order No:</span>
+        <input type="text" id="soNumber" placeholder="Auto-generated" style="width:170px;padding:5px 8px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;font-weight:600;background:var(--surface-alt);color:var(--text);" readonly>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="header-sections">
+        <!-- Sales Person Details -->
+        <div>
+          <h3 style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--amber);margin-bottom:10px;">Sales Person Details</h3>
+          <div class="form-grid" style="grid-template-columns:1fr 1fr;">
+            <div class="form-group" style="grid-column:span 2">
+              <label>Sales Person Name</label>
+              <select id="salesPerson" onchange="filterCustomers()">
+                <option value="">Select Sales Person</option>
+                <option value="Neha">Neha</option>
+                <option value="Somya Mishra">Somya Mishra</option>
+                <option value="Preeti Bhardwaj">Preeti Bhardwaj</option>
+                <option value="Simran">Simran</option>
+                <option value="Jatin Narang">Jatin Narang</option>
+                <option value="Hitesh Mehta">Hitesh Mehta</option>
+              </select>
+            </div>
+            <div class="form-group" style="grid-column:span 2">
+              <label>Port of Loading</label>
+              <select id="portOfLoading">
+                <option value="">Select Port</option>
+                <option value="Mundra / Nhava Shiva / ICD TKD">Mundra / Nhava Shiva / ICD TKD</option>
+                <option value="Mundra">Mundra</option>
+                <option value="Nhava Shiva">Nhava Shiva</option>
+                <option value="ICD TKD">ICD TKD</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Sales Inquiry No</label>
+              <input type="text" id="salesInquiryNo" placeholder="ENQ-XXX-000">
+            </div>
+            <div class="form-group">
+              <label>Date</label>
+              <input type="date" id="orderDate">
+            </div>
+          </div>
+        </div>
+
+        <!-- Buyer Details -->
+        <div class="section-divider">
+          <h3 style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--amber);margin-bottom:10px;">Buyer Details</h3>
+          <div class="form-grid" style="grid-template-columns:1fr 1fr;">
+            <div class="form-group" style="grid-column:span 2">
+              <label>Party Name</label>
+              <div class="search-dropdown" id="partyDropdown">
+                <input type="text" id="partyName" placeholder="Search customer..." autocomplete="off"
+                  oninput="searchParty(this.value)" onfocus="searchParty(this.value)">
+                <div class="dropdown-list" id="partyList"></div>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Country</label>
+              <input type="text" id="country" readonly>
+            </div>
+            <div class="form-group">
+              <label>City</label>
+              <input type="text" id="city" readonly>
+            </div>
+            <div class="form-group">
+              <label>Contact Name</label>
+              <input type="text" id="contactName">
+            </div>
+            <div class="form-group">
+              <label>Contact No</label>
+              <input type="text" id="contactNo">
+            </div>
+            <div class="form-group" style="grid-column:span 2">
+              <label>Email</label>
+              <input type="email" id="email">
+            </div>
+            <div class="form-group">
+              <label>Buyer Code</label>
+              <input type="text" id="buyerCode" readonly>
+            </div>
+          </div>
+        </div>
+
+        <!-- Other Details -->
+        <div class="section-divider">
+          <h3 style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--amber);margin-bottom:10px;">Shipping &amp; Payment</h3>
+          <div class="form-grid" style="grid-template-columns:1fr 1fr;">
+            <div class="form-group">
+              <label>POD (Port of Discharge)</label>
+              <input type="text" id="pod">
+            </div>
+            <div class="form-group">
+              <label>Payment Terms</label>
+              <select id="paymentTerms">
+                <option value="">Select</option>
+                <option value="FOB">FOB</option>
+                <option value="CIF">CIF</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Currency</label>
+              <select id="currency">
+                <option value="">Select</option>
+                <option value="USD">USD</option>
+                <option value="Euro">Euro</option>
+                <option value="GBP">GBP</option>
+                <option value="CAD">CAD</option>
+                <option value="AUD">AUD</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Cube Size</label>
+              <select id="cubeSize">
+                <option value="">Select</option>
+                <option value="20 ft">20 ft</option>
+                <option value="40 ft">40 ft</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>CBM Required</label>
+              <input type="number" id="cbmRequired" step="0.01" placeholder="0.00">
+            </div>
+            <div class="form-group">
+              <label>PI Number</label>
+              <input type="text" id="piNumber" placeholder="PI-XXX">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Product Line Items -->
+  <div class="card">
+    <div class="card-header">
+      <h2>Product Line Items</h2>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-outline" onclick="addRow()">+ Add Row</button>
+        <button class="btn btn-outline" onclick="addRows(5)">+ Add 5 Rows</button>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table class="product-table" id="productTable">
+        <thead>
+          <tr>
+            <th style="width:30px">#</th>
+            <th style="min-width:160px">Product Code</th>
+            <th style="min-width:200px">Product Name</th>
+            <th>Brand</th>
+            <th>Unit Size</th>
+            <th>Units/Ctn</th>
+            <th>Category</th>
+            <th class="num">CBM</th>
+            <th class="num" style="min-width:70px">Qty</th>
+            <th class="num">Total CBM</th>
+            <th class="num" style="min-width:90px">Rate</th>
+            <th class="num">Amount</th>
+            <th style="min-width:100px">Packing</th>
+            <th>Remarks</th>
+            <th style="width:36px"></th>
+          </tr>
+        </thead>
+        <tbody id="lineItems">
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Packing Instructions -->
+  <div class="card">
+    <div class="card-header">
+      <h2>Packing &amp; Design Instructions</h2>
+    </div>
+    <div class="card-body">
+      <div class="form-grid" style="grid-template-columns:1fr 1fr 1fr;">
+        <div class="form-group">
+          <label>Imported By</label>
+          <textarea id="importedBy" rows="2" placeholder="Importer details..."></textarea>
+        </div>
+        <div class="form-group">
+          <label>POI (Place of Origin)</label>
+          <textarea id="poi" rows="2" placeholder="Place of origin details..."></textarea>
+        </div>
+        <div class="form-group">
+          <label>General Remarks</label>
+          <textarea id="generalRemarks" rows="2" placeholder="Any additional notes..."></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Summary Bar -->
+<div class="summary-bar">
+  <div class="summary-stats">
+    <div class="stat-item">
+      <span class="stat-label">Items</span>
+      <span class="stat-value" id="totalItems">0</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-label">Total CBM</span>
+      <span class="stat-value" id="totalCBM">0.000</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-label">Net Weight</span>
+      <span class="stat-value" id="totalNetWt">0.00</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-label">Total Value</span>
+      <span class="stat-value highlight" id="totalValue">0.00</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-label">CBM Utilization</span>
+      <div style="display:flex;align-items:center;gap:6px;">
+        <div style="width:80px;height:6px;background:var(--border);border-radius:3px;overflow:hidden;">
+          <div id="cbmBar" style="height:100%;background:var(--mint);border-radius:3px;width:0%;transition:width 0.3s ease;"></div>
+        </div>
+        <span class="stat-value" id="cbmPercent" style="font-size:13px;">0%</span>
+      </div>
+    </div>
+  </div>
+  <div style="display:flex;gap:8px;">
+    <button class="btn btn-success" onclick="saveOrder()">✓ Save Order</button>
+  </div>
+</div>
+
+<!-- Print Area -->
+<div class="print-area" id="printArea">
+  <div class="print-header">
+    <h1>Krishna Overseas Inc</h1>
+    <p id="printOrderInfo"></p>
+  </div>
+  <div id="printContent"></div>
+</div>
+
+<!-- Product Search Modal -->
+<div class="modal-overlay" id="productModal">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>Search Product</h3>
+      <button class="btn-icon" onclick="closeProductModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <input type="text" id="productSearch" placeholder="Search by SKU, name, or brand..."
+          oninput="searchProducts(this.value)" style="font-size:14px;padding:10px 12px;">
+      </div>
+      <div id="productResults" style="max-height:300px;overflow-y:auto;margin-top:12px;"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Data ──
+const CUSTOMERS = [
+  ["APNA FOODS IMPORTS CO.","Addison","USA","Mr Pradeep Salwan","apnafoods@yahoo.com","001 6304008080","Illnois","360 S Lombard Rd, Addison, IL, USA","601101","360 S Lombard Rd, Addison, IL, USA","FMCG & Pvt Label","New York","UA13","Neha","FOB","USD","Mundra / Nhava Shiva / ICD TKD"],
+  ["Neals Gmbh","Ratingen","Germany","Suresh Narula/Himanshu Narula","nealsgmbh@gmail.com","4916096814409","Essen","Kokkolastr 5, 40882, Ratingen, Germany","40882","Kokkolastr 5, 40882, Ratingen, Germany","FMCG & Pvt Label","Hamburg","GH18","Somya Mishra","FOB","Euro","Mundra / Nhava Shiva / ICD TKD"],
+  ["INDIAN GROCERY INC","Woodbridge","USA","Mr Sanjay Shah","sanjayshah76@yahoo.com","001 703 327 5290","Virginia","14424 albemarle point place woodbridge VA 22191","22191","14424 albemarle point place woodbridge VA 22191","FMCG & Pvt Label","Baltimore","UI18","Neha","FOB","USD","Mundra / Nhava Shiva / ICD TKD"],
+  ["A&S Traders LLC DBA PUNJAB GROCERS","Michigan","USA","Gurneet Singh Sodhi","Punjabgrocersmi@gmail.com","+12485901904","Michigan","27851 Orchard Lake Rd Farmington Hills, MI 48334","48334","27851 Orchard Lake Rd Farmington Hills, MI 48334","FMCG & Pvt Label","New York","AGTU171","Neha","FOB","USD","Mundra / Nhava Shiva / ICD TKD"],
+  ["GRAIN MARKET LLC","Dallas","USA","Mr Anand Pabri","GrainMarketusa@gmail.com","001 4698551538","Texas","12626 International Parkway, Dallas, Tx, USA","75228","12626 International Parkway, Dallas, Tx, USA","FMCG & Pvt Label","Houston","UG55","Neha","FOB","USD","Mundra / Nhava Shiva / ICD TKD"],
+  ["NEW INDIA BAZAAR","Milptas","USA","Mr Hamant Sharda","hamantsharda@newindiabazar.com","001 48087816311","Clifornia","885 Yosemite Way Milptas CA, USA","95035","885 Yosemite Way Milptas CA, USA","FMCG & Pvt Label","Oakland","UN16","Neha","FOB","USD","Mundra / Nhava Shiva / ICD TKD"],
+  ["THAL GOLDEN SPICES INC.","Tulsa","USA","Sukhwinder Singh","thalfoods21@gmail.com","+19182632109","Oklahoma","8810 E 46th st, STE#115, Tulsa OK, USA","74145","8810 E 46th st, STE#115, Tulsa OK, USA","FMCG & Pvt Label","Houston","UT11","Neha","FOB","USD","Mundra / Nhava Shiva / ICD TKD"],
+  ["FRESH FARMS LLC","Chicago","USA","Mr Amit Dhanani","Freshfarmsllc@gmail.com","001 773 942 8181","Illinois","2626 W Devon ave Chicago, IL 60659","60659","2626 W Devon ave Chicago, IL 60659","FMCG & Pvt Label","New York","UF26","Neha","FOB","USD","Mundra / Nhava Shiva / ICD TKD"],
+  ["PATEL BROTHERS INC","New Jersey","USA","Mr Rakesh Patel","purchasing@patelbros.com","001 732-283-5858","New Jersey","12 Oak Tree Road, Iselin NJ 08830","08830","12 Oak Tree Road, Iselin NJ 08830","FMCG & Pvt Label","New York","UP01","Neha","FOB","USD","Mundra / Nhava Shiva / ICD TKD"],
+  ["SUBZI MANDI FARMER MARKET","Houston","USA","Mr Amandeep Singh","subzimandi@gmail.com","001 281 530 4545","Texas","6919 Johnny Morris Rd, Austin Tx 78724","78724","6919 Johnny Morris Rd, Austin Tx 78724","FMCG & Pvt Label","Houston","US33","Neha","FOB","USD","Mundra / Nhava Shiva / ICD TKD"]
+];
+
+const PRODUCTS = [
+  ["KOI-KRI-DEVI-MAKHANA-D-CHAAT-75G-D2","Delhi Chat Makhana 75gmx20","75gm","20","","5%","0.03","102","Pvt Label","Devi","Amit"],
+  ["KOI-PVT-FOOD-COLOR-RED-100G-D3","Food Color(Orange Red) 100gmx48","100gm","20","","18%","0.02","413","Pvt Label","Devi","Amit"],
+  ["KOI-BR-BADSHAH-PANI-PURI-MASALA-100G-D5","Badshah Pani Puri Masala 100gmx60","100gm","60","","5%","0.042","45.7","Branded","Badshah","Amit"],
+  ["KOI-BR-BADSHAH-CHAT-MASALA-100G-D7","Badshah Chat Masala 100gmx60","100gm","60","","5%","0.042","49.5","Branded","Badshah","Amit"],
+  ["KOI-BR-BADSHAH-GARAM-MASALA-100G-D8","Badshah Garam Masala 100gmx60","100gm","60","","5%","0.042","81","Branded","Badshah","Amit"],
+  ["KOI-BR-HALDIRAM-ALOO-BHUJIA-200G-D14","Haldiram Aloo Bhujia 200gmx30","200gm","30","","12%","0.038","91","Branded","Haldirams","Amit"],
+  ["KOI-BR-HALDIRAM-BHUJIA-200G-D15","Haldiram Bhujia 200gmx30","200gm","30","","12%","0.038","88.5","Branded","Haldirams","Amit"],
+  ["KOI-BR-HALDIRAM-MOONG-DAL-200G-D16","Haldiram Moong Dal 200gmx30","200gm","30","","12%","0.038","89","Branded","Haldirams","Amit"],
+  ["KOI-BR-HALDIRAM-NAVRATAN-200G-D17","Haldiram Navratan Mix 200gmx30","200gm","30","","12%","0.038","92","Branded","Haldirams","Amit"],
+  ["KOI-BR-MDH-CHANA-MASALA-100G-D19","MDH Chana Masala 100gmx60","100gm","60","","5%","0.042","52","Branded","MDH","Amit"],
+  ["KOI-BR-MDH-CHUNKY-CHAT-100G-D20","MDH Chunky Chat Masala 100gmx60","100gm","60","","5%","0.042","52","Branded","MDH","Amit"],
+  ["KOI-BR-MDH-KITCHEN-KING-100G-D22","MDH Kitchen King 100gmx60","100gm","60","","5%","0.042","66","Branded","MDH","Amit"],
+  ["KOI-BR-MTR-GULAB-JAMUN-MIX-200G-D25","MTR Gulab Jamun Mix 200gmx24","200gm","24","","18%","0.022","55","Branded","MTR","Amit"],
+  ["KOI-BR-MTR-RAVA-IDLI-MIX-200G-D26","MTR Rava Idli Mix 200gmx24","200gm","24","","18%","0.022","43","Branded","MTR","Amit"],
+  ["KOI-BR-PATANJALI-GHEE-1L-D30","Patanjali Ghee 1Lx12","1L","12","","5%","0.034","480","Branded","Patanjali","Amit"],
+  ["KOI-BR-M-MAGGI-NOODLES-70G-M50","Maggi Masala Noodles 70gmx48","70gm","48","","18%","0.048","12.5","Branded","Maggi","Kapil"],
+  ["KOI-BR-M-PARLE-G-GOLD-100G-M55","Parle-G Gold 100gmx48","100gm","48","","18%","0.035","15","Branded","Parle","Kapil"],
+  ["KOI-BR-M-BRITANNIA-GOOD-DAY-90G-M60","Britannia Good Day 90gmx36","90gm","36","","18%","0.028","18","Branded","Britannia","Kapil"],
+  ["KOI-BR-M-TATA-TEA-PREMIUM-500G-M70","Tata Tea Premium 500gmx24","500gm","24","","5%","0.045","185","Branded","Tata","Kapil"],
+  ["KOI-BR-M-DETTOL-SOAP-ORIGINAL-125GM-M80","Dettol Soap Original 125gmx150","125gm","150","","18%","0.035","42","Branded","Dettol","Kapil"]
+];
+
+// Customer fields: [name, city, country, contactPerson, email, phone, state, address, pin, deliveryAddr, zone, pod, buyerCode, salesPerson, paymentTerms, currency, portOfLoading]
+// Product fields: [sku, description, unitSize, packingSize, mrp, gst, cbm, buyingPrice, category, brand, purchasePerson]
+
+let activeProductRow = null;
+let rowCounter = 0;
+
+// ── Init ──
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('orderDate').valueAsDate = new Date();
+  generateOrderNumber();
+  addRows(5);
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('#partyDropdown')) {
+      document.getElementById('partyDropdown').classList.remove('open');
+    }
+    if (!e.target.closest('#productModal') && !e.target.closest('.prod-search-trigger')) {
+      // handled by modal
+    }
+  });
+});
+
+function generateOrderNumber() {
+  const d = new Date();
+  const fy = d.getMonth() >= 3 ? d.getFullYear() : d.getFullYear() - 1;
+  const num = String(Math.floor(Math.random() * 100)).padStart(2, '0');
+  document.getElementById('soNumber').value = `KOI/XX/${fy % 100}-${(fy + 1) % 100}/${num}`;
+}
+
+// ── Customer Search ──
+function searchParty(query) {
+  const dd = document.getElementById('partyDropdown');
+  const list = document.getElementById('partyList');
+  const q = query.toLowerCase();
+
+  const filtered = CUSTOMERS.filter(c =>
+    c[0].toLowerCase().includes(q) ||
+    c[2].toLowerCase().includes(q) ||
+    c[1].toLowerCase().includes(q)
+  ).slice(0, 15);
+
+  list.innerHTML = filtered.map((c, i) => `
+    <div class="dd-item" onclick="selectCustomer(${CUSTOMERS.indexOf(c)})">
+      <div style="font-weight:600">${c[0]}</div>
+      <div class="dd-sub">${c[1]}, ${c[2]} · ${c[12]}</div>
+    </div>
+  `).join('') || '<div class="dd-item" style="color:var(--slate-light)">No customers found</div>';
+
+  dd.classList.add('open');
+}
+
+function selectCustomer(idx) {
+  const c = CUSTOMERS[idx];
+  document.getElementById('partyName').value = c[0];
+  document.getElementById('country').value = c[2];
+  document.getElementById('city').value = c[1];
+  document.getElementById('contactName').value = c[3];
+  document.getElementById('contactNo').value = c[5];
+  document.getElementById('email').value = c[4];
+  document.getElementById('buyerCode').value = c[12];
+  document.getElementById('pod').value = c[11];
+  document.getElementById('paymentTerms').value = c[14];
+  document.getElementById('currency').value = c[15];
+  document.getElementById('portOfLoading').value = c[16];
+
+  if (!document.getElementById('salesPerson').value) {
+    document.getElementById('salesPerson').value = c[13];
+  }
+
+  // Update SO number with buyer code
+  const d = new Date();
+  const fy = d.getMonth() >= 3 ? d.getFullYear() : d.getFullYear() - 1;
+  const num = String(Math.floor(Math.random() * 100)).padStart(2, '0');
+  document.getElementById('soNumber').value = `KOI/${c[12]}/${fy % 100}-${(fy + 1) % 100}/${num}`;
+
+  document.getElementById('partyDropdown').classList.remove('open');
+  showToast('Customer loaded');
+}
+
+function filterCustomers() {
+  // Just for UX feedback
+}
+
+// ── Product Line Items ──
+function addRow() {
+  rowCounter++;
+  const tbody = document.getElementById('lineItems');
+  const tr = document.createElement('tr');
+  tr.dataset.row = rowCounter;
+  tr.innerHTML = `
+    <td class="row-num">${rowCounter}</td>
+    <td>
+      <input type="text" class="prod-search-trigger" placeholder="Search product..."
+        onclick="openProductModal(${rowCounter})" readonly
+        data-field="sku" style="cursor:pointer">
+    </td>
+    <td><input type="text" data-field="name" readonly tabindex="-1"></td>
+    <td><input type="text" data-field="brand" readonly tabindex="-1" style="width:80px"></td>
+    <td><input type="text" data-field="unitSize" readonly tabindex="-1" style="width:70px"></td>
+    <td><input type="text" data-field="unitsPer" readonly tabindex="-1" style="width:60px"></td>
+    <td><input type="text" data-field="category" readonly tabindex="-1" style="width:80px"></td>
+    <td class="num"><input type="text" data-field="cbm" readonly tabindex="-1" style="width:60px;text-align:right"></td>
+    <td class="num"><input type="number" data-field="qty" min="0" step="1" placeholder="0"
+        oninput="recalcRow(${rowCounter})" style="width:70px;text-align:right"></td>
+    <td class="num"><div class="computed" data-field="totalCbm">0.000</div></td>
+    <td class="num"><input type="number" data-field="rate" min="0" step="0.01" placeholder="0.00"
+        oninput="recalcRow(${rowCounter})" style="width:90px;text-align:right"></td>
+    <td class="num"><div class="computed" data-field="amount" style="font-weight:600">0.00</div></td>
+    <td>
+      <select data-field="packing" style="width:100px">
+        <option value="">Select</option>
+        <option value="Co Pack">Co Pack</option>
+        <option value="Original">Original</option>
+        <option value="Re-Label">Re-Label</option>
+        <option value="Own Label">Own Label</option>
+      </select>
+    </td>
+    <td><input type="text" data-field="remarks" placeholder="..." style="width:100px"></td>
+    <td><button class="btn-danger" onclick="removeRow(${rowCounter})" title="Remove">✕</button></td>
+  `;
+  tbody.appendChild(tr);
+}
+
+function addRows(n) {
+  for (let i = 0; i < n; i++) addRow();
+}
+
+function removeRow(rowId) {
+  const tr = document.querySelector(`tr[data-row="${rowId}"]`);
+  if (tr) {
+    tr.remove();
+    recalcTotals();
+  }
+}
+
+function recalcRow(rowId) {
+  const tr = document.querySelector(`tr[data-row="${rowId}"]`);
+  if (!tr) return;
+
+  const cbm = parseFloat(tr.querySelector('[data-field="cbm"]').value) || 0;
+  const qty = parseFloat(tr.querySelector('[data-field="qty"]').value) || 0;
+  const rate = parseFloat(tr.querySelector('[data-field="rate"]').value) || 0;
+
+  const totalCbm = cbm * qty;
+  const amount = rate * qty;
+
+  tr.querySelector('[data-field="totalCbm"]').textContent = totalCbm.toFixed(3);
+  tr.querySelector('[data-field="amount"]').textContent = amount.toFixed(2);
+
+  recalcTotals();
+}
+
+function recalcTotals() {
+  const rows = document.querySelectorAll('#lineItems tr');
+  let items = 0, totalCBM = 0, totalVal = 0;
+
+  rows.forEach(tr => {
+    const qty = parseFloat(tr.querySelector('[data-field="qty"]')?.value) || 0;
+    const cbm = parseFloat(tr.querySelector('[data-field="totalCbm"]')?.textContent) || 0;
+    const amt = parseFloat(tr.querySelector('[data-field="amount"]')?.textContent) || 0;
+
+    if (qty > 0) items++;
+    totalCBM += cbm;
+    totalVal += amt;
+  });
+
+  document.getElementById('totalItems').textContent = items;
+  document.getElementById('totalCBM').textContent = totalCBM.toFixed(3);
+  document.getElementById('totalValue').textContent = totalVal.toFixed(2);
+
+  const cbmReq = parseFloat(document.getElementById('cbmRequired').value) || 0;
+  const pct = cbmReq > 0 ? Math.min(100, (totalCBM / cbmReq) * 100) : 0;
+  document.getElementById('cbmPercent').textContent = pct.toFixed(0) + '%';
+  document.getElementById('cbmBar').style.width = pct + '%';
+
+  if (pct > 90) {
+    document.getElementById('cbmBar').style.background = pct > 100 ? 'var(--coral)' : 'var(--amber)';
+  } else {
+    document.getElementById('cbmBar').style.background = 'var(--mint)';
+  }
+}
+
+// ── Product Search Modal ──
+function openProductModal(rowId) {
+  activeProductRow = rowId;
+  document.getElementById('productModal').classList.add('open');
+  const input = document.getElementById('productSearch');
+  input.value = '';
+  input.focus();
+  searchProducts('');
+}
+
+function closeProductModal() {
+  document.getElementById('productModal').classList.remove('open');
+  activeProductRow = null;
+}
+
+function searchProducts(query) {
+  const q = query.toLowerCase();
+  const results = PRODUCTS.filter(p =>
+    p[0].toLowerCase().includes(q) ||
+    p[1].toLowerCase().includes(q) ||
+    p[9].toLowerCase().includes(q)
+  ).slice(0, 20);
+
+  const container = document.getElementById('productResults');
+  container.innerHTML = results.map((p, i) => `
+    <div class="dd-item" onclick="selectProduct(${PRODUCTS.indexOf(p)})" style="display:flex;justify-content:space-between;align-items:center;">
+      <div>
+        <div style="font-weight:600;font-size:12px;color:var(--slate)">${p[0]}</div>
+        <div style="font-size:13px;margin-top:2px">${p[1]}</div>
+        <div class="dd-sub">${p[9]} · ${p[8]} · ${p[2]}</div>
+      </div>
+      <div style="text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;">
+        <div style="font-weight:600">₹${p[7]}</div>
+        <div class="dd-sub">CBM: ${p[6]}</div>
+      </div>
+    </div>
+  `).join('') || '<div class="dd-item" style="color:var(--slate-light)">No products found</div>';
+}
+
+function selectProduct(idx) {
+  const p = PRODUCTS[idx];
+  const tr = document.querySelector(`tr[data-row="${activeProductRow}"]`);
+  if (!tr) return;
+
+  tr.querySelector('[data-field="sku"]').value = p[0];
+  tr.querySelector('[data-field="name"]').value = p[1];
+  tr.querySelector('[data-field="brand"]').value = p[9];
+  tr.querySelector('[data-field="unitSize"]').value = p[2];
+  tr.querySelector('[data-field="unitsPer"]').value = p[3];
+  tr.querySelector('[data-field="category"]').value = p[8];
+  tr.querySelector('[data-field="cbm"]').value = p[6];
+  tr.querySelector('[data-field="rate"]').value = p[7];
+
+  closeProductModal();
+  recalcRow(activeProductRow);
+
+  // Focus quantity field
+  tr.querySelector('[data-field="qty"]').focus();
+  showToast('Product added');
+}
+
+// ── Actions ──
+function saveOrder() {
+  const order = collectOrderData();
+
+  // Save to localStorage
+  const orders = JSON.parse(localStorage.getItem('koi_orders') || '[]');
+  order.id = Date.now();
+  order.savedAt = new Date().toISOString();
+  orders.push(order);
+  localStorage.setItem('koi_orders', JSON.stringify(orders));
+
+  document.getElementById('statusBadge').textContent = 'Saved';
+  document.getElementById('statusBadge').className = 'badge badge-active';
+  showToast('Order saved successfully');
+}
+
+function collectOrderData() {
+  const items = [];
+  document.querySelectorAll('#lineItems tr').forEach(tr => {
+    const sku = tr.querySelector('[data-field="sku"]')?.value;
+    if (!sku) return;
+    items.push({
+      sku,
+      name: tr.querySelector('[data-field="name"]')?.value,
+      brand: tr.querySelector('[data-field="brand"]')?.value,
+      unitSize: tr.querySelector('[data-field="unitSize"]')?.value,
+      unitsPer: tr.querySelector('[data-field="unitsPer"]')?.value,
+      category: tr.querySelector('[data-field="category"]')?.value,
+      cbm: tr.querySelector('[data-field="cbm"]')?.value,
+      qty: tr.querySelector('[data-field="qty"]')?.value,
+      rate: tr.querySelector('[data-field="rate"]')?.value,
+      packing: tr.querySelector('[data-field="packing"]')?.value,
+      remarks: tr.querySelector('[data-field="remarks"]')?.value,
+    });
+  });
+
+  return {
+    soNumber: document.getElementById('soNumber').value,
+    salesPerson: document.getElementById('salesPerson').value,
+    portOfLoading: document.getElementById('portOfLoading').value,
+    salesInquiryNo: document.getElementById('salesInquiryNo').value,
+    orderDate: document.getElementById('orderDate').value,
+    partyName: document.getElementById('partyName').value,
+    country: document.getElementById('country').value,
+    city: document.getElementById('city').value,
+    contactName: document.getElementById('contactName').value,
+    contactNo: document.getElementById('contactNo').value,
+    email: document.getElementById('email').value,
+    buyerCode: document.getElementById('buyerCode').value,
+    pod: document.getElementById('pod').value,
+    paymentTerms: document.getElementById('paymentTerms').value,
+    currency: document.getElementById('currency').value,
+    cubeSize: document.getElementById('cubeSize').value,
+    cbmRequired: document.getElementById('cbmRequired').value,
+    piNumber: document.getElementById('piNumber').value,
+    items,
+    totalCBM: document.getElementById('totalCBM').textContent,
+    totalValue: document.getElementById('totalValue').textContent,
+  };
+}
+
+function resetForm() {
+  if (!confirm('Start a new order? Unsaved changes will be lost.')) return;
+
+  document.querySelectorAll('input:not([type="date"]):not([readonly]), textarea').forEach(el => el.value = '');
+  document.querySelectorAll('select').forEach(el => el.selectedIndex = 0);
+  document.getElementById('lineItems').innerHTML = '';
+  rowCounter = 0;
+
+  document.getElementById('orderDate').valueAsDate = new Date();
+  generateOrderNumber();
+  addRows(5);
+  recalcTotals();
+
+  document.getElementById('statusBadge').textContent = 'Draft';
+  document.getElementById('statusBadge').className = 'badge badge-draft';
+  showToast('Form reset');
+}
+
+function printOrder() {
+  const order = collectOrderData();
+  const pa = document.getElementById('printArea');
+
+  document.getElementById('printOrderInfo').innerHTML = `
+    <strong>${order.soNumber}</strong> · ${order.partyName || '—'} · ${order.orderDate || '—'}<br>
+    Sales: ${order.salesPerson || '—'} · ${order.paymentTerms} ${order.currency} · POD: ${order.pod || '—'}
+  `;
+
+  let html = '<table><thead><tr><th>#</th><th>Product Code</th><th>Product Name</th><th>Brand</th><th>Size</th><th>Qty</th><th>CBM</th><th>Rate</th><th>Amount</th><th>Packing</th></tr></thead><tbody>';
+  order.items.forEach((item, i) => {
+    const tcbm = ((parseFloat(item.cbm)||0) * (parseFloat(item.qty)||0)).toFixed(3);
+    const amt = ((parseFloat(item.rate)||0) * (parseFloat(item.qty)||0)).toFixed(2);
+    html += `<tr><td>${i+1}</td><td>${item.sku}</td><td>${item.name}</td><td>${item.brand}</td><td>${item.unitSize}</td><td>${item.qty||0}</td><td>${tcbm}</td><td>${item.rate||0}</td><td>${amt}</td><td>${item.packing||''}</td></tr>`;
+  });
+  html += `</tbody></table>`;
+  html += `<p style="margin-top:12px;font-weight:bold">Total CBM: ${order.totalCBM} · Total Value: ${order.totalValue}</p>`;
+
+  document.getElementById('printContent').innerHTML = html;
+  window.print();
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+</script>

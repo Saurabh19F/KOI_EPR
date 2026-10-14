@@ -1,0 +1,111 @@
+<!-- Order-wise Production Tracking Panel (no stock deduction/addition) -->
+<div id="logProductionView" class="view hidden space-y-6">
+  <div class="bg-gradient-to-r from-slate-950 via-indigo-950 to-slate-900 text-white rounded-2xl p-6 shadow-xl border border-indigo-900/50">
+    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+      <div>
+        <span class="text-xs font-extrabold text-indigo-300 uppercase tracking-[0.18em]">Order-wise Production Control</span>
+        <h2 class="text-2xl font-black mt-1 flex items-center gap-2"><i data-lucide="factory" class="w-7 h-7"></i>Production Job & Closing Panel</h2>
+        <p class="text-sm text-slate-300 mt-2">Sales Order se products load karein, production job generate karein aur actual closing details record karein.</p>
+      </div>
+      <div class="bg-white/10 border border-white/15 rounded-xl px-4 py-3 text-sm">
+        <div class="text-[10px] uppercase tracking-wider text-slate-300 font-bold">Active Production Warehouse</div>
+        <div id="production-panel-warehouse" class="text-xl font-black text-indigo-200 mt-1"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-700 rounded-xl p-4 shadow-sm"><div class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">Total Jobs</div><div id="prod-track-total" class="text-3xl font-black text-slate-900 dark:text-white mt-1">0</div></div>
+    <div class="bg-white dark:bg-[#111827] border border-amber-200 dark:border-amber-900 rounded-xl p-4 shadow-sm"><div class="text-[10px] font-extrabold uppercase tracking-wider text-amber-600 dark:text-amber-400">In Progress</div><div id="prod-track-progress" class="text-3xl font-black text-amber-600 dark:text-amber-400 mt-1">0</div></div>
+    <div class="bg-white dark:bg-[#111827] border border-emerald-200 dark:border-emerald-900 rounded-xl p-4 shadow-sm"><div class="text-[10px] font-extrabold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Completed</div><div id="prod-track-completed" class="text-3xl font-black text-emerald-600 dark:text-emerald-400 mt-1">0</div></div>
+    <div class="bg-white dark:bg-[#111827] border border-indigo-200 dark:border-indigo-900 rounded-xl p-4 shadow-sm"><div class="text-[10px] font-extrabold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Sales Orders</div><div id="prod-track-orders" class="text-3xl font-black text-indigo-600 dark:text-indigo-400 mt-1">0</div></div>
+  </div>
+
+  <div class="bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-700 rounded-2xl shadow-sm overflow-hidden">
+    <div class="px-6 py-5 bg-slate-50 dark:bg-[#151c2c] border-b border-slate-200 dark:border-slate-700">
+      <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
+        <div><span class="text-[10px] font-extrabold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">Step 1</span><h3 class="text-lg font-black text-slate-900 dark:text-white">Sales Order Select Karein</h3></div>
+        <div class="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
+          <select id="production-order-select" class="form-input-styled min-w-[280px] bg-white dark:bg-slate-900 font-bold"><option value="">Select Order No</option></select>
+          <button id="production-load-order-btn" type="button" class="inline-flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-lg text-sm font-bold shadow"><i data-lucide="search" class="w-4 h-4"></i>Fetch Order Items</button>
+          <button id="production-fetch-selected-details-btn" type="button" class="inline-flex items-center justify-center gap-2 bg-violet-600 hover:bg-violet-700 text-white px-5 py-2.5 rounded-lg text-sm font-bold shadow"><i data-lucide="table-2" class="w-4 h-4"></i>Fetch Selected Details</button>
+        </div>
+      </div>
+    </div>
+    <div id="production-order-summary" class="hidden px-6 py-4 bg-indigo-50/60 dark:bg-indigo-950/20 border-b border-indigo-100 dark:border-indigo-900"></div>
+    <div class="overflow-x-auto p-4">
+      <table id="production-order-products-table" class="w-full responsive-card-table text-sm text-left">
+        <thead class="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 uppercase text-[10px] font-extrabold">
+          <tr><th class="px-3 py-3 text-center">Select</th><th class="px-3 py-3">Product Details</th><th class="px-3 py-3">Pack Details</th><th class="px-3 py-3 text-center">Order Qty</th><th class="px-3 py-3 text-center">Already Generated</th><th class="px-3 py-3 text-center">Balance</th></tr>
+        </thead>
+        <tbody id="production-order-products-body" class="divide-y divide-slate-100 dark:divide-slate-800"><tr><td colspan="6" class="px-4 py-10 text-center text-slate-400">Order select karke products load karein.</td></tr></tbody>
+      </table>
+    </div>
+
+    <div id="production-requirement-sheet" class="hidden border-t-2 border-indigo-200 dark:border-indigo-900 bg-slate-50 dark:bg-slate-950/30">
+      <div class="px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div><span class="text-[10px] uppercase tracking-wider font-extrabold text-indigo-600 dark:text-indigo-400">Excel-style Entry Sheet</span><h4 class="text-lg font-black text-slate-900 dark:text-white">Selected Items Production Requirements</h4><p class="text-xs text-slate-500 mt-1">Horizontal scroll karke saari details aur requirement columns fill karein.</p></div>
+        <button id="production-close-requirement-sheet-btn" type="button" class="bg-slate-600 hover:bg-slate-700 text-white px-4 py-2 rounded-lg text-xs font-bold">Close Table</button>
+      </div>
+      <div class="overflow-x-auto px-4 pb-4">
+        <table id="production-requirement-excel-table" data-no-mobile-cards class="border-collapse text-xs bg-white dark:bg-slate-900" style="min-width:4500px;width:100%">
+          <thead class="sticky top-0 z-10">
+            <tr class="text-white text-center uppercase text-[10px] tracking-wider">
+              <th colspan="9" class="border border-indigo-300 bg-indigo-700 px-3 py-3">Item Details</th>
+              <th colspan="10" class="border border-amber-300 bg-amber-600 px-3 py-3">Instruction Details</th>
+              <th colspan="10" class="border border-emerald-300 bg-emerald-700 px-3 py-3">Requirement Details</th>
+            </tr>
+            <tr class="bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-[10px] uppercase">
+              <th class="border border-slate-300 dark:border-slate-700 px-2 py-2">Order No</th><th class="border border-slate-300 dark:border-slate-700 px-2 py-2">Product Code</th><th class="border border-slate-300 dark:border-slate-700 px-2 py-2">Product Name</th><th class="border border-slate-300 dark:border-slate-700 px-2 py-2">Brand</th><th class="border border-slate-300 dark:border-slate-700 px-2 py-2">Unit Size</th><th class="border border-slate-300 dark:border-slate-700 px-2 py-2">Unit/Carton</th><th class="border border-slate-300 dark:border-slate-700 px-2 py-2">Category</th><th class="border border-slate-300 dark:border-slate-700 px-2 py-2">Order Qty</th><th class="border border-slate-300 dark:border-slate-700 px-2 py-2">Packing</th>
+              <th class="border border-slate-300 dark:border-slate-700 px-2 py-2">Imported By</th><th class="border border-slate-300 dark:border-slate-700 px-2 py-2">POI</th><th class="border border-slate-300 dark:border-slate-700 px-2 py-2">Nutrition</th><th class="border border-slate-300 dark:border-slate-700 px-2 py-2">Ingredients</th><th class="border border-slate-300 dark:border-slate-700 px-2 py-2">Barcode</th><th class="border border-slate-300 dark:border-slate-700 px-2 py-2">Batch No</th><th class="border border-slate-300 dark:border-slate-700 px-2 py-2">Shelf Life</th><th class="border border-slate-300 dark:border-slate-700 px-2 py-2">Mfg</th><th class="border border-slate-300 dark:border-slate-700 px-2 py-2">Allergen Advice</th><th class="border border-slate-300 dark:border-slate-700 px-2 py-2">Nt Wt</th>
+              <th class="border border-slate-300 dark:border-slate-700 px-2 py-2">Production Qty</th><th class="border border-slate-300 dark:border-slate-700 px-2 py-2">Source WH</th><th colspan="8" class="border border-slate-300 dark:border-slate-700 px-2 py-2">Bulk Required Materials</th>
+            </tr>
+          </thead>
+          <tbody id="production-requirement-excel-body"></tbody>
+        </table>
+      </div>
+      <div class="px-6 py-4 border-t border-slate-200 dark:border-slate-700 space-y-3">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
+          <input id="production-requirement-batch-remarks" type="text" class="form-input-styled bg-white dark:bg-slate-900" placeholder="Warehouse request remarks (optional)">
+          <input id="production-job-remarks" type="text" class="form-input-styled bg-white dark:bg-slate-900" placeholder="Production job remarks (optional)">
+        </div>
+        <div class="flex flex-col sm:flex-row justify-end gap-2">
+          <button id="production-send-all-material-requests-btn" type="button" class="inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-lg text-sm font-bold shadow"><i data-lucide="send" class="w-4 h-4"></i>Send Request & Generate Production Job</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bg-white dark:bg-[#111827] border border-violet-200 dark:border-violet-900 rounded-2xl shadow-sm overflow-hidden">
+    <div class="px-6 py-5 bg-violet-50 dark:bg-violet-950/20 border-b border-violet-100 dark:border-violet-900 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div><span class="text-[10px] font-extrabold text-violet-600 dark:text-violet-400 uppercase tracking-wider">Warehouse Requests</span><h3 class="text-lg font-black text-slate-900 dark:text-white">Production Material Request Status</h3></div>
+      <div class="text-xs text-slate-500 dark:text-slate-400">Approved → Shipped → Received</div>
+    </div>
+    <div class="overflow-x-auto p-4"><table id="production-material-request-table" class="w-full responsive-card-table text-sm text-left">
+      <thead class="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 uppercase text-[10px] font-extrabold"><tr><th class="px-3 py-3">Request Group</th><th class="px-3 py-3">Order / Final Product</th><th class="px-3 py-3">Required Item</th><th class="px-3 py-3 text-center">Requested</th><th class="px-3 py-3 text-center">Dispatched</th><th class="px-3 py-3">From Warehouse</th><th class="px-3 py-3">Status</th><th class="px-3 py-3">Last Edit</th></tr></thead>
+      <tbody id="production-material-request-body"><tr><td colspan="8" class="px-4 py-10 text-center text-slate-400">No production material requests.</td></tr></tbody>
+    </table></div>
+  </div>
+
+  <div class="bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-700 rounded-2xl shadow-sm overflow-hidden">
+    <div class="px-6 py-5 bg-amber-50 dark:bg-amber-950/20 border-b border-amber-100 dark:border-amber-900 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div><span class="text-[10px] font-extrabold text-amber-600 dark:text-amber-400 uppercase tracking-wider">Step 2</span><h3 class="text-lg font-black text-slate-900 dark:text-white">Active Production Jobs</h3></div>
+      <button id="production-refresh-panel-btn" type="button" class="inline-flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-900 text-white px-4 py-2 rounded-lg text-xs font-bold"><i data-lucide="refresh-cw" class="w-4 h-4"></i>Refresh</button>
+    </div>
+    <div class="overflow-x-auto p-4"><table id="production-active-jobs-table" class="w-full responsive-card-table text-sm text-left">
+      <thead class="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 uppercase text-[10px] font-extrabold"><tr><th class="px-3 py-3">Production ID</th><th class="px-3 py-3">Order / Party</th><th class="px-3 py-3">Product</th><th class="px-3 py-3 text-center">Planned Qty</th><th class="px-3 py-3">Started</th><th class="px-3 py-3">Status</th><th class="px-3 py-3 text-right">Action</th></tr></thead>
+      <tbody id="production-active-jobs-body"></tbody>
+    </table></div>
+  </div>
+
+  <div class="bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-700 rounded-2xl shadow-sm overflow-hidden">
+    <div class="px-6 py-5 bg-emerald-50 dark:bg-emerald-950/20 border-b border-emerald-100 dark:border-emerald-900"><span class="text-[10px] font-extrabold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Production Audit</span><h3 class="text-lg font-black text-slate-900 dark:text-white">Completed Production History</h3></div>
+    <div class="overflow-x-auto p-4"><table id="production-history-table" class="w-full responsive-card-table text-sm text-left">
+      <thead class="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 uppercase text-[10px] font-extrabold"><tr><th class="px-3 py-3">Production ID</th><th class="px-3 py-3">Order No</th><th class="px-3 py-3">Product</th><th class="px-3 py-3 text-center">Planned</th><th class="px-3 py-3 text-center">Final Produced</th><th class="px-3 py-3">Closed</th><th class="px-3 py-3">Closed By</th><th class="px-3 py-3 text-right">Details</th></tr></thead>
+      <tbody id="production-history-body"></tbody>
+    </table></div>
+  </div>
+
+  <div class="rounded-xl border border-blue-200 dark:border-blue-900 bg-blue-50 dark:bg-blue-950/20 p-4 text-sm text-blue-800 dark:text-blue-300 flex items-start gap-3"><i data-lucide="info" class="w-5 h-5 shrink-0 mt-0.5"></i><div><strong>Tracking-only workflow:</strong> Production job generate ya close karne par StockMaster, raw-material stock ya finished-product stock mein koi quantity change nahi hoti.</div></div>
+</div>
+

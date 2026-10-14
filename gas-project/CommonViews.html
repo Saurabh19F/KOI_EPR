@@ -1,0 +1,797 @@
+<!-- dashboardView -->
+<div id="dashboardView" class="view space-y-6">
+
+
+          <!-- ACCOUNTS DASHBOARD -->
+          <div id="accounts-dashboard" class="hidden space-y-6 role-dashboard">
+            <div class="bg-white dark:bg-[#111827] rounded-xl border border-slate-200 dark:border-[#1e293b] shadow-sm p-6">
+              <div class="flex items-center gap-3 mb-5">
+                <div class="p-3 rounded-lg bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600"><i data-lucide="landmark" class="w-6 h-6"></i></div>
+                <div><h3 class="text-lg font-bold text-slate-800 dark:text-white">Accounts & Audit Panel</h3><p class="text-xs text-slate-500 dark:text-slate-400">Stock, receiving and transfer records.</p></div>
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <button type="button" class="accounts-open-view text-left p-5 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-indigo-400 transition" data-target-view="stockReportView"><i data-lucide="package" class="w-5 h-5 text-indigo-600 mb-3"></i><span class="block font-bold text-slate-800 dark:text-white">Stock Report</span><span class="text-xs text-slate-500">View and download current stock</span></button>
+                <button type="button" class="accounts-open-view text-left p-5 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-emerald-400 transition" data-target-view="grnHistoryView"><i data-lucide="receipt" class="w-5 h-5 text-emerald-600 mb-3"></i><span class="block font-bold text-slate-800 dark:text-white">Receiving History</span><span class="text-xs text-slate-500">Review invoices and GRN records</span></button>
+                <button type="button" class="accounts-open-view text-left p-5 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-amber-400 transition" data-target-view="transferHistoryView"><i data-lucide="arrow-right-left" class="w-5 h-5 text-amber-600 mb-3"></i><span class="block font-bold text-slate-800 dark:text-white">Transfer History</span><span class="text-xs text-slate-500">Review warehouse stock movements</span></button>
+              </div>
+            </div>
+          </div>
+
+          <!-- PLANNER DASHBOARD -->
+          <div id="planner-dashboard" class="hidden space-y-6 role-dashboard">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div
+                class="bg-white dark:bg-[#111827] p-5 rounded-xl border border-slate-200 dark:border-[#1e293b] shadow-sm flex items-center space-x-4">
+                <div
+                  class="bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-404 p-3 rounded-lg border border-indigo-100 dark:border-indigo-900/50">
+                  <i data-lucide="file-text" class="w-6 h-6"></i>
+                </div>
+                <div>
+                  <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Orders</p>
+                  <p id="planner-stat-total" class="text-2xl font-bold text-slate-800 dark:text-white">0</p>
+                </div>
+              </div>
+              <div
+                class="bg-white dark:bg-[#111827] p-5 rounded-xl border border-slate-200 dark:border-[#1e293b] shadow-sm flex items-center space-x-4">
+                <div
+                  class="bg-amber-50 dark:bg-amber-955 text-amber-600 dark:text-amber-400 p-3 rounded-lg border border-amber-100 dark:border-[#1e293b]0/30">
+                  <i data-lucide="clock" class="w-6 h-6"></i>
+                </div>
+                <div>
+                  <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Unplanned Orders</p>
+                  <p id="planner-stat-unplanned" class="text-2xl font-bold text-amber-600 dark:text-amber-505">0</p>
+                </div>
+              </div>
+              <div
+                class="bg-white dark:bg-[#111827] p-5 rounded-xl border border-slate-200 dark:border-[#1e293b] shadow-sm flex items-center space-x-4">
+                <div
+                  class="bg-emerald-50 dark:bg-[#111827] text-emerald-505 dark:text-emerald-404 p-3 rounded-lg border border-emerald-100 dark:border-[#1e293b]">
+                  <i data-lucide="check-circle" class="w-6 h-6"></i>
+                </div>
+                <div>
+                  <p class="text-xs font-semibold text-slate-555 dark:text-slate-404 uppercase tracking-wider">Planned
+                    Allocation</p>
+                  <p id="planner-stat-planned" class="text-2xl font-bold text-emerald-600 dark:text-emerald-505">0</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- CROSS-WAREHOUSE REQUEST APPROVAL CONSOLE -->
+            <div
+              class="bg-white dark:bg-[#111827] rounded-xl border border-slate-200 dark:border-[#1e293b] shadow-sm overflow-hidden mb-6">
+              <div
+                class="px-6 py-4 border-b border-slate-200 dark:border-[#1e293b] bg-amber-500/10 dark:bg-amber-950/20 flex justify-between items-center">
+                <div class="flex items-center space-x-2">
+                  <i data-lucide="shield-check" class="w-5 h-5 text-amber-600"></i>
+                  <h3 class="font-bold text-slate-800 dark:text-white">Cross-Warehouse Transfer Approval Console (Head
+                    Planner)</h3>
+                </div>
+                <span class="text-xs font-bold text-amber-700 dark:text-amber-404 bg-amber-100 dark:bg-amber-900/40 px-3 py-1 rounded-full border border-amber-300">Approval Required</span>
+              </div>
+              <div class="p-6 overflow-x-auto">
+                <table id="planner-approvals-table" class="w-full text-sm text-left">
+                  <thead
+                    class="bg-slate-50 dark:bg-[#151c2c] text-slate-600 dark:text-slate-404 uppercase text-xs font-bold border-b border-slate-200 dark:border-[#1e293b]">
+                    <tr>
+                      <th class="px-3 py-2">Req ID</th>
+                      <th class="px-3 py-2">Order No</th>
+                      <th class="px-3 py-2">Product ID</th>
+                      <th class="px-3 py-2 font-semibold">Qty</th>
+                      <th class="px-3 py-2">From WH (Source)</th>
+                      <th class="px-3 py-2">To WH (Requesting)</th>
+                      <th class="px-3 py-2">Requested By</th>
+                      <th class="px-3 py-2 text-right">Approval Action</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-slate-100 dark:divide-[#1e293b]"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <div
+              class="bg-white dark:bg-[#111827] rounded-xl border border-slate-200 dark:border-[#1e293b] shadow-sm overflow-hidden">
+              <div
+                class="px-6 py-5 border-b border-slate-200 dark:border-[#1e293b] bg-slate-50 dark:bg-[#151c2c] flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+                  <h3 class="text-lg font-bold text-slate-800 dark:text-white">Planner Purchase Orders</h3>
+                  <div class="inline-flex rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 p-1 gap-1" role="tablist" aria-label="Planner allocation status">
+                    <button type="button" id="planner-tab-pending" class="planner-status-tab planner-tab-active inline-flex items-center justify-center min-w-[190px] px-3 py-1.5 rounded-md text-xs font-bold border" data-status="pending" style="visibility:visible;opacity:1;background:#4f46e5;color:#ffffff;border-color:#4f46e5;"><span class="planner-tab-label" style="color:#ffffff;">Pending for Allocate</span> <span id="planner-pending-tab-count" class="planner-tab-count ml-1 opacity-80" style="color:#ffffff;">0</span></button>
+                    <button type="button" id="planner-tab-allocated" class="planner-status-tab planner-tab-inactive inline-flex items-center justify-center min-w-[120px] px-3 py-1.5 rounded-md text-xs font-bold border" data-status="allocated" style="visibility:visible;opacity:1;background:#ffffff;color:#4338ca;border-color:#c7d2fe;"><span class="planner-tab-label" style="color:#4338ca;">Allocated</span> <span id="planner-allocated-tab-count" class="planner-tab-count ml-1 opacity-80" style="color:#4338ca;">0</span></button>
+                  </div>
+                </div>
+                <div class="flex items-center gap-2 flex-wrap justify-end">
+                  <button type="button" class="download-planner-po-btn bg-slate-700 hover:bg-slate-800 text-white px-3.5 py-2 rounded-lg text-xs font-bold transition shadow inline-flex items-center" data-format="pdf"><i data-lucide="file-text" class="w-4 h-4 mr-1.5"></i>Download PDF</button>
+                  <button type="button" class="download-planner-po-btn bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-2 rounded-lg text-xs font-bold transition shadow inline-flex items-center" data-format="xlsx"><i data-lucide="file-spreadsheet" class="w-4 h-4 mr-1.5"></i>Download Excel</button>
+                  <button type="button" id="planner-bulk-allocate-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3.5 py-2 rounded-lg text-xs font-bold transition shadow disabled:opacity-50 disabled:cursor-not-allowed" disabled>Bulk Allocate (<span id="planner-bulk-selected-count">0</span>)</button>
+                  <span class="text-xs font-semibold px-3 py-1 bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-400 rounded-full border border-indigo-100 dark:border-slate-700">Planning Console</span>
+                </div>
+              </div>
+
+              <!-- Filter Section -->
+              <div id="planner-filters"
+                class="px-5 py-4 bg-slate-50 dark:bg-[#131a28] border-b border-slate-200 dark:border-[#1e293b]">
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-7 gap-3 items-end">
+                  <div>
+                    <label class="block text-xs font-bold text-slate-555 dark:text-slate-404 uppercase mb-1">PO ID</label>
+                    <select id="filter-po-id" class="w-full" multiple data-placeholder="All PO IDs"></select>
+                  </div>
+                  <div>
+                    <label class="block text-xs font-bold text-slate-555 dark:text-slate-404 uppercase mb-1">Order No.</label>
+                    <select id="filter-order-no" class="w-full" multiple data-placeholder="All Orders"></select>
+                  </div>
+                  <div>
+                    <label class="block text-xs font-bold text-slate-555 dark:text-slate-404 uppercase mb-1">Product Code</label>
+                    <select id="filter-unique-code" class="w-full" multiple data-placeholder="All Products"></select>
+                  </div>
+                  <div>
+                    <label class="block text-xs font-bold text-slate-555 dark:text-slate-404 uppercase mb-1">Item Name</label>
+                    <select id="filter-item-name" class="w-full" multiple data-placeholder="All Item Names"></select>
+                  </div>
+                  <div>
+                    <label class="block text-xs font-bold text-slate-555 dark:text-slate-404 uppercase mb-1">Vendor Name</label>
+                    <select id="filter-vendor-name" class="w-full" multiple data-placeholder="All Vendors"></select>
+                  </div>
+                  <div>
+                    <label class="block text-xs font-bold text-slate-555 dark:text-slate-404 uppercase mb-1">Expected Date</label>
+                    <input type="date" id="filter-date" class="w-full border border-slate-300 dark:border-[#1e293b] rounded-lg p-2.5 text-sm bg-white dark:bg-[#1e293b] text-slate-800 dark:text-white focus:outline-none">
+                  </div>
+                  <div class="flex space-x-2">
+                    <button id="apply-planner-filters-btn" class="w-full bg-indigo-600 text-white px-4 py-2.5 rounded-lg hover:bg-indigo-700 font-semibold text-sm transition shadow-md">Filter</button>
+                    <button id="reset-planner-filters-btn" class="w-full bg-slate-600 hover:bg-slate-700 text-white px-4 py-2.5 rounded-lg transition text-sm shadow-md">Reset</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Table Section -->
+              <div class="p-6 overflow-x-auto">
+                <table id="planner-po-table" class="w-full responsive-card-table text-sm text-left" style="width:100%">
+                  <thead
+                    class="bg-slate-50 dark:bg-[#151c2c] text-slate-600 dark:text-slate-400 uppercase text-xs font-bold border-b border-slate-200 dark:border-[#1e293b]">
+                    <tr>
+                      <th class="px-3 py-3 text-center w-10"><input type="checkbox" id="planner-select-all" class="h-4 w-4 text-indigo-600 rounded cursor-pointer" aria-label="Select all pending planner items"></th>
+                      <th class="px-3 py-3 whitespace-normal break-words">Purchase PO</th>
+                      <th class="px-3 py-3 whitespace-normal break-words">Sales Order No</th>
+                      <th class="px-3 py-3 whitespace-normal break-words">Product Code</th>
+                      <th class="px-3 py-3 whitespace-normal break-words">Product Detail</th>
+                      <th class="px-3 py-3 whitespace-normal break-words">UOM</th>
+                      <th class="px-3 py-3 whitespace-normal break-words">Buyer Code</th>
+                      <th class="px-3 py-3 whitespace-normal break-words">Sales Person</th>
+                      <th class="px-3 py-3 whitespace-normal break-words">Purchaser</th>
+                      <th class="px-3 py-3 whitespace-normal break-words">Vendor</th>
+                      <th class="px-3 py-3 whitespace-normal break-words">Expected Date</th>
+                      <th class="px-3 py-3 whitespace-normal break-words">Location</th>
+                      <th
+                        class="px-3 py-3 text-rose-600 dark:text-rose-500 font-semibold whitespace-normal break-words">
+                        Unplanned Qty</th>
+                      <th class="px-3 py-3 whitespace-normal break-words">Last Edit Status</th> <!-- 🟢 NEW -->
+                      <th class="px-3 py-3 text-right font-semibold whitespace-normal break-words">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-slate-100 dark:divide-[#1e293b] text-slate-700 dark:text-slate-300">
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- PURCHASE DASHBOARD -->
+          <div id="purchase-dashboard" class="hidden space-y-6 role-dashboard">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div
+                class="bg-white dark:bg-[#111827] p-5 rounded-xl border border-slate-200 dark:border-[#1e293b] shadow-sm flex items-center space-x-4">
+                <div
+                  class="bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-404 p-3 rounded-lg border border-indigo-100 dark:border-indigo-900/50">
+                  <i data-lucide="shopping-cart" class="w-6 h-6"></i>
+                </div>
+                <div>
+                  <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Tracked POs</p>
+                  <p id="pur-stat-total-pos" class="text-2xl font-bold text-slate-800 dark:text-white">0</p>
+                </div>
+              </div>
+              <div
+                class="bg-white dark:bg-[#111827] p-5 rounded-xl border border-slate-200 dark:border-[#1e293b] shadow-sm flex items-center space-x-4">
+                <div
+                  class="bg-rose-50 dark:bg-[#111827] text-rose-650 dark:text-rose-455 p-3 rounded-lg border border-rose-100 dark:border-[#1e293b]">
+                  <i data-lucide="shield-alert" class="w-6 h-6"></i>
+                </div>
+                <div>
+                  <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Pending Reject Actions</p>
+                  <p id="pur-stat-pending-rejects" class="text-2xl font-bold text-rose-600 dark:text-rose-505">0</p>
+                </div>
+              </div>
+              <div
+                class="bg-white dark:bg-[#111827] p-5 rounded-xl border border-slate-200 dark:border-[#1e293b] shadow-sm flex items-center space-x-4">
+                <div
+                  class="bg-emerald-50 dark:bg-[#111827] text-emerald-505 dark:text-emerald-404 p-3 rounded-lg border border-emerald-100 dark:border-[#1e293b]">
+                  <i data-lucide="check-circle" class="w-6 h-6"></i>
+                </div>
+                <div>
+                  <p class="text-xs font-semibold text-slate-555 dark:text-slate-404 uppercase tracking-wider">Closed /
+                    Completed POs</p>
+                  <p id="pur-stat-completed-pos" class="text-2xl font-bold text-emerald-600 dark:text-emerald-500">0</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-white dark:bg-[#111827] rounded-xl border border-slate-200 dark:border-[#1e293b] shadow-sm p-4 flex flex-col sm:flex-row sm:items-end gap-3">
+              <div class="w-full sm:max-w-md">
+                <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Item Name</label>
+                <select id="pur-filter-item-name" class="w-full role-item-name-filter" data-role-filter="purchase" multiple data-placeholder="All Item Names"></select>
+              </div>
+              <button type="button" class="clear-role-item-filter bg-slate-600 hover:bg-slate-700 text-white px-4 py-2.5 rounded-lg text-sm font-semibold" data-target="#pur-filter-item-name">Reset</button>
+            </div>
+
+            <div class="flex flex-col space-y-6">
+              <div
+                class="bg-white dark:bg-[#111827] rounded-xl border border-slate-200 dark:border-[#1e293b] shadow-sm overflow-hidden flex flex-col">
+                <div
+                  class="px-6 py-4 border-b border-slate-200 dark:border-[#1e293b] bg-slate-50 dark:bg-[#151c2c] flex justify-between items-center">
+                  <h3 class="font-bold text-slate-800 dark:text-white">Rejections Requiring Sourcing Action</h3>
+                  <span class="text-xs px-2 py-0.5 bg-rose-100 text-rose-700 rounded font-semibold">Immediate Attention</span>
+                </div>
+                <div class="p-6 overflow-x-auto flex-grow">
+                  <table id="pur-dash-rejections-table" class="w-full text-sm text-left">
+                    <thead
+                      class="bg-slate-50 dark:bg-[#151c2c] text-slate-600 dark:text-slate-404 uppercase text-xs font-bold border-b border-slate-200 dark:border-[#1e293b]">
+                      <tr>
+                        <th class="px-3 py-2">Receipt ID</th>
+                        <th class="px-3 py-2">Product ID</th>
+                        <th class="px-3 py-2 text-rose-600 font-semibold">Rejected Stage & Reason</th>
+                        <th class="px-3 py-2 text-rose-600 font-semibold">Rejected Qty</th>
+                        <th class="px-3 py-2 text-right font-semibold">Resolve</th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-[#1e293b]"></tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div
+                class="bg-white dark:bg-[#111827] rounded-xl border border-slate-200 dark:border-[#1e293b] shadow-sm overflow-hidden flex flex-col">
+                <div
+                  class="px-6 py-4 border-b border-slate-200 dark:border-[#1e293b] bg-slate-50 dark:bg-[#151c2c] flex justify-between items-center">
+                  <h3 class="font-bold text-slate-800 dark:text-white">Recent Inbound Deliveries & GRN History Log</h3>
+                  <span class="text-xs px-2.5 py-1 bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 rounded-full font-bold">Live Inbound</span>
+                </div>
+                <div class="p-6 overflow-x-auto flex-grow">
+                  <table id="pur-dash-receipts-table" class="w-full text-sm text-left" style="width:100%">
+                    <thead
+                      class="bg-slate-50 dark:bg-[#151c2c] text-slate-600 dark:text-slate-400 uppercase text-xs font-bold border-b border-slate-200 dark:border-[#1e293b]">
+                      <tr>
+                        <th class="px-3 py-2.5">Receipt & Date</th>
+                        <th class="px-3 py-2.5">PO & Sales Order No</th>
+                        <th class="px-3 py-2.5">Product Details</th>
+                        <th class="px-3 py-2.5">Vendor & Invoice</th>
+                        <th class="px-3 py-2.5">WH</th>
+                        <th class="px-3 py-2.5 text-emerald-600 font-bold">Recd Qty</th>
+                        <th class="px-3 py-2.5 text-rose-600 font-bold text-center">Rej Qty</th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-[#1e293b]"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <div
+              class="bg-white dark:bg-[#111827] rounded-xl border border-slate-200 dark:border-[#1e293b] shadow-sm overflow-hidden">
+              <div class="px-6 py-4 border-b border-slate-200 dark:border-[#1e293b] bg-slate-50 dark:bg-[#151c2c]">
+                <h3 class="font-bold text-slate-800 dark:text-white">Sourcing & Purchase Order Tracking Ledger</h3>
+              </div>
+              <div class="p-6 overflow-x-auto">
+                <table id="pur-dash-pos-table" class="w-full text-sm text-left" style="width:100%">
+                  <thead
+                    class="bg-slate-50 dark:bg-[#151c2c] text-slate-600 dark:text-slate-404 uppercase text-xs font-bold border-b border-slate-200 dark:border-[#1e293b]">
+                    <tr>
+                      <th class="px-4 py-3">PO Number</th>
+                      <th class="px-4 py-3">Product ID</th>
+                      <th class="px-4 py-3">Item Description</th>
+                      <th class="px-4 py-3">Vendor</th>
+                      <th class="px-4 py-3 text-semibold">Qty</th>
+                      <th class="px-4 py-3">Expected Date</th>
+                      <th class="px-4 py-3 font-semibold">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-slate-100 dark:divide-[#1e293b]"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- WAREHOUSE DASHBOARD -->
+          <div id="warehouse-dashboard" class="hidden space-y-6 role-dashboard">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div
+                class="bg-white dark:bg-[#111827] p-5 rounded-xl border border-slate-200 dark:border-[#1e293b] shadow-sm flex items-center space-x-4">
+                <div
+                  class="bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-404 p-3 rounded-lg border border-emerald-100 dark:border-[#1e293b]0/50">
+                  <i data-lucide="download" class="w-6 h-6"></i>
+                </div>
+                <div>
+                  <p class="text-xs font-semibold text-slate-555 uppercase tracking-wider">Inbound Shipments</p>
+                  <p id="wh-stat-receipts" class="text-2xl font-bold text-slate-800 dark:text-white">0</p>
+                </div>
+              </div>
+              <div
+                class="bg-white dark:bg-[#111827] p-5 rounded-xl border border-slate-200 dark:border-[#1e293b] shadow-sm flex items-center space-x-4">
+                <div
+                  class="bg-orange-50 dark:bg-orange-955 text-orange-600 dark:text-orange-500 p-3 rounded-lg border border-orange-100 dark:border-orange-900/30">
+                  <i data-lucide="upload" class="w-6 h-6"></i>
+                </div>
+                <div>
+                  <p class="text-xs font-semibold text-slate-555 uppercase tracking-wider">Approved Transfer Requests
+                  </p>
+                  <p id="wh-stat-dispatches" class="text-2xl font-bold text-slate-800 dark:text-white">0</p>
+                </div>
+              </div>
+            </div>
+            <!-- Inbound Receipts Section Header in index.html -->
+            <div
+              class="bg-white dark:bg-[#111827] rounded-xl border border-slate-200 dark:border-[#1e293b] shadow-sm overflow-hidden">
+              <div
+                class="px-6 py-5 border-b border-slate-200 dark:border-[#1e293b] bg-slate-50 dark:bg-[#151c2c] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <h3 class="text-lg font-bold text-slate-800 dark:text-white">Inbound Logistics Log (GRN Plan)</h3>
+                <div class="flex items-center space-x-3">
+                  <!-- 🟢 MULTI-ITEM GRN BUTTON -->
+                  <button id="btn-open-multi-grn" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3.5 py-1.5 rounded-lg text-xs font-bold transition shadow flex items-center">
+        <i data-lucide="layers" class="w-4 h-4 mr-1.5"></i> Multi-Item GRN
+      </button>
+
+                  <!-- DOWNLOAD RECEIVING PLAN PDF -->
+                  <button id="download-wh-plan-pdf-btn" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-1.5 rounded-lg text-xs font-bold transition shadow flex items-center">
+        <i data-lucide="file-down" class="w-4 h-4 mr-1.5"></i> Download PDF
+      </button>
+                  <button id="download-wh-plan-excel-btn" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-1.5 rounded-lg text-xs font-bold transition shadow flex items-center">
+        <i data-lucide="file-spreadsheet" class="w-4 h-4 mr-1.5"></i> Download Excel
+      </button>
+                  <span class="text-xs font-semibold bg-emerald-50 dark:bg-emerald-955 text-emerald-700 dark:text-emerald-404 rounded-full border border-emerald-100 dark:border-[#1e293b] px-3 py-1">Incoming Freight</span>
+                </div>
+              </div>
+
+              <!-- 🟢 Item Filter Added in Warehouse Filter Bar -->
+              <div id="warehouse-filters"
+                class="p-6 bg-slate-50 dark:bg-[#131a28] border-b border-slate-200 dark:border-[#1e293b]">
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 items-end">
+                  <div>
+                    <label class="block text-xs font-bold text-slate-500 dark:text-slate-404 uppercase mb-1">PO ID</label>
+                    <select id="wh-filter-po" class="w-full" multiple data-placeholder="All PO IDs"></select>
+                  </div>
+                  <div>
+                    <label class="block text-xs font-bold text-slate-505 dark:text-slate-404 uppercase mb-1">Order No</label>
+                    <select id="wh-filter-order" class="w-full" multiple data-placeholder="All Orders"></select>
+                  </div>
+                  <div>
+                    <label class="block text-xs font-bold text-slate-505 dark:text-slate-404 uppercase mb-1">Item Name</label>
+                    <select id="wh-filter-item" class="w-full" multiple data-placeholder="All Products/Items"></select>
+                  </div>
+                  <div>
+                    <label class="block text-xs font-bold text-slate-505 dark:text-slate-404 uppercase mb-1">Vendor Name</label>
+                    <select id="wh-filter-vendor" class="w-full" multiple data-placeholder="All Vendors"></select>
+                  </div>
+                  <div>
+                    <label class="block text-xs font-bold text-slate-505 dark:text-slate-404 uppercase mb-1">Expected Date</label>
+                    <input type="date" id="wh-filter-date" class="w-full border border-slate-300 dark:border-[#1e293b] rounded-lg p-2 text-sm bg-white dark:bg-[#1e293b] text-slate-800 dark:text-white focus:outline-none">
+                  </div>
+                  <div class="flex space-x-2">
+                    <button id="apply-wh-filters-btn" class="w-full bg-indigo-600 text-white px-4 py-2.5 rounded-lg hover:bg-indigo-700 font-semibold text-sm transition shadow-md">Filter</button>
+                    <button id="reset-wh-filters-btn" class="w-full bg-slate-600 hover:bg-slate-700 text-white px-4 py-2.5 rounded-lg transition text-sm shadow-md">Reset</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="p-6 overflow-x-auto">
+                <!-- Inbound Logistics Log Table with Checkbox Column -->
+                <table id="wh-receipts-table" class="w-full responsive-card-table text-sm text-left" style="width:100%">
+                  <thead
+                    class="bg-slate-50 dark:bg-[#151c2c] text-slate-600 dark:text-slate-404 uppercase text-xs font-bold border-b border-slate-200 dark:border-[#1e293b]">
+                    <tr>
+                      <th class="px-3 py-3 text-center w-10"><input type="checkbox" id="wh-select-all-plans" class="h-4 w-4 text-indigo-600 rounded cursor-pointer">
+                      </th>
+                      <th class="px-4 py-3">Plan ID</th>
+                      <th class="px-4 py-3">PO ID</th>
+                      <th class="px-4 py-3">Order No.</th>
+                      <th class="px-4 py-3">Item Desc.</th>
+                      <th class="px-4 py-3">Unique Code</th>
+                      <th class="px-4 py-3">Vendor</th>
+                      <th class="px-4 py-3">Expected Date</th>
+                      <th class="px-4 py-3">Planned</th>
+                      <th class="px-4 py-3 text-indigo-600 dark:text-indigo-400 font-semibold">Received</th>
+                      <th class="px-4 py-3 text-rose-600 dark:text-rose-505 font-semibold">Balance</th>
+                      <th class="px-4 py-3">UOM</th>
+                      <th class="px-4 py-3">Last Edit Status</th> <!-- 🟢 NEW -->
+                      <th class="px-4 py-3 text-right font-semibold">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-slate-100 dark:divide-[#1e293b] text-slate-700 dark:text-slate-300">
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Outbound Pending Dispatches -->
+            <div
+              class="bg-white dark:bg-[#111827] rounded-xl border border-slate-200 dark:border-[#1e293b] shadow-sm overflow-hidden mt-6">
+              <div
+                class="px-6 py-5 border-b border-slate-200 dark:border-[#1e293b] bg-slate-50 dark:bg-[#151c2c] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <h3 class="text-lg font-bold text-slate-800 dark:text-white">Approved Transfer Requests (Send Material)
+                </h3>
+                <div class="flex items-center space-x-3">
+                  <!-- 🟢 DOWNLOAD APPROVED TRANSFERS PDF BUTTON -->
+                  <button id="download-approved-transfers-pdf-btn" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-1.5 rounded-lg text-xs font-bold transition shadow flex items-center">
+                    <i data-lucide="file-down" class="w-4 h-4 mr-1.5"></i> Download PDF
+                  </button>
+                  <button id="download-approved-transfers-excel-btn" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-1.5 rounded-lg text-xs font-bold transition shadow flex items-center">
+                    <i data-lucide="file-spreadsheet" class="w-4 h-4 mr-1.5"></i> Download Excel
+                  </button>
+                  <span class="text-xs font-semibold bg-amber-50 dark:bg-amber-955 text-amber-700 dark:text-amber-404 rounded-full border border-amber-100 dark:border-amber-900/30 px-3 py-1">Action Queue</span>
+                </div>
+              </div>
+
+              <div class="p-6 overflow-x-auto">
+                <table id="wh-dispatch-table" class="w-full responsive-card-table text-sm text-left" style="width:100%">
+                  <thead
+                    class="bg-slate-50 dark:bg-[#151c2c] text-slate-600 dark:text-slate-404 uppercase text-xs font-bold border-b border-slate-200 dark:border-[#1e293b]">
+                    <tr>
+                      <th class="px-4 py-3">Req ID</th>
+                      <th class="px-4 py-3">Order No</th>
+                      <th class="px-4 py-3">Production For</th>
+                      <th class="px-4 py-3">Product ID</th>
+                      <th class="px-4 py-3">Item Description</th>
+                      <th class="px-4 py-3">UOM</th>
+                      <th class="px-4 py-3">Requester</th>
+                      <th class="px-4 py-3 font-semibold text-center">Req Qty</th>
+                      <th class="px-4 py-3">To Warehouse</th>
+                      <th class="px-4 py-3">Last Edit Status</th> <!-- 🟢 NEW -->
+                      <th class="px-4 py-3 text-right font-semibold">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-slate-100 dark:divide-[#1e293b] text-slate-700 dark:text-slate-300">
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- PRODUCTION DASHBOARD -->
+          <div id="production-dashboard" class="hidden space-y-6 role-dashboard">
+
+            <!-- Top Console Bar -->
+            <div
+              class="bg-white dark:bg-[#111827] text-slate-800 dark:text-white p-6 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 border border-slate-200 dark:border-[#1e293b]">
+              <div>
+                <span class="text-xs uppercase font-extrabold text-indigo-600 dark:text-indigo-404 tracking-widest">Production Console</span>
+                <h3 class="text-2xl font-bold">Active Warehouse:
+                  <span id="prod-id-span" class="text-indigo-600 dark:text-indigo-300"></span>
+                </h3>
+              </div>
+              <div
+                class="flex items-center space-x-2 bg-indigo-50 dark:bg-indigo-955/40 px-4 py-2 rounded-xl border border-indigo-100 dark:border-indigo-900/50 text-sm">
+                <i data-lucide="info" class="w-4 h-4 text-indigo-600 dark:text-indigo-404"></i>
+                <span>Review inbound inventory allocations and physical logs below.</span>
+              </div>
+            </div>
+
+            <div class="bg-white dark:bg-[#111827] rounded-xl border border-slate-200 dark:border-[#1e293b] shadow-sm p-4 flex flex-col sm:flex-row sm:items-end gap-3">
+              <div class="w-full sm:max-w-md">
+                <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Item Name</label>
+                <select id="prod-filter-item-name" class="w-full role-item-name-filter" data-role-filter="production" multiple data-placeholder="All Item Names"></select>
+              </div>
+              <button type="button" class="clear-role-item-filter bg-slate-600 hover:bg-slate-700 text-white px-4 py-2.5 rounded-lg text-sm font-semibold" data-target="#prod-filter-item-name">Reset</button>
+            </div>
+
+            <!-- Stacked Tables Container -->
+            <div class="flex flex-col space-y-6 w-full">
+
+              <!-- 1. Material Transfers Sent To Me -->
+              <div
+                class="bg-white dark:bg-[#111827] rounded-xl border border-slate-200 dark:border-[#1e293b] shadow-sm overflow-hidden w-full">
+                <div class="px-6 py-4 border-b border-slate-200 dark:border-[#1e293b] bg-slate-50 dark:bg-[#151c2c]">
+                  <h4 class="font-bold text-slate-800 dark:text-white">Incoming Transferred Material (Receive Material)
+                  </h4>
+                </div>
+                <div class="p-6 overflow-x-auto w-full">
+                  <table id="prod-incoming-table" class="w-full text-sm text-left border-collapse" style="width:100%">
+                    <thead
+                      class="bg-slate-50 dark:bg-[#151c2c] text-slate-600 dark:text-slate-404 uppercase text-xs font-bold border-b border-slate-200 dark:border-[#1e293b]">
+                      <tr>
+                        <th class="px-3 py-3">Request ID</th>
+                        <th class="px-3 py-3">Order No</th>
+                        <th class="px-3 py-3">Product Details</th>
+                        <th class="px-3 py-3 font-semibold">Dispatched Qty</th>
+                        <th class="px-3 py-3">UOM</th>
+                        <th class="px-3 py-3">PO No</th>
+                        <th class="px-3 py-3">From WH</th>
+                        <th class="px-3 py-3 text-right font-semibold">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-[#1e293b] text-slate-700 dark:text-slate-300">
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <!-- 2. My Stock Location Quantities (FIXED: Added Action Column for Reject Material) -->
+              <div
+                class="bg-white dark:bg-[#111827] rounded-xl border border-slate-200 dark:border-[#1e293b] shadow-sm overflow-hidden w-full">
+                <div class="px-6 py-4 border-b border-slate-200 dark:border-[#1e293b] bg-slate-50 dark:bg-[#151c2c]">
+                  <h4 class="font-bold text-slate-800 dark:text-white">My Stock Location Quantities</h4>
+                </div>
+                <div class="p-6 overflow-x-auto w-full">
+                  <table id="prod-stock-table" class="w-full text-sm text-left border-collapse" style="width:100%">
+                    <thead
+                      class="bg-slate-50 dark:bg-[#151c2c] text-slate-600 dark:text-slate-404 uppercase text-xs font-bold border-b border-slate-200 dark:border-[#1e293b]">
+                      <tr>
+                        <th class="px-4 py-3">Product ID</th>
+                        <th class="px-4 py-3">Product Name</th>
+                        <th class="px-4 py-3">Category</th>
+                        <th class="px-4 py-3 font-semibold">Available Stock</th>
+                        <th class="px-4 py-3 text-right">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-[#1e293b] text-slate-700 dark:text-slate-300">
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <!-- 3. Production Log & In-Line QC Actions Console -->
+              <div
+                class="bg-white dark:bg-[#111827] rounded-xl border border-slate-200 dark:border-[#1e293b] shadow-sm overflow-hidden w-full">
+                <div class="px-6 py-4 border-b border-slate-200 dark:border-[#1e293b] bg-slate-50 dark:bg-[#151c2c]">
+                  <h4 class="font-bold text-slate-800 dark:text-white">Production History & Quality Verification Console
+                  </h4>
+                </div>
+                <div class="p-6 overflow-x-auto w-full">
+                  <table id="prod-runs-table" class="w-full text-sm text-left border-collapse" style="width:100%">
+                    <thead
+                      class="bg-slate-50 dark:bg-[#151c2c] text-slate-600 dark:text-slate-404 uppercase text-xs font-bold border-b border-slate-200 dark:border-[#1e293b]">
+                      <tr>
+                        <th class="px-4 py-3">Run Log ID</th>
+                        <th class="px-4 py-3">Date</th>
+                        <th class="px-4 py-3">Consumed Raw SKU</th>
+                        <th class="px-4 py-3">Produced Finished SKU</th>
+                        <th class="px-4 py-3 font-semibold">Produced Qty</th>
+                        <th class="px-4 py-3">Dest Warehouse</th>
+                        <th class="px-4 py-3">QC Status</th>
+                        <th class="px-4 py-3">Last Edit Status</th> <!-- 🟢 NEW -->
+                        <th class="px-4 py-3 text-right font-semibold">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-[#1e293b] text-slate-700 dark:text-slate-300">
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- QUALITY INSPECTOR DASHBOARD (FIXED: Tables Added) -->
+          <div id="quality-dashboard" class="hidden space-y-6 role-dashboard">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div
+                class="bg-white dark:bg-[#111827] p-5 rounded-xl border border-slate-200 dark:border-[#1e293b] shadow-sm flex items-center space-x-4">
+                <div
+                  class="bg-amber-50 dark:bg-amber-955 text-amber-600 dark:text-amber-404 p-3 rounded-lg border border-amber-100 dark:border-amber-900/30">
+                  <i data-lucide="clock" class="w-6 h-6"></i>
+                </div>
+                <div>
+                  <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Pending Inspections</p>
+                  <p id="qc-stat-pending" class="text-2xl font-bold text-amber-600 dark:text-amber-505">0</p>
+                </div>
+              </div>
+              <div
+                class="bg-white dark:bg-[#111827] p-5 rounded-xl border border-slate-200 dark:border-[#1e293b] shadow-sm flex items-center space-x-4">
+                <div
+                  class="bg-emerald-50 dark:bg-emerald-950 text-emerald-555 dark:text-emerald-404 p-3 rounded-lg border border-emerald-100 dark:border-[#1e293b]">
+                  <i data-lucide="check-circle" class="w-6 h-6"></i>
+                </div>
+                <div>
+                  <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Approved Batches</p>
+                  <p id="qc-stat-approved" class="text-2xl font-bold text-emerald-600 dark:text-emerald-505">0</p>
+                </div>
+              </div>
+              <div
+                class="bg-white dark:bg-[#111827] p-5 rounded-xl border border-slate-200 dark:border-[#1e293b] shadow-sm flex items-center space-x-4">
+                <div
+                  class="bg-rose-50 dark:bg-[#111827] text-rose-650 dark:text-rose-455 p-3 rounded-lg border border-rose-100 dark:border-[#1e293b]">
+                  <i data-lucide="alert-triangle" class="w-6 h-6"></i>
+                </div>
+                <div>
+                  <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Rejected Batches</p>
+                  <p id="qc-stat-rejected" class="text-2xl font-bold text-rose-600 dark:text-rose-505">0</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-white dark:bg-[#111827] rounded-xl border border-slate-200 dark:border-[#1e293b] shadow-sm p-4 flex flex-col sm:flex-row sm:items-end gap-3">
+              <div class="w-full sm:max-w-md">
+                <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Item Name</label>
+                <select id="qc-filter-item-name" class="w-full role-item-name-filter" data-role-filter="quality" multiple data-placeholder="All Item Names"></select>
+              </div>
+              <button type="button" class="clear-role-item-filter bg-slate-600 hover:bg-slate-700 text-white px-4 py-2.5 rounded-lg text-sm font-semibold" data-target="#qc-filter-item-name">Reset</button>
+            </div>
+
+            <!-- PENDING INSPECTIONS TABLE ON DASHBOARD -->
+            <div
+              class="bg-white dark:bg-[#111827] rounded-xl border border-slate-200 dark:border-[#1e293b] shadow-sm overflow-hidden">
+              <div
+                class="px-6 py-5 border-b border-slate-200 dark:border-[#1e293b] bg-slate-50 dark:bg-[#151c2c] flex justify-between items-center">
+                <h3 class="text-lg font-bold text-slate-800 dark:text-white">Batches Awaiting Inspection Queue</h3>
+                <span class="text-xs font-semibold px-3 py-1 bg-amber-50 dark:bg-amber-955 text-amber-700 dark:text-amber-404 rounded-full border border-amber-100 dark:border-indigo-900/50">QA Queue</span>
+              </div>
+              <div class="p-6 overflow-x-auto">
+                <table id="qc-dashboard-pending-table" class="w-full responsive-card-table text-sm text-left"
+                  style="width:100%">
+                  <thead
+                    class="bg-slate-50 dark:bg-[#151c2c] text-slate-600 dark:text-slate-404 uppercase text-xs font-bold border-b border-slate-200 dark:border-[#1e293b]">
+                    <tr>
+                      <th class="px-4 py-3">QC ID</th>
+                      <th class="px-4 py-3">Date Requested</th>
+                      <th class="px-4 py-3">Run Log / PO ID</th>
+                      <th class="px-4 py-3">Product ID</th>
+                      <th class="px-4 py-3">Warehouse</th>
+                      <th class="px-4 py-3 text-amber-600 dark:text-amber-500 font-semibold">Qty to Inspect</th>
+                      <th class="px-4 py-3">Last Edit Status</th> <!-- 🟢 NEW -->
+                      <th class="px-4 py-3 text-right">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-slate-100 dark:divide-[#1e293b] text-slate-700 dark:text-slate-300">
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- INSPECTION HISTORY TABLE ON DASHBOARD -->
+            <div
+              class="bg-white dark:bg-[#111827] rounded-xl border border-slate-200 dark:border-[#1e293b] shadow-sm overflow-hidden">
+              <div class="px-6 py-5 border-b border-slate-200 dark:border-[#1e293b] bg-slate-50 dark:bg-[#151c2c]">
+                <h3 class="text-lg font-bold text-slate-800 dark:text-white">Recent Quality Inspection Logs</h3>
+              </div>
+              <div class="p-6 overflow-x-auto">
+                <table id="qc-dashboard-history-table" class="w-full responsive-card-table text-sm text-left"
+                  style="width:100%">
+                  <thead
+                    class="bg-slate-50 dark:bg-[#151c2c] text-slate-600 dark:text-slate-404 uppercase text-xs font-bold border-b border-slate-200 dark:border-[#1e293b]">
+                    <tr>
+                      <th class="px-4 py-3">QC ID</th>
+                      <th class="px-4 py-3">Inspection Date</th>
+                      <th class="px-4 py-3">Product ID</th>
+                      <th class="px-4 py-3">Inspector</th>
+                      <th class="px-4 py-3 font-semibold">Decision</th>
+                      <th class="px-4 py-3">Reason / Remarks</th>
+                      <th class="px-4 py-3">Last Edit Status</th> <!-- 🟢 NEW -->
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-slate-100 dark:divide-[#1e293b] text-slate-700 dark:text-slate-300">
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+<!-- stockReportView -->
+<div id="stockReportView" class="view hidden space-y-4">
+          <div
+            class="flex justify-between items-center bg-white dark:bg-[#111827] px-5 py-4 rounded-xl border border-slate-200 dark:border-[#1e293b] shadow-sm">
+            <h3 class="text-xl font-bold text-slate-800 dark:text-white">Centralized Stock Ledger</h3>
+            <div class="flex flex-wrap items-center gap-2">
+              <button class="download-stock-sheet-btn bg-slate-700 hover:bg-slate-800 text-white px-3 py-2 rounded-lg text-xs font-bold shadow flex items-center" data-format="pdf"><i data-lucide="file-text" class="w-4 h-4 mr-1.5"></i>Download PDF</button>
+              <button class="download-stock-sheet-btn bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-lg text-xs font-bold shadow flex items-center" data-format="xlsx"><i data-lucide="file-spreadsheet" class="w-4 h-4 mr-1.5"></i>Download Excel</button>
+              <span class="text-xs font-bold text-indigo-600 dark:text-indigo-404 bg-indigo-50 dark:bg-indigo-950 border border-indigo-100 dark:border-indigo-900/50 rounded-full px-3 py-1 uppercase tracking-wider">Live Inventory</span>
+            </div>
+          </div>
+          <div id="stock-report-filters" class="bg-white dark:bg-[#111827] rounded-xl border border-slate-200 dark:border-[#1e293b] shadow-sm px-4 py-3">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-3 items-end">
+              <div><label class="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1">Product ID</label><select id="stock-filter-product" class="w-full" multiple data-placeholder="All Products"></select></div>
+              <div><label class="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1">Category</label><select id="stock-filter-category" class="w-full" multiple data-placeholder="All Categories"></select></div>
+              <div class="sm:col-span-2 lg:col-span-2"><label class="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1">PO / Order</label><select id="stock-filter-po" class="w-full" multiple data-placeholder="All PO / Orders"></select></div>
+              <div class="flex gap-2"><button type="button" id="apply-stock-filters" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-lg text-xs font-bold">Apply</button><button type="button" id="reset-stock-po-filter" class="flex-1 bg-slate-600 hover:bg-slate-700 text-white px-3 py-2 rounded-lg text-xs font-bold">Reset</button></div>
+            </div>
+          </div>
+          <div
+            class="bg-white dark:bg-[#111827] rounded-xl border border-slate-200 dark:border-[#1e293b] shadow-sm p-4 overflow-x-auto">
+            <table id="stockTable" class="w-full responsive-card-table text-sm text-left" style="width:100%">
+              <thead id="stockTableHeader"
+                class="bg-slate-50 dark:bg-[#151c2c] text-slate-600 dark:text-slate-404 uppercase text-xs font-bold border-b border-slate-200 dark:border-[#1e293b]">
+              </thead>
+              <tbody class="divide-y divide-slate-100 dark:divide-[#1e293b]"></tbody>
+            </table>
+            <div class="flex items-center space-x-2 text-xs text-rose-500 font-semibold mt-4">
+              <i data-lucide="alert-triangle" class="w-4 h-4"></i>
+              <span>Low-stock rows highlighted in red (Count &lt; 10 units).</span>
+            </div>
+          </div>
+        </div>
+
+<!-- grnHistoryView -->
+<div id="grnHistoryView" class="view hidden space-y-6">
+          <div
+            class="flex justify-between items-center bg-white dark:bg-[#111827] p-6 rounded-xl border border-slate-200 dark:border-[#1e293b] shadow-sm">
+            <div class="space-y-1">
+              <span class="text-xs font-extrabold text-indigo-600 dark:text-indigo-404 uppercase tracking-widest">Completed Goods Received Logs</span>
+              <h3 class="text-xl font-bold text-slate-800 dark:text-white">GRN History Log & Reprint Center</h3>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+              <button class="download-received-material-btn bg-slate-700 hover:bg-slate-800 text-white px-3 py-2 rounded-lg text-xs font-bold shadow flex items-center" data-format="pdf"><i data-lucide="file-text" class="w-4 h-4 mr-1.5"></i>Download PDF</button>
+              <button class="download-received-material-btn bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-lg text-xs font-bold shadow flex items-center" data-format="xlsx"><i data-lucide="file-spreadsheet" class="w-4 h-4 mr-1.5"></i>Download Excel</button>
+              <span class="text-xs font-bold text-emerald-600 dark:text-emerald-455 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-100 dark:border-indigo-900/50 rounded-full px-3.5 py-1.5 uppercase tracking-wider font-semibold">Audit Archive</span>
+            </div>
+          </div>
+          <div class="bg-white dark:bg-[#111827] rounded-xl border border-slate-200 dark:border-[#1e293b] shadow-sm p-4 flex flex-col sm:flex-row sm:items-end gap-3">
+            <div class="w-full sm:max-w-xl"><label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">PO Filter (Multi-select)</label><select id="grn-filter-po" class="w-full" multiple data-placeholder="All PO IDs"></select></div>
+            <button type="button" id="reset-grn-po-filter" class="bg-slate-600 hover:bg-slate-700 text-white px-4 py-2.5 rounded-lg text-sm font-semibold">Reset</button>
+          </div>
+
+          <div
+            class="bg-white dark:bg-[#111827] rounded-xl border border-slate-200 dark:border-[#1e293b] shadow-sm p-6 overflow-x-auto">
+            <table id="wh-completed-grns-table" class="w-full responsive-card-table text-sm text-left"
+              style="width:100%">
+              <thead
+                class="bg-slate-50 dark:bg-[#151c2c] text-slate-600 dark:text-slate-404 uppercase text-xs font-bold border-b border-slate-200 dark:border-[#1e293b]">
+                <tr>
+                  <th class="px-4 py-3">Receipt ID</th>
+                  <th class="px-4 py-3">Date</th>
+                  <th class="px-4 py-3">PO / Order No</th>
+                  <th class="px-4 py-3">Product Details</th>
+                  <th class="px-4 py-3">Vendor Details</th>
+                  <th class="px-4 py-3">Buyer Code</th>
+                  <th class="px-4 py-3">Invoice No</th>
+                  <th class="px-4 py-3">Received By</th>
+                  <th class="px-4 py-3 text-emerald-600 dark:text-emerald-455 font-semibold">Accepted Qty</th>
+                  <th class="px-4 py-3 text-rose-600 dark:text-rose-505 font-semibold">Rejected Qty</th>
+                  <th class="px-4 py-3">Last Edit Status</th> <!-- 🟢 NEW -->
+                  <th class="px-4 py-3 text-right">Reprint</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100 dark:divide-[#1e293b] text-slate-700 dark:text-slate-300">
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+<!-- transferHistoryView -->
+<div id="transferHistoryView" class="view hidden space-y-6">
+          <div
+            class="flex justify-between items-center bg-white dark:bg-[#111827] p-6 rounded-xl border border-slate-200 dark:border-[#1e293b] shadow-sm">
+            <div class="space-y-1">
+              <span class="text-xs font-extrabold text-indigo-600 dark:text-indigo-404 uppercase tracking-widest">Internal Logistics Audit</span>
+              <h3 class="text-xl font-bold text-slate-800 dark:text-white">Material Transfer History Log</h3>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+              <button class="download-transfer-history-btn bg-slate-700 hover:bg-slate-800 text-white px-3 py-2 rounded-lg text-xs font-bold shadow flex items-center" data-format="pdf"><i data-lucide="file-text" class="w-4 h-4 mr-1.5"></i>Download PDF</button>
+              <button class="download-transfer-history-btn bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-lg text-xs font-bold shadow flex items-center" data-format="xlsx"><i data-lucide="file-spreadsheet" class="w-4 h-4 mr-1.5"></i>Download Excel</button>
+              <span class="text-xs font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-955 border border-indigo-100 dark:border-indigo-900/50 rounded-full px-3.5 py-1.5 uppercase tracking-wider font-semibold">Stock Movements</span>
+            </div>
+          </div>
+
+          <div
+            class="bg-white dark:bg-[#111827] rounded-xl border border-slate-200 dark:border-[#1e293b] shadow-sm p-6 overflow-x-auto">
+            <table id="transfer-history-table" class="w-full responsive-card-table text-sm text-left"
+              style="width:100%">
+              <thead
+                class="bg-slate-50 dark:bg-[#151c2c] text-slate-600 dark:text-slate-404 uppercase text-xs font-bold border-b border-slate-200 dark:border-[#1e293b]">
+                <tr>
+                  <th class="px-3 py-3">Req ID</th>
+                  <th class="px-3 py-3">Order No</th>
+                  <th class="px-3 py-3">Product ID</th>
+                  <th class="px-3 py-3">UOM</th>
+                  <th class="px-3 py-3">From WH</th>
+                  <th class="px-3 py-3">To WH</th>
+                  <th class="px-3 py-3 font-semibold text-center">Req Qty</th>
+                  <th class="px-3 py-3 font-semibold text-center">Disp Qty</th>
+                  <th class="px-3 py-3 font-semibold text-center">Recd Qty</th>
+                  <th class="px-3 py-3 font-semibold">Status</th>
+                  <th class="px-3 py-3">Last Edit Status</th> <!-- 🟢 NEW -->
+                  <th class="px-3 py-3 text-right">PDF Slip</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100 dark:divide-[#1e293b] text-slate-700 dark:text-slate-300">
+              </tbody>
+            </table>
+          </div>
+        </div>
+

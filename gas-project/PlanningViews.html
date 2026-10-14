@@ -1,0 +1,34 @@
+<!-- warehouseMgmtView -->
+<div id="warehouseMgmtView" class="view hidden space-y-6">
+          <div
+            class="bg-white dark:bg-[#111827] p-6 rounded-xl border border-slate-200 dark:border-[#1e293b] shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div class="space-y-1">
+              <span class="text-xs uppercase font-extrabold text-indigo-600 dark:text-indigo-400 tracking-wider">Infrastructure Matrix</span>
+              <h3 class="text-xl font-bold text-slate-800 dark:text-white">Registered Locations Matrix</h3>
+            </div>
+            <div class="flex items-center space-x-3">
+              <span id="wh-matrix-count" class="text-xs bg-slate-100 dark:bg-[#1e293b] border border-slate-300 dark:border-slate-700 px-3 py-1.5 rounded-full font-bold">0 Active</span>
+              <button id="btn-open-register-modal" class="flex items-center bg-indigo-600 text-white px-4 py-2.5 rounded-lg font-bold text-sm shadow-md hover:bg-indigo-700 transition duration-155">
+                <i data-lucide="plus" class="w-4 h-4 mr-1.5"></i> Register Warehouse
+              </button>
+            </div>
+          </div>
+
+          <div
+            class="overflow-x-auto bg-white dark:bg-[#111827] rounded-xl border border-slate-200 dark:border-[#1e293b] shadow-sm p-6">
+            <table id="warehouse-mgmt-table" class="w-full responsive-card-table text-sm text-left" style="width:100%">
+              <thead
+                class="bg-slate-50 dark:bg-[#151c2c] text-slate-600 dark:text-slate-404 uppercase text-xs font-bold border-b border-slate-200 dark:border-[#1e293b]">
+                <tr>
+                  <th class="px-4 py-3">Warehouse ID</th>
+                  <th class="px-4 py-3">Location</th>
+                  <th class="px-4 py-3">Type</th>
+                  <th class="px-4 py-3 text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100 dark:divide-[#1e293b] text-slate-700 dark:text-slate-300">
+              </tbody>
+            </table>
+          </div>
+        </div>
+

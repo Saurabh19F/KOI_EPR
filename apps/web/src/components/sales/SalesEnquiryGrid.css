@@ -1,0 +1,107 @@
+/* ── Spreadsheet-like Grid Styles for Sales Enquiry Redesign ──────────────── */
+
+.sales-grid-container {
+  max-height: 500px;
+  overflow-y: auto;
+  overflow-x: auto;
+  position: relative;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+}
+
+.sales-grid-table {
+  min-width: max-content;
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.sales-grid-table th {
+  background-color: #f1f5f9;
+  color: #334155;
+  font-weight: 600;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 8px 12px;
+  border: 1px solid #cbd5e1;
+  text-align: left;
+}
+
+.sales-grid-table td {
+  padding: 0;
+  border: 1px solid #cbd5e1;
+  background-color: #ffffff;
+}
+
+/* Grid row hover state */
+.sales-grid-row:hover td {
+  background-color: #f8fafc;
+}
+
+/* Cell inputs style */
+.sales-grid-input {
+  width: 100%;
+  height: 32px;
+  border: none;
+  background: transparent;
+  padding: 4px 8px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12px;
+  color: #1e293b;
+  outline: none;
+  transition: all 0.15s ease;
+}
+
+.sales-grid-input:focus {
+  background-color: #eff6ff;
+  box-shadow: inset 0 0 0 2px #3b82f6;
+}
+
+.sales-grid-input:disabled {
+  background-color: #f1f5f9;
+  color: #64748b;
+  cursor: not-allowed;
+}
+
+/* Sticky row numbers column */
+.sales-sticky-col-num {
+  position: sticky;
+  left: 0;
+  background-color: #f8fafc !important;
+  z-index: 10;
+  text-align: center !important;
+  font-weight: 600;
+  color: #64748b;
+  width: 40px;
+  min-width: 40px;
+}
+
+/* Sticky SKU column */
+.sales-sticky-col-sku {
+  position: sticky;
+  left: 40px;
+  background-color: #ffffff;
+  z-index: 10;
+  min-width: 140px;
+  box-shadow: 4px 0 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.sales-grid-row:hover .sales-sticky-col-sku {
+  background-color: #f8fafc;
+}
+
+/* Headers for sticky columns */
+.sales-sticky-col-num-hdr {
+  position: sticky;
+  left: 0;
+  z-index: 20;
+  background-color: #e2e8f0 !important;
+}
+
+.sales-sticky-col-sku-hdr {
+  position: sticky;
+  left: 40px;
+  z-index: 20;
+  background-color: #e2e8f0 !important;
+  box-shadow: 4px 0 6px -2px rgba(0, 0, 0, 0.05);
+}
