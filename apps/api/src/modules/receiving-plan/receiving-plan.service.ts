@@ -1059,7 +1059,7 @@ export class ReceivingPlanService {
 
       const warehouseIds = dto.allocations.map((a) => a.warehouseId);
       const warehouses = await queryRunner.manager.find(Warehouse, {
-        where: { id: In(warehouseIds), isActive: true },
+        where: { id: In(warehouseIds), companyId, isActive: true },
       });
       const warehouseMap = new Map(warehouses.map((w) => [w.id, w]));
 
