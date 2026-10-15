@@ -1209,13 +1209,13 @@ export class ReceivingPlanService {
       if (!po.items?.length) continue;
 
       for (const item of po.items) {
-        if (!item.productId) continue;
         const qty = Number(item.quantity || 0);
         if (qty <= 0) continue;
 
         totalOrderCount++;
 
-        const key = `${po.orderId}___${item.productId}`;
+        const itemIdentifier = item.productId || item.itemId;
+        const key = `${po.orderId}___${itemIdentifier}`;
         const totalPlanned = plannedQtyMap.get(key) || 0;
         const unplannedQty = Math.max(0, qty - totalPlanned);
 
@@ -1224,7 +1224,7 @@ export class ReceivingPlanService {
         pendingPOs.push({
           poId: po.orderId,
           poNumber: po.orderNumber,
-          productId: item.productId,
+          productId: item.productId || item.itemId,
           productName: item.productName,
           productCode: item.productCode || item.sku,
           itemDescription: item.description || item.productName,
