@@ -206,6 +206,7 @@ export class UsersService {
     email?: string;
     phone?: string;
     departmentId?: string;
+    warehouseId?: string | null;
     isActive?: boolean;
     password?: string;
     preferences?: Record<string, any>;

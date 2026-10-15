@@ -653,7 +653,6 @@ export default function AdminPriceAnalysisPage() {
                 <select className="w-full h-10 px-3 border rounded-md" value={haulageForm.containerType} onChange={(e) => setHaulageForm({ ...haulageForm, containerType: e.target.value })}>
                   <option value="20FT">20 FT</option>
                   <option value="40FT">40 FT</option>
-                  <option value="40HC">40 HC</option>
                 </select>
               </div>
             </div>

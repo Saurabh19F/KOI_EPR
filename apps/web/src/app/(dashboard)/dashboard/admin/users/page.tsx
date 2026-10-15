@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { usersApi } from '@/lib/api';
+import { usersApi, inventoryApi } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -34,6 +34,7 @@ import {
   Trash2,
   Lock,
   Building2,
+  Warehouse,
   CheckCircle,
   XCircle,
 } from 'lucide-react';
@@ -55,6 +56,7 @@ export default function AdminUsersPage() {
     password: '',
     departmentId: '',
     roleId: '',
+    warehouseId: '',
     isActive: true,
   });
 
@@ -90,9 +92,19 @@ export default function AdminUsersPage() {
     },
   });
 
+  // Fetch warehouses
+  const { data: warehousesData } = useQuery({
+    queryKey: ['adminWarehouses'],
+    queryFn: async () => {
+      const res = await inventoryApi.getWarehouses();
+      return res.data || res || [];
+    },
+  });
+
   const usersList = usersData?.data || [];
   const departments = departmentsData || [];
   const roles = rolesData || [];
+  const warehouses = Array.isArray(warehousesData) ? warehousesData : (warehousesData as any)?.data || [];
 
   // Create User Mutation
   const createUserMutation = useMutation({
@@ -148,6 +160,7 @@ export default function AdminUsersPage() {
       password: '',
       departmentId: '',
       roleId: '',
+      warehouseId: '',
       isActive: true,
     });
     setEditingUser(null);
@@ -163,9 +176,10 @@ export default function AdminUsersPage() {
     setFormData({
       name: user.name || '',
       email: user.email || '',
-      password: '', // Password is not loaded back for editing
+      password: '',
       departmentId: user.departmentId || '',
       roleId: user.role?.roleId || user.roleId || '',
+      warehouseId: user.warehouseId || '',
       isActive: user.isActive !== false,
     });
     setIsDialogOpen(true);
@@ -183,6 +197,7 @@ export default function AdminUsersPage() {
       name: formData.name,
       email: formData.email,
       departmentId: formData.departmentId || null,
+      warehouseId: formData.warehouseId || null,
       isActive: formData.isActive,
     };
 
@@ -477,6 +492,29 @@ export default function AdminUsersPage() {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label>Warehouse</Label>
+              <Select
+                value={formData.warehouseId}
+                onValueChange={(val) => setFormData(prev => ({ ...prev, warehouseId: val === '__none__' ? '' : val }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Warehouse (optional)" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">None (All Warehouses)</SelectItem>
+                  {warehouses.map((wh: any) => (
+                    <SelectItem key={wh.id} value={wh.id}>
+                      {wh.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-slate-500">
+                Assign a warehouse to restrict this user to that location only
+              </p>
             </div>
 
             <div className="flex items-center justify-between border-t border-slate-100 pt-4">

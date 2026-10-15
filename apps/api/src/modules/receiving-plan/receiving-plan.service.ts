@@ -1037,14 +1037,17 @@ export class ReceivingPlanService {
         throw new BadRequestException(`Purchase order ${po.orderNumber} is not in a plannable status (current: ${po.status})`);
       }
 
-      const poItem = po.items?.find((i) => i.productId === dto.productId && i.isActive && !i.noNeed);
+      const poItem = po.items?.find(
+        (i) => (i.productId === dto.productId || i.itemId === dto.productId) && i.isActive && !i.noNeed,
+      );
       if (!poItem) {
         throw new NotFoundException(`Product ${dto.productId} is not an active item on PO ${po.orderNumber}`);
       }
+      const resolvedProductId = poItem.productId || poItem.itemId || dto.productId;
 
       const orderedQty = Number(poItem.quantity || 0);
       const existingPlans = await queryRunner.manager.find(ReceivingPlan, {
-        where: { purchaseOrderId: dto.poId, productId: dto.productId, companyId },
+        where: { purchaseOrderId: dto.poId, productId: resolvedProductId, ...(companyId ? { companyId } : {}) },
       });
       const alreadyPlanned = existingPlans
         .filter((p) => p.status !== ReceivingPlanStatus.CANCELLED)
@@ -1059,7 +1062,7 @@ export class ReceivingPlanService {
 
       const warehouseIds = dto.allocations.map((a) => a.warehouseId);
       const warehouses = await queryRunner.manager.find(Warehouse, {
-        where: { id: In(warehouseIds), companyId, isActive: true },
+        where: { id: In(warehouseIds), isActive: true },
       });
       const warehouseMap = new Map(warehouses.map((w) => [w.id, w]));
 
@@ -1082,7 +1085,7 @@ export class ReceivingPlanService {
           companyId,
           purchaseOrderId: po.orderId,
           poNumber: po.orderNumber,
-          productId: poItem.productId,
+          productId: resolvedProductId,
           productName: poItem.productName,
           warehouseId: warehouse.id,
           warehouseName: warehouse.name,
@@ -1155,15 +1158,19 @@ export class ReceivingPlanService {
       PurchaseOrderStatus.APPROVED,
       PurchaseOrderStatus.PARTIALLY_PLANNED,
       PurchaseOrderStatus.PLANNED,
+      PurchaseOrderStatus.PARTIALLY_RECEIVED,
     ];
 
     const poQuery = this.dataSource
       .getRepository(PurchaseOrder)
       .createQueryBuilder('po')
       .leftJoinAndSelect('po.items', 'item', 'item.isActive = true AND item.noNeed = false')
-      .where('po.companyId = :companyId', { companyId })
-      .andWhere('po.isActive = true')
+      .where('po.isActive = true')
       .andWhere('po.status IN (:...statuses)', { statuses: statusesToShow });
+
+    if (companyId) {
+      poQuery.andWhere('po.companyId = :companyId', { companyId });
+    }
 
     if (filters?.search) {
       poQuery.andWhere(
@@ -1173,10 +1180,17 @@ export class ReceivingPlanService {
     }
 
     if (user.warehouseId) {
-      poQuery.andWhere('(po.location = :warehouseId OR po.location IS NULL OR po.location = :empty)', {
-        warehouseId: user.warehouseId,
-        empty: '',
-      });
+      const warehouse = await this.dataSource
+        .getRepository(Warehouse)
+        .findOne({ where: { id: user.warehouseId } });
+      if (warehouse) {
+        poQuery.andWhere(
+          '(po.location = :whName OR po.location = :whCode OR po.location = :whId OR po.location IS NULL OR po.location = :empty)',
+          { whName: warehouse.name, whCode: warehouse.code, whId: user.warehouseId, empty: '' },
+        );
+      } else {
+        poQuery.andWhere('1 = 0');
+      }
     }
 
     poQuery.orderBy('po.createdAt', 'DESC');
@@ -1188,8 +1202,12 @@ export class ReceivingPlanService {
 
     let existingPlans: ReceivingPlan[] = [];
     if (poIds.length > 0) {
+      const planWhere: any = { purchaseOrderId: In(poIds) };
+      if (companyId) {
+        planWhere.companyId = companyId;
+      }
       existingPlans = await this.receivingPlanRepository.find({
-        where: { purchaseOrderId: In(poIds), companyId },
+        where: planWhere,
       });
     }
 
@@ -1201,12 +1219,41 @@ export class ReceivingPlanService {
       plannedQtyMap.set(key, existing + Number(plan.plannedQty));
     }
 
+    const enquiryIds = purchaseOrders.map((po) => po.salesEnquiryId).filter(Boolean);
+    const soNos = purchaseOrders.map((po) => po.soNo).filter(Boolean);
+    const enquiryNos = purchaseOrders.map((po) => po.enquiryNo).filter(Boolean);
+
+    const enquiryByIdMap = new Map<string, any>();
+    const enquiryBySoMap = new Map<string, any>();
+    const enquiryByNoMap = new Map<string, any>();
+
+    if (enquiryIds.length > 0 || soNos.length > 0 || enquiryNos.length > 0) {
+      const conditions: string[] = [];
+      const params: any[] = [];
+      let idx = 1;
+      if (enquiryIds.length > 0) { conditions.push(`enquiry_order_id = ANY($${idx})`); params.push(enquiryIds); idx++; }
+      if (soNos.length > 0) { conditions.push(`order_no = ANY($${idx})`); params.push(soNos); idx++; }
+      if (enquiryNos.length > 0) { conditions.push(`enquiry_order_no = ANY($${idx})`); params.push(enquiryNos); idx++; }
+
+      const enquiries = await this.dataSource.query(
+        `SELECT enquiry_order_id, enquiry_order_no, order_no, buyer_code, sales_person_name FROM sales_enquiry_orders WHERE ${conditions.join(' OR ')}`,
+        params,
+      );
+      for (const e of enquiries) {
+        if (e.enquiry_order_id) enquiryByIdMap.set(e.enquiry_order_id, e);
+        if (e.order_no) enquiryBySoMap.set(e.order_no, e);
+        if (e.enquiry_order_no) enquiryByNoMap.set(e.enquiry_order_no, e);
+      }
+    }
+
     const pendingPOs: any[] = [];
     let totalOrderCount = 0;
     let unplannedOrderCount = 0;
 
     for (const po of purchaseOrders) {
       if (!po.items?.length) continue;
+
+      const enquiry = enquiryByIdMap.get(po.salesEnquiryId) || enquiryBySoMap.get(po.soNo) || enquiryByNoMap.get(po.enquiryNo);
 
       for (const item of po.items) {
         const qty = Number(item.quantity || 0);
@@ -1235,7 +1282,8 @@ export class ReceivingPlanService {
           uom: item.uomName || '',
           expectedDate: po.expectedDeliveryDate,
           purchasePerson: po.purchasePerson || '',
-          salesPerson: po.salesPersonName || '',
+          salesPerson: enquiry?.sales_person_name || po.salesPersonName || '',
+          buyerCode: enquiry?.buyer_code || '',
           location: item.location || po.location || '',
           orderNo: item.soNo || po.soNo || '',
           poStatus: po.status,

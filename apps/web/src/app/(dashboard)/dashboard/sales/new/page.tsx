@@ -695,7 +695,6 @@ export default function NewSalesEnquiryPage() {
                     <SelectContent>
                       <SelectItem value="20">20 ft</SelectItem>
                       <SelectItem value="40">40 ft</SelectItem>
-                      <SelectItem value="40HC">40 HC</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

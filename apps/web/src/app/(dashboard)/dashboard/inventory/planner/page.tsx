@@ -64,6 +64,7 @@ interface PlannerItem {
   expectedDate: string;
   purchasePerson: string;
   salesPerson: string;
+  buyerCode: string;
   location: string;
   orderNo: string;
   poStatus: string;
@@ -310,7 +311,7 @@ export default function PlannerPage() {
       item.productCode || '',
       item.itemDescription || item.productName,
       item.uom || '',
-      item.purchasePerson || '',
+      item.buyerCode || '',
       item.salesPerson || '',
       item.purchasePerson || '',
       item.vendorName || '',
@@ -776,7 +777,7 @@ export default function PlannerPage() {
                           <TableCell className="text-xs font-mono">{item.productCode || '—'}</TableCell>
                           <TableCell className="max-w-[200px] truncate">{item.itemDescription || item.productName}</TableCell>
                           <TableCell>{item.uom || '—'}</TableCell>
-                          <TableCell>{item.purchasePerson || '—'}</TableCell>
+                          <TableCell>{item.buyerCode || '—'}</TableCell>
                           <TableCell>{item.salesPerson || '—'}</TableCell>
                           <TableCell>{item.purchasePerson || '—'}</TableCell>
                           <TableCell>{item.vendorName || '—'}</TableCell>
@@ -974,7 +975,7 @@ export default function PlannerPage() {
                   </div>
                   <div>
                     <span className="text-muted-foreground">Buyer Code:</span>
-                    <p className="font-semibold">{allocateItem.purchasePerson || '—'}</p>
+                    <p className="font-semibold">{allocateItem.buyerCode || '—'}</p>
                   </div>
                   <div>
                     <span className="text-muted-foreground">Vendor:</span>
