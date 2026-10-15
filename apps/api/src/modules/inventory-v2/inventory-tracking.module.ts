@@ -16,6 +16,7 @@ import {
   StockTransferItem,
   ReorderPoint,
 } from './entities/inventory-tracking.entity';
+import { StockLocationTransferLog } from './entities/stock-location-transfer-log.entity';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import {
       StockTransfer,
       StockTransferItem,
       ReorderPoint,
+      StockLocationTransferLog,
     ]),
     EventBusModule,
   ],

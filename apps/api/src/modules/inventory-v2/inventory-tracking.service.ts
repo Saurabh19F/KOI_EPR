@@ -13,6 +13,7 @@ import {
   ReorderPoint,
   ValuationMethod,
 } from './entities/inventory-tracking.entity';
+import { StockLocationTransferLog } from './entities/stock-location-transfer-log.entity';
 import {
   CreateBatchDto,
   BatchQueryDto,
@@ -24,6 +25,10 @@ import {
   CreateReorderPointDto,
   StockValuationQueryDto,
   PaginationDto,
+  MoveStockLocationDto,
+  RequestMaterialDto,
+  DispatchMaterialDto,
+  ReceiveTransferMaterialDto,
 } from './dto/inventory-tracking.dto';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 
@@ -58,6 +63,8 @@ export class InventoryTrackingService {
     private readonly transferItemRepository: Repository<StockTransferItem>,
     @InjectRepository(ReorderPoint)
     private readonly reorderRepository: Repository<ReorderPoint>,
+    @InjectRepository(StockLocationTransferLog)
+    private readonly locationTransferLogRepository: Repository<StockLocationTransferLog>,
     private readonly dataSource: DataSource,
     private readonly eventEmitter: EventEmitter2,
   ) {}
@@ -889,5 +896,374 @@ export class InventoryTrackingService {
       averageValue,
       lowStockCount,
     };
+  }
+
+  // ============ BIN-TO-BIN LOCATION MOVE ============
+
+  async moveStockLocation(
+    dto: MoveStockLocationDto,
+    userId: string,
+    userName: string,
+    companyId: string,
+  ): Promise<{ transferId: string; message: string }> {
+    if (dto.qtyToMove <= 0) {
+      throw new BadRequestException('Quantity must be greater than 0');
+    }
+    if (dto.currentBin === dto.newBin) {
+      throw new BadRequestException('Source and destination bins cannot be the same');
+    }
+
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const now = new Date();
+      const ts = now.toISOString().replace(/[-:T]/g, '').slice(0, 14);
+      const rand = String(Math.floor(100 + Math.random() * 900));
+      const transferId = `LOC-${ts}-${rand}`;
+
+      const log = queryRunner.manager.create(StockLocationTransferLog, {
+        transferId,
+        companyId,
+        warehouseId: dto.warehouseId,
+        productId: dto.productId,
+        sourceLocation: dto.currentBin,
+        destinationLocation: dto.newBin,
+        transferredQty: dto.qtyToMove,
+        transferredBy: userName,
+        transferredByUserId: userId,
+      });
+
+      await queryRunner.manager.save(log);
+      await queryRunner.commitTransaction();
+
+      return {
+        transferId,
+        message: `Moved ${dto.qtyToMove} items from ${dto.currentBin} to ${dto.newBin}. Transfer logged successfully.`,
+      };
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  // ============ MATERIAL REQUEST (with auto-approve for same-WH) ============
+
+  async requestMaterial(
+    dto: RequestMaterialDto,
+    requestingWarehouseId: string,
+    userId: string,
+    userName: string,
+    companyId: string,
+  ): Promise<{ status: string; message: string; transfers: StockTransfer[] }> {
+    if (!dto.items || dto.items.length === 0) {
+      throw new BadRequestException('No items provided in the request');
+    }
+
+    const isCrossWarehouse = requestingWarehouseId !== dto.sourceWarehouseId;
+    const initialStatus = isCrossWarehouse ? 'pending' : 'in_transit';
+
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      // Validate stock availability (physical minus reserved)
+      const stockMap = await this.getWarehouseStockMapInternal(dto.sourceWarehouseId, companyId, queryRunner.manager);
+
+      const requestedByProduct: Record<string, number> = {};
+      for (const item of dto.items) {
+        requestedByProduct[item.productId] = (requestedByProduct[item.productId] || 0) + item.qty;
+      }
+
+      for (const [productId, requested] of Object.entries(requestedByProduct)) {
+        const available = stockMap[productId] || 0;
+        if (requested > available) {
+          throw new BadRequestException(
+            `Insufficient unreserved stock for ${productId}. Available: ${available}, Requested: ${requested}`,
+          );
+        }
+      }
+
+      const transfers: StockTransfer[] = [];
+
+      for (const item of dto.items) {
+        const transferNumber = await this.generateTransferNumberForTransfer(queryRunner.manager, companyId);
+
+        const transfer = queryRunner.manager.create(StockTransfer, {
+          transferNumber,
+          transferDate: new Date(),
+          sourceWarehouseId: dto.sourceWarehouseId,
+          sourceWarehouseName: dto.sourceWarehouseName,
+          destinationWarehouseId: requestingWarehouseId,
+          destinationWarehouseName: '',
+          orderNo: dto.orderNo,
+          requestType: dto.requestType || 'material_request',
+          productionId: dto.productionId,
+          requestRemarks: dto.remarks,
+          requestedByUsername: userName,
+          status: initialStatus,
+          totalQuantity: item.qty,
+          companyId,
+          createdBy: userId,
+        });
+
+        const savedTransfer = await queryRunner.manager.save(transfer);
+
+        const transferItem = queryRunner.manager.create(StockTransferItem, {
+          transferId: savedTransfer.transferId,
+          productId: item.productId,
+          productName: item.productName,
+          quantity: item.qty,
+          requestedQty: item.qty,
+          dispatchedQty: 0,
+          receivedQty: 0,
+          unitCost: 0,
+          companyId,
+          createdBy: userId,
+        });
+
+        await queryRunner.manager.save(transferItem);
+
+        // For same-warehouse (auto-approved): deduct from source immediately
+        if (!isCrossWarehouse) {
+          await this.updateStockValuation(
+            item.productId,
+            dto.sourceWarehouseId,
+            -item.qty,
+            0,
+            queryRunner.manager,
+          );
+
+          await queryRunner.manager.update(StockTransfer, savedTransfer.transferId, {
+            sentBy: userId,
+            sentAt: new Date(),
+          });
+        }
+
+        transfers.push(savedTransfer);
+      }
+
+      await queryRunner.commitTransaction();
+
+      const message = isCrossWarehouse
+        ? 'Cross-warehouse request logged. Sent for approval.'
+        : `Internal material request created and auto-approved for ${dto.sourceWarehouseId}.`;
+
+      return { status: 'success', message, transfers };
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  // ============ DISPATCH MATERIAL ============
+
+  async dispatchMaterial(
+    dto: DispatchMaterialDto,
+    userId: string,
+    companyId: string,
+  ): Promise<{ status: string; message: string }> {
+    const transfer = await this.transferRepository.findOne({
+      where: { transferId: dto.transferId, companyId },
+    });
+
+    if (!transfer) {
+      throw new NotFoundException(`Transfer ${dto.transferId} not found`);
+    }
+
+    if (transfer.status !== 'in_transit') {
+      throw new BadRequestException('Transfer must be in_transit (approved) to dispatch');
+    }
+
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const items = await this.transferItemRepository.find({ where: { transferId: dto.transferId } });
+
+      let totalDispatched = 0;
+      for (const item of items) {
+        const maxDispatch = Number(item.requestedQty || item.quantity);
+        const itemDispatchQty = Math.min(dto.dispatchedQty, maxDispatch);
+
+        await this.updateStockValuation(
+          item.productId,
+          transfer.sourceWarehouseId,
+          -itemDispatchQty,
+          0,
+          queryRunner.manager,
+        );
+
+        await queryRunner.manager.update(StockTransferItem, item.itemId, {
+          dispatchedQty: itemDispatchQty,
+        });
+
+        totalDispatched += itemDispatchQty;
+      }
+
+      await queryRunner.manager.update(StockTransfer, dto.transferId, {
+        status: 'in_transit',
+        sentBy: userId,
+        sentAt: new Date(),
+        updatedBy: userId,
+      });
+
+      await queryRunner.commitTransaction();
+
+      return {
+        status: 'success',
+        message: `Material dispatched! ${totalDispatched} units sent from ${transfer.sourceWarehouseName}.`,
+      };
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  // ============ RECEIVE TRANSFERRED MATERIAL ============
+
+  async receiveTransferredMaterial(
+    dto: ReceiveTransferMaterialDto,
+    userId: string,
+    companyId: string,
+  ): Promise<{ status: string; message: string }> {
+    const transfer = await this.transferRepository.findOne({
+      where: { transferId: dto.transferId, companyId },
+    });
+
+    if (!transfer) {
+      throw new NotFoundException(`Transfer ${dto.transferId} not found`);
+    }
+
+    if (transfer.status !== 'in_transit') {
+      throw new BadRequestException('Transfer must be in transit to receive');
+    }
+
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const items = await this.transferItemRepository.find({ where: { transferId: dto.transferId } });
+
+      let totalReceived = 0;
+      let totalDispatched = 0;
+      for (const item of items) {
+        const dispatched = Number(item.dispatchedQty || item.quantity);
+        const itemReceiveQty = Math.min(dto.receivedQty, dispatched);
+
+        await this.updateStockValuation(
+          item.productId,
+          transfer.destinationWarehouseId,
+          itemReceiveQty,
+          item.unitCost,
+          queryRunner.manager,
+        );
+
+        await queryRunner.manager.update(StockTransferItem, item.itemId, {
+          receivedQty: itemReceiveQty,
+        });
+
+        totalReceived += itemReceiveQty;
+        totalDispatched += dispatched;
+      }
+
+      const finalStatus = totalReceived >= totalDispatched ? 'received' : 'partially_received';
+
+      await queryRunner.manager.update(StockTransfer, dto.transferId, {
+        status: finalStatus,
+        receivedBy: userId,
+        receivedAt: new Date(),
+        updatedBy: userId,
+      });
+
+      await queryRunner.commitTransaction();
+
+      const bin = dto.targetBin || 'Inward-Staging';
+      return {
+        status: 'success',
+        message: `Material received (${finalStatus})! ${totalReceived} units added to destination (${bin}).`,
+      };
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  // ============ WAREHOUSE STOCK MAP (with reserved stock deduction) ============
+
+  async getWarehouseStockMap(
+    warehouseId: string,
+    companyId: string,
+  ): Promise<Record<string, number>> {
+    return this.getWarehouseStockMapInternal(warehouseId, companyId);
+  }
+
+  private async getWarehouseStockMapInternal(
+    warehouseId: string,
+    companyId: string,
+    manager?: any,
+  ): Promise<Record<string, number>> {
+    const repo = manager || this.dataSource.manager;
+
+    // Get physical stock from valuations
+    const valuations = await repo.find(StockValuation, {
+      where: { warehouseId, companyId },
+    });
+
+    const stockMap: Record<string, number> = {};
+    for (const v of valuations) {
+      stockMap[v.productId] = (stockMap[v.productId] || 0) + Number(v.quantity);
+    }
+
+    // Subtract outstanding (non-completed) transfer request quantities
+    const outstandingTransfers = await repo
+      .createQueryBuilder(StockTransfer, 'transfer')
+      .innerJoin(StockTransferItem, 'item', 'item.transferId = transfer.transferId')
+      .select([
+        'item.productId AS "productId"',
+        'SUM(GREATEST(0, COALESCE(item.requestedQty, item.quantity) - COALESCE(item.dispatchedQty, 0))) AS "outstanding"',
+      ])
+      .where('transfer.sourceWarehouseId = :warehouseId', { warehouseId })
+      .andWhere('transfer.companyId = :companyId', { companyId })
+      .andWhere('transfer.status NOT IN (:...completedStatuses)', {
+        completedStatuses: ['received', 'cancelled', 'rejected'],
+      })
+      .groupBy('item.productId')
+      .getRawMany();
+
+    for (const row of outstandingTransfers) {
+      const productId = row.productId;
+      const outstanding = Number(row.outstanding) || 0;
+      if (productId && outstanding > 0) {
+        stockMap[productId] = Math.max(0, (stockMap[productId] || 0) - outstanding);
+      }
+    }
+
+    return stockMap;
+  }
+
+  // ============ WAREHOUSE EMAIL LOOKUP ============
+
+  async getWarehouseEmails(warehouseId: string, companyId: string): Promise<string[]> {
+    if (!warehouseId || !companyId) return [];
+
+    const rows = await this.dataSource.query(
+      `SELECT DISTINCT email FROM users WHERE preferences->>'warehouseId' = $1 AND company_id = $2 AND is_active = true AND email IS NOT NULL AND email LIKE '%@%'`,
+      [warehouseId, companyId],
+    );
+
+    return rows.map((r: any) => r.email);
   }
 }

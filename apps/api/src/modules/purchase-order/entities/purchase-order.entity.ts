@@ -15,6 +15,8 @@ export enum PurchaseOrderStatus {
   SUBMITTED = 'submitted',
   PENDING_APPROVAL = 'pending_approval',
   APPROVED = 'approved',
+  PARTIALLY_PLANNED = 'partially_planned',
+  PLANNED = 'planned',
   PARTIALLY_RECEIVED = 'partially_received',
   RECEIVED = 'received',
   INVOICED = 'invoiced',
@@ -237,6 +239,9 @@ export class PurchaseOrder {
 
   @Column({ default: true })
   isActive: boolean;
+
+  @Column({ nullable: true })
+  plannedBy: string;
 
   @Column({ nullable: true })
   approvedBy: string;

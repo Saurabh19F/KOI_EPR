@@ -8,9 +8,13 @@ import {
   Param,
   Query,
   UseGuards,
+  Res,
+  Header,
 } from '@nestjs/common';
+import { Response } from 'express';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { ReceivingPlanService } from './receiving-plan.service';
+import { ReceivingPlanPdfService } from './receiving-plan-pdf.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Permissions } from '../auth/decorators/permissions.decorator';
@@ -20,6 +24,10 @@ import {
   BulkCreateReceivingPlanDto,
   UpdateReceivedQtyDto,
   SubmitGoodsReceivingDto,
+  SubmitBulkGoodsReceivingDto,
+  SubmitMultiGoodsReceivingDto,
+  AllocateToWarehousesDto,
+  BulkAllocateDto,
 } from './dto/receiving-plan.dto';
 import { ReceivingPlanStatus } from './entities/receiving-plan.entity';
 
@@ -28,7 +36,10 @@ import { ReceivingPlanStatus } from './entities/receiving-plan.entity';
 @UseGuards(JwtAuthGuard)
 @Controller('receiving-plans')
 export class ReceivingPlanController {
-  constructor(private readonly receivingPlanService: ReceivingPlanService) {}
+  constructor(
+    private readonly receivingPlanService: ReceivingPlanService,
+    private readonly receivingPlanPdfService: ReceivingPlanPdfService,
+  ) {}
 
   @Post()
   @Permissions('RECEIVING_PLAN_CREATE')
@@ -73,11 +84,48 @@ export class ReceivingPlanController {
     });
   }
 
+  @Get('planner-data')
+  @Permissions('RECEIVING_PLAN_VIEW')
+  @ApiOperation({ summary: 'Get planner dashboard data: PO items with planned/unplanned quantities' })
+  @ApiQuery({ name: 'search', required: false, type: String })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  getPlannerData(
+    @Query('search') search?: string,
+    @Query('page') page?: number,
+    @Query('limit') limit?: number,
+    @CurrentUser() user?: any,
+  ) {
+    return this.receivingPlanService.getPlannerData(
+      {
+        userId: user?.sub,
+        companyId: user?.companyId,
+        warehouseId: user?.warehouseId,
+        name: user?.name,
+      },
+      { search, page: page ? Number(page) : 1, limit: limit ? Number(limit) : 100 },
+    );
+  }
+
   @Get('grn/:grnId')
   @Permissions('RECEIVING_PLAN_VIEW')
   @ApiOperation({ summary: 'Get GRN details with items' })
   getGrnDetails(@Param('grnId') grnId: string, @CurrentUser() user: any) {
     return this.receivingPlanService.getGrnWithItems(grnId, user?.companyId);
+  }
+
+  @Get(':id/pdf')
+  @Permissions('RECEIVING_PLAN_VIEW')
+  @Header('Content-Type', 'application/pdf')
+  @ApiOperation({ summary: 'Download receiving plan PDF' })
+  async getPdf(
+    @Param('id') id: string,
+    @CurrentUser() user: any,
+    @Res() res: Response,
+  ) {
+    const { stream, filename } = await this.receivingPlanPdfService.generateReceivingPlanPdf(id, user?.companyId);
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    (stream as any).pipe(res);
   }
 
   @Get(':id')
@@ -130,6 +178,60 @@ export class ReceivingPlanController {
   @ApiOperation({ summary: 'Get GRN history for a receiving plan' })
   getGrnHistory(@Param('id') id: string, @CurrentUser() user: any) {
     return this.receivingPlanService.getGrnHistory(id, user?.companyId);
+  }
+
+  @Post('bulk-grn')
+  @Permissions('RECEIVING_PLAN_EDIT')
+  @ApiOperation({ summary: 'Submit bulk goods receiving (multiple items, shared invoice/transport)' })
+  submitBulkGoodsReceiving(
+    @Body() dto: SubmitBulkGoodsReceivingDto,
+    @CurrentUser() user: any,
+  ) {
+    return this.receivingPlanService.submitBulkGoodsReceiving(
+      dto,
+      user?.userId,
+      user?.name || user?.email || user?.userId,
+      user?.companyId,
+    );
+  }
+
+  @Post('multi-grn')
+  @Permissions('RECEIVING_PLAN_EDIT')
+  @ApiOperation({ summary: 'Submit multi goods receiving (with duplicate detection and two-phase validation)' })
+  submitMultiGoodsReceiving(
+    @Body() dto: SubmitMultiGoodsReceivingDto,
+    @CurrentUser() user: any,
+  ) {
+    return this.receivingPlanService.submitMultiGoodsReceiving(
+      dto,
+      user?.userId,
+      user?.name || user?.email || user?.userId,
+      user?.companyId,
+    );
+  }
+
+  @Post('allocate')
+  @Permissions('RECEIVING_PLAN_CREATE')
+  @ApiOperation({ summary: 'Allocate a PO item to one or more warehouses (split allocation)' })
+  allocateToWarehouses(@Body() dto: AllocateToWarehousesDto, @CurrentUser() user: any) {
+    return this.receivingPlanService.allocateToWarehouses(
+      dto,
+      user?.sub,
+      user?.name || user?.email || user?.sub,
+      user?.companyId,
+    );
+  }
+
+  @Post('bulk-allocate')
+  @Permissions('RECEIVING_PLAN_CREATE')
+  @ApiOperation({ summary: 'Bulk allocate multiple PO items to warehouses' })
+  bulkAllocate(@Body() dto: BulkAllocateDto, @CurrentUser() user: any) {
+    return this.receivingPlanService.bulkAllocate(
+      dto,
+      user?.sub,
+      user?.name || user?.email || user?.sub,
+      user?.companyId,
+    );
   }
 
   @Post('sync-from-approved-pos')

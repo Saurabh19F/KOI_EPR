@@ -123,6 +123,7 @@ const navItems: NavItem[] = [
       { title: 'Stock Movements', href: '/dashboard/inventory/movements', permissions: ['INVENTORY_VIEW', 'PURCHASE_VIEW'] },
       { title: 'Stock Adjustments', href: '/dashboard/inventory/adjustments', permissions: ['INVENTORY_VIEW', 'PURCHASE_VIEW'] },
       { title: 'Receiving Plans', href: '/dashboard/inventory/receiving-plans', permissions: ['INVENTORY_VIEW', 'PURCHASE_VIEW'] },
+      { title: 'Planner', href: '/dashboard/inventory/planner', permissions: ['RECEIVING_PLAN_VIEW', 'INVENTORY_VIEW'] },
     ],
   },
   {

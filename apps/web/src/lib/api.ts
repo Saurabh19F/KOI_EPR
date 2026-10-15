@@ -683,6 +683,13 @@ export const inventoryApi = {
   adjustStock: (data: any) => api.post('/inventory/adjust', data),
   transferStock: (data: any) => api.post('/inventory/transfer', data),
 
+  // Transfers
+  getTransfers: (params?: { page?: number; limit?: number; status?: string }) =>
+    api.get('/inventory/transfers', { params }),
+  approveTransfer: (transferId: string) => api.put(`/inventory/transfers/${transferId}/approve`),
+  rejectTransfer: (transferId: string, reason?: string) =>
+    api.put(`/inventory/transfers/${transferId}/reject`, { reason }),
+
   // Alerts
   getLowStockAlerts: (warehouseId?: string) => api.get('/inventory/alerts/low-stock', {
     params: warehouseId ? { warehouseId } : {}
@@ -923,6 +930,11 @@ export const receivingPlanApi = {
   submitGrn: (planId: string, data: any) => api.post(`/receiving-plans/${planId}/grn`, data),
   getGrnHistory: (planId: string) => api.get(`/receiving-plans/${planId}/grn-history`),
   getGrnDetails: (grnId: string) => api.get(`/receiving-plans/grn/${grnId}`),
+  getPlannerData: (params?: { search?: string; page?: number; limit?: number }) =>
+    api.get<any>('/receiving-plans/planner-data', { params }),
+  allocateToWarehouses: (data: any) => api.post('/receiving-plans/allocate', data),
+  bulkAllocate: (data: any) => api.post('/receiving-plans/bulk-allocate', data),
+  downloadPdf: (planId: string) => api.get(`/receiving-plans/${planId}/pdf`, { responseType: 'blob' }),
 };
 
 // Financial API

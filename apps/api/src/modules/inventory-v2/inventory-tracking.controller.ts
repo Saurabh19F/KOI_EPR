@@ -29,6 +29,10 @@ import {
   CreateReorderPointDto,
   StockValuationQueryDto,
   PaginationDto,
+  MoveStockLocationDto,
+  RequestMaterialDto,
+  DispatchMaterialDto,
+  ReceiveTransferMaterialDto,
 } from './dto/inventory-tracking.dto';
 
 @ApiTags('Inventory Tracking')
@@ -368,5 +372,104 @@ export class InventoryTrackingController {
   @ApiResponse({ status: 200, description: 'Inventory summary' })
   async getInventorySummary(@Request() req: any) {
     return this.inventoryService.getInventorySummary(req.user.companyId);
+  }
+
+  // ============ Bin-to-Bin Location Move ============
+
+  @Post('move-location')
+  @ApiOperation({ summary: 'Move stock between bins within a warehouse' })
+  @ApiResponse({ status: 201, description: 'Stock moved successfully' })
+  async moveStockLocation(
+    @Body() dto: MoveStockLocationDto,
+    @Request() req: any,
+  ) {
+    return this.inventoryService.moveStockLocation(
+      dto,
+      req.user.userId,
+      req.user.name || req.user.email || req.user.userId,
+      req.user.companyId,
+    );
+  }
+
+  // ============ Material Request (with auto-approve for same-WH) ============
+
+  @Post('request-material')
+  @ApiOperation({ summary: 'Request material from a warehouse (auto-approve for same-WH)' })
+  @ApiResponse({ status: 201, description: 'Material request created' })
+  async requestMaterial(
+    @Body() dto: RequestMaterialDto,
+    @Query('warehouseId') requestingWarehouseId: string,
+    @Request() req: any,
+  ) {
+    return this.inventoryService.requestMaterial(
+      dto,
+      requestingWarehouseId,
+      req.user.userId,
+      req.user.name || req.user.email || req.user.userId,
+      req.user.companyId,
+    );
+  }
+
+  // ============ Dispatch Material ============
+
+  @Put('transfers/:transferId/dispatch')
+  @ApiOperation({ summary: 'Dispatch material for an approved transfer' })
+  @ApiResponse({ status: 200, description: 'Material dispatched' })
+  async dispatchMaterial(
+    @Param('transferId') transferId: string,
+    @Body() dto: DispatchMaterialDto,
+    @Request() req: any,
+  ) {
+    dto.transferId = transferId;
+    return this.inventoryService.dispatchMaterial(
+      dto,
+      req.user.userId,
+      req.user.companyId,
+    );
+  }
+
+  // ============ Receive Transferred Material ============
+
+  @Put('transfers/:transferId/receive-material')
+  @ApiOperation({ summary: 'Receive transferred material at destination' })
+  @ApiResponse({ status: 200, description: 'Material received' })
+  async receiveTransferredMaterial(
+    @Param('transferId') transferId: string,
+    @Body() dto: ReceiveTransferMaterialDto,
+    @Request() req: any,
+  ) {
+    dto.transferId = transferId;
+    return this.inventoryService.receiveTransferredMaterial(
+      dto,
+      req.user.userId,
+      req.user.companyId,
+    );
+  }
+
+  // ============ Warehouse Stock Map (with reserved stock deduction) ============
+
+  @Get('stock-map/:warehouseId')
+  @ApiOperation({ summary: 'Get available stock map for a warehouse (physical minus reserved)' })
+  @ApiResponse({ status: 200, description: 'Stock map by product' })
+  async getWarehouseStockMap(
+    @Param('warehouseId') warehouseId: string,
+    @Request() req: any,
+  ) {
+    return this.inventoryService.getWarehouseStockMap(
+      warehouseId,
+      req.user.companyId,
+    );
+  }
+
+  // ============ Warehouse Email Lookup ============
+
+  @Get('warehouse-emails/:warehouseId')
+  @ApiOperation({ summary: 'Get email addresses of users assigned to a warehouse' })
+  @ApiResponse({ status: 200, description: 'List of emails' })
+  async getWarehouseEmails(
+    @Param('warehouseId') warehouseId: string,
+    @Request() req: any,
+  ) {
+    return this.inventoryService.getWarehouseEmails(warehouseId, req.user.companyId);
   }
 }

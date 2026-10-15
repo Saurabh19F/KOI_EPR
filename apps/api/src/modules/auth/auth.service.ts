@@ -18,6 +18,8 @@ interface TokenPayload {
   isSuperAdmin?: boolean;
   roles: string[];
   permissions: string[];
+  warehouseId?: string;
+  name?: string;
   type: 'access' | 'refresh';
 }
 
@@ -181,6 +183,8 @@ export class AuthService {
       isSuperAdmin: isSuperAdmin,
       roles: roleCodes,
       permissions: permissions,
+      warehouseId: user.warehouseId || null,
+      name: user.name || null,
     };
 
     // Use configurable token expiry from config
@@ -201,6 +205,7 @@ export class AuthService {
         isSuperAdmin: isSuperAdmin,
         roles: roleCodes,
         permissions: permissions,
+        warehouseId: user.warehouseId || null,
       },
     };
   }

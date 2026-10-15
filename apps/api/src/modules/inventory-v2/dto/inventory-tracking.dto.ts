@@ -565,6 +565,111 @@ export class PaginationDto {
   search?: string;
 }
 
+// ============ Bin-to-Bin Location Move DTOs ============
+
+export class MoveStockLocationDto {
+  @ApiProperty()
+  @IsString()
+  productId: string;
+
+  @ApiProperty()
+  @IsString()
+  warehouseId: string;
+
+  @ApiProperty()
+  @IsString()
+  currentBin: string;
+
+  @ApiProperty()
+  @IsString()
+  newBin: string;
+
+  @ApiProperty()
+  @IsNumber()
+  @Min(1)
+  qtyToMove: number;
+}
+
+// ============ Material Request DTOs ============
+
+export class MaterialRequestItemDto {
+  @ApiProperty()
+  @IsString()
+  productId: string;
+
+  @ApiProperty()
+  @IsString()
+  productName: string;
+
+  @ApiProperty()
+  @IsNumber()
+  @Min(1)
+  qty: number;
+}
+
+export class RequestMaterialDto {
+  @ApiProperty()
+  @IsString()
+  sourceWarehouseId: string;
+
+  @ApiProperty()
+  @IsString()
+  sourceWarehouseName: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  orderNo?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  requestType?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  productionId?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  remarks?: string;
+
+  @ApiProperty({ type: [MaterialRequestItemDto] })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => MaterialRequestItemDto)
+  items: MaterialRequestItemDto[];
+}
+
+export class DispatchMaterialDto {
+  @ApiProperty()
+  @IsString()
+  transferId: string;
+
+  @ApiProperty()
+  @IsNumber()
+  @Min(1)
+  dispatchedQty: number;
+}
+
+export class ReceiveTransferMaterialDto {
+  @ApiProperty()
+  @IsString()
+  transferId: string;
+
+  @ApiProperty()
+  @IsNumber()
+  @Min(1)
+  receivedQty: number;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  targetBin?: string;
+}
+
 // ============ Utility ============
 
 import { IsBoolean } from 'class-validator';

@@ -65,6 +65,9 @@ export class User {
   @Column({ name: 'is_super_admin', default: false })
   isSuperAdmin: boolean;
 
+  @Column({ name: 'warehouse_id', nullable: true, type: 'uuid' })
+  warehouseId: string;
+
   @Column({ name: 'last_login_at', nullable: true, type: 'timestamp' })
   lastLoginAt: Date;
 

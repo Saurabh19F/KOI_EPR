@@ -12,6 +12,8 @@ export interface JwtPayload {
   isSuperAdmin?: boolean;
   roles?: string[];
   permissions?: string[];
+  warehouseId?: string;
+  name?: string;
   type?: 'access' | 'refresh';
 }
 
@@ -74,6 +76,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       isSuperAdmin: payload.isSuperAdmin,
       roles: roles,
       permissions: permissions,
+      warehouseId: payload.warehouseId,
+      name: payload.name,
     };
   }
 }
