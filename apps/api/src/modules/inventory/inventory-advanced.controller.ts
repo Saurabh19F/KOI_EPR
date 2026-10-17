@@ -3,7 +3,6 @@ import {
   Get,
   Post,
   Put,
-  Delete,
   Body,
   Param,
   Query,
@@ -17,7 +16,7 @@ import {
   ApiResponse,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { InventoryTrackingService } from './inventory-tracking.service';
+import { InventoryAdvancedService } from './inventory-advanced.service';
 import {
   CreateBatchDto,
   BatchQueryDto,
@@ -39,8 +38,8 @@ import {
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 @Controller('inventory-tracking')
-export class InventoryTrackingController {
-  constructor(private readonly inventoryService: InventoryTrackingService) {}
+export class InventoryAdvancedController {
+  constructor(private readonly inventoryService: InventoryAdvancedService) {}
 
   // ============ Batch Operations ============
 
@@ -222,6 +221,7 @@ export class InventoryTrackingController {
     return this.inventoryService.findAllTransfers({
       ...query,
       companyId: req.user.companyId,
+      sourceWarehouseId: query.sourceWarehouseId,
     });
   }
 
@@ -471,5 +471,41 @@ export class InventoryTrackingController {
     @Request() req: any,
   ) {
     return this.inventoryService.getWarehouseEmails(warehouseId, req.user.companyId);
+  }
+
+  // ============ Bin & Rack Operations ============
+
+  @Get('bin-rack/:warehouseId')
+  @ApiOperation({ summary: 'Get stock with bin/rack locations for a warehouse' })
+  @ApiResponse({ status: 200, description: 'Stock list with bin locations' })
+  async getBinRackStock(
+    @Param('warehouseId') warehouseId: string,
+    @Query('search') search?: string,
+    @Query('page') page?: number,
+    @Query('limit') limit?: number,
+    @Request() req?: any,
+  ) {
+    return this.inventoryService.getBinRackStock({
+      warehouseId,
+      companyId: req?.user?.companyId,
+      search,
+      page: page ? Number(page) : 1,
+      limit: limit ? Number(limit) : 50,
+    });
+  }
+
+  @Put('bin-rack/assign')
+  @ApiOperation({ summary: 'Assign a bin/rack location to a stock item' })
+  @ApiResponse({ status: 200, description: 'Bin/Rack assigned' })
+  async assignBinRack(
+    @Body() body: { stockId: string; newBin: string },
+    @Request() req: any,
+  ) {
+    return this.inventoryService.assignBinRack({
+      stockId: body.stockId,
+      newBin: body.newBin,
+      companyId: req.user.companyId,
+      userId: req.user.userId,
+    });
   }
 }

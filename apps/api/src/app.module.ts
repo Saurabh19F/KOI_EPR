@@ -27,7 +27,6 @@ import { AccountsModule } from './modules/accounts/accounts.module';
 import { EventBusModule } from './modules/events/event-bus.module';
 import { SearchModule } from './modules/search/search.module';
 import { InventoryModule } from './modules/inventory/inventory.module';
-import { InventoryV2Module } from './modules/inventory-v2/inventory-tracking.module';
 import { ReportsV2Module } from './modules/reports-v2/reports.module';
 import { AuthV2Module } from './modules/auth-v2/auth-v2.module';
 import { createRedisConnectionOptions, queuesEnabled } from './common/queue.config';
@@ -149,7 +148,6 @@ const isQueueEnabled = queuesEnabled();
     PlatformModule,
     SearchModule,
     InventoryModule,
-    InventoryV2Module,
     ReportsV2Module,
     AuthV2Module,
     FinancialModule,

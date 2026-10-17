@@ -2,12 +2,23 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { InventoryService } from './inventory.service';
 import { InventoryController } from './inventory.controller';
-import { InventoryTrackingService } from './inventory-tracking.service';
-import { InventoryTrackingController } from './inventory-tracking.controller';
+import { InventoryAdvancedService } from './inventory-advanced.service';
+import { InventoryAdvancedController } from './inventory-advanced.controller';
 import { InventoryStock } from '../masters/entities/inventory-stock.entity';
 import { Warehouse } from '../masters/entities/warehouse.entity';
 import { StockMovement } from './entities/stock-movement.entity';
-import { InventoryBatch } from './entities/batch.entity';
+import {
+  InventoryBatch,
+  InventorySerialNumber,
+  StockReservation,
+  StockValuation,
+  StockCount,
+  StockCountItem,
+  StockTransfer,
+  StockTransferItem,
+  ReorderPoint,
+  StockLocationTransferLog,
+} from './entities';
 import { Product } from '../masters/entities/product.entity';
 import { CommonModule } from '../../common/common.module';
 
@@ -20,10 +31,19 @@ import { CommonModule } from '../../common/common.module';
       StockMovement,
       InventoryBatch,
       Product,
+      InventorySerialNumber,
+      StockReservation,
+      StockValuation,
+      StockCount,
+      StockCountItem,
+      StockTransfer,
+      StockTransferItem,
+      ReorderPoint,
+      StockLocationTransferLog,
     ]),
   ],
-  controllers: [InventoryController, InventoryTrackingController],
-  providers: [InventoryService, InventoryTrackingService],
-  exports: [InventoryService, InventoryTrackingService],
+  controllers: [InventoryController, InventoryAdvancedController],
+  providers: [InventoryService, InventoryAdvancedService],
+  exports: [InventoryService, InventoryAdvancedService],
 })
 export class InventoryModule {}

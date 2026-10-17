@@ -5,6 +5,7 @@ import {
   IsNumber,
   IsDate,
   IsArray,
+  IsBoolean,
   ValidateNested,
   Min,
 } from 'class-validator';
@@ -669,7 +670,3 @@ export class ReceiveTransferMaterialDto {
   @IsString()
   targetBin?: string;
 }
-
-// ============ Utility ============
-
-import { IsBoolean } from 'class-validator';

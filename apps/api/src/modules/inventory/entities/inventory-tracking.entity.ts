@@ -5,104 +5,10 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   Index,
-  ManyToOne,
-  JoinColumn,
-  OneToMany,
 } from 'typeorm';
-
-// Batch/Lot tracking for inventory
-@Entity('inventory_batches')
-
-@Index(['batchNumber'], { unique: true })
-export class InventoryBatch {
-  @PrimaryGeneratedColumn('uuid')
-  batchId: string;
-
-  @Column({ nullable: true })
-  companyId: string;
-
-  @Column({ unique: true })
-  batchNumber: string;
-
-  @Column()
-  productId: string;
-
-  @Column()
-  productName: string;
-
-  @Column({ nullable: true })
-  warehouseId: string;
-
-  @Column({ nullable: true })
-  warehouseName: string;
-
-  @Column({ nullable: true })
-  locationId: string;
-
-  @Column({ nullable: true })
-  locationName: string;
-
-  @Column({ nullable: true })
-  manufacturingDate: Date;
-
-  @Column({ nullable: true })
-  expiryDate: Date;
-
-  @Column({ type: 'decimal', precision: 18, scale: 3, default: 0 })
-  quantity: number;
-
-  @Column({ type: 'decimal', precision: 18, scale: 3, default: 0 })
-  reservedQuantity: number;
-
-  @Column({ type: 'decimal', precision: 18, scale: 2 })
-  unitCost: number;
-
-  @Column({ type: 'decimal', precision: 18, scale: 2 })
-  totalCost: number;
-
-  @Column({ nullable: true })
-  vendorId: string;
-
-  @Column({ nullable: true })
-  vendorName: string;
-
-  @Column({ nullable: true })
-  purchaseOrderId: string;
-
-  @Column({ nullable: true })
-  grnId: string;
-
-  @Column({ nullable: true })
-  grnNumber: string;
-
-  @Column({ nullable: true })
-  invoiceNumber: string;
-
-  @Column({ nullable: true })
-  mfgLicenseNumber: string;
-
-  @Column({ nullable: true })
-  barcode: string;
-
-  @Column({ default: true })
-  isActive: boolean;
-
-  @Column({ nullable: true })
-  createdBy: string;
-
-  @CreateDateColumn()
-  createdAt: Date;
-
-  @Column({ nullable: true })
-  updatedBy: string;
-
-  @UpdateDateColumn()
-  updatedAt: Date;
-}
 
 // Serial number tracking for individual items
 @Entity('inventory_serial_numbers')
-
 @Index(['serialNumber'], { unique: true })
 export class InventorySerialNumber {
   @PrimaryGeneratedColumn('uuid')
@@ -157,7 +63,7 @@ export class InventorySerialNumber {
   vendorName: string;
 
   @Column({ default: 'available' })
-  status: string; // available, sold, used, damaged, returned
+  status: string;
 
   @Column({ nullable: true })
   salesInvoiceId: string;
@@ -192,8 +98,6 @@ export class InventorySerialNumber {
 
 // Stock reservation for orders
 @Entity('stock_reservations')
-
-
 export class StockReservation {
   @PrimaryGeneratedColumn('uuid')
   reservationId: string;
@@ -223,7 +127,7 @@ export class StockReservation {
   orderId: string;
 
   @Column()
-  orderType: string; // sales_order, purchase_order, job_work
+  orderType: string;
 
   @Column({ type: 'decimal', precision: 18, scale: 3 })
   quantity: number;
@@ -235,10 +139,10 @@ export class StockReservation {
   cancelledQuantity: number;
 
   @Column({ default: 'pending' })
-  status: string; // pending, partial, fulfilled, cancelled, expired
+  status: string;
 
   @Column({ nullable: true })
-  expiryDate: Date; // Reservation expiry
+  expiryDate: Date;
 
   @Column({ nullable: true })
   notes: string;
@@ -265,7 +169,6 @@ export enum ValuationMethod {
 }
 
 @Entity('stock_valuation')
-
 @Index(['warehouseId'])
 export class StockValuation {
   @PrimaryGeneratedColumn('uuid')
@@ -290,10 +193,10 @@ export class StockValuation {
   averageCost: number;
 
   @Column({ type: 'decimal', precision: 18, scale: 2, default: 0 })
-  fifoCost: number; // Cost from oldest batch
+  fifoCost: number;
 
   @Column({ type: 'decimal', precision: 18, scale: 2, default: 0 })
-  lifoCost: number; // Cost from newest batch
+  lifoCost: number;
 
   @Column({ type: 'decimal', precision: 18, scale: 2, default: 0 })
   standardCost: number;
@@ -322,7 +225,6 @@ export class StockValuation {
 
 // Physical stock take / Cycle counting
 @Entity('stock_counts')
-
 export class StockCount {
   @PrimaryGeneratedColumn('uuid')
   countId: string;
@@ -352,7 +254,7 @@ export class StockCount {
   countedBy: string;
 
   @Column({ default: 'draft' })
-  status: string; // draft, in_progress, completed, variances_posted
+  status: string;
 
   @Column({ nullable: true })
   notes: string;
@@ -416,7 +318,7 @@ export class StockCountItem {
   variance: number;
 
   @Column({ nullable: true })
-  reason: string; // theft, damage, miscount, etc.
+  reason: string;
 
   @Column({ nullable: true })
   notes: string;
@@ -493,7 +395,7 @@ export class StockTransfer {
   requestedByUsername: string;
 
   @Column({ default: 'pending' })
-  status: string; // pending, in_transit, received, cancelled
+  status: string;
 
   @Column({ type: 'decimal', precision: 18, scale: 2, default: 0 })
   totalQuantity: number;
@@ -592,7 +494,6 @@ export class StockTransferItem {
 
 // Reorder point configuration
 @Entity('reorder_points')
-
 export class ReorderPoint {
   @PrimaryGeneratedColumn('uuid')
   reorderId: string;
@@ -613,13 +514,13 @@ export class ReorderPoint {
   warehouseName: string;
 
   @Column({ type: 'decimal', precision: 18, scale: 3 })
-  reorderLevel: number; // Minimum stock level
+  reorderLevel: number;
 
   @Column({ type: 'decimal', precision: 18, scale: 3 })
-  reorderQuantity: number; // Quantity to reorder
+  reorderQuantity: number;
 
   @Column({ type: 'decimal', precision: 18, scale: 3 })
-  maximumLevel: number; // Maximum stock level
+  maximumLevel: number;
 
   @Column({ type: 'int', default: 0 })
   leadTimeDays: number;

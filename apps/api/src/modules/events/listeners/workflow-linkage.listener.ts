@@ -1,12 +1,15 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
-import { DataSource } from 'typeorm';
+import { DataSource, EntityManager } from 'typeorm';
 import { ReceivingPlan, ReceivingPlanStatus } from '../../receiving-plan/entities/receiving-plan.entity';
 import { QualityLog, QualityLogStatus } from '../../quality/entities/quality.entity';
+import { RejectActionLog, RejectActionType, RejectActionStatus } from '../../quality/entities/quality.entity';
 import { PurchaseIndentItem, IndentStatus } from '../../purchase/entities/purchase-indent.entity';
-import { StockTransfer, InventoryBatch } from '../../inventory-v2/entities/inventory-tracking.entity';
+import { StockTransfer, StockTransferItem, StockValuation, InventoryBatch, ValuationMethod } from '../../inventory/entities';
 import { PurchaseOrder, PurchaseOrderItem } from '../../purchase-order/entities/purchase-order.entity';
+import { ProductionJob, ProductionJobStatus, ProductionMaterialClosure } from '../../production/entities/production.entity';
 import { Warehouse } from '../../masters/entities/warehouse.entity';
+import { generateDocumentNumber } from '../../../common/utils/document-number.util';
 
 @Injectable()
 export class WorkflowLinkageListener {
@@ -319,7 +322,7 @@ export class WorkflowLinkageListener {
   }) {
     try {
       const order = await this.dataSource.manager.findOne(PurchaseOrder, {
-        where: { orderId: payload.orderId },
+        where: { orderId: payload.orderId, companyId: payload.companyId },
         relations: ['items'],
       });
 
@@ -356,37 +359,43 @@ export class WorkflowLinkageListener {
         return;
       }
 
-      let createdCount = 0;
-      for (const item of order.items) {
-        if (!item.isActive || item.noNeed) continue;
-        if (!item.productId) continue;
+      // One transaction for the whole batch: the plan-number generator takes a
+      // transaction-scoped advisory lock, which only serialises against other
+      // generators while the rows it hands out are still being inserted.
+      const createdCount = await this.dataSource.transaction(async (manager) => {
+        let created = 0;
+        for (const item of order.items) {
+          if (!item.isActive || item.noNeed) continue;
+          if (!item.productId) continue;
 
-        const qty = Number(item.quantity || 0);
-        if (qty <= 0) continue;
+          const qty = Number(item.quantity || 0);
+          if (qty <= 0) continue;
 
-        const planNumber = await this.generatePlanNumber(payload.companyId);
+          const planNumber = await this.generatePlanNumber(manager);
 
-        const plan = this.dataSource.manager.create(ReceivingPlan, {
-          planNumber,
-          companyId: payload.companyId,
-          purchaseOrderId: payload.orderId,
-          poNumber: order.orderNumber,
-          productId: item.productId,
-          productName: item.productName,
-          warehouseId: warehouse.id,
-          warehouseName: warehouse.name,
-          plannedQty: qty,
-          totalReceivedQty: 0,
-          status: ReceivingPlanStatus.PENDING,
-          plannedByUserId: payload.userId,
-          plannedBy: payload.userId,
-          remarks: `Auto-created from approved PO ${order.orderNumber}`,
-          createdBy: payload.userId,
-        });
+          const plan = manager.create(ReceivingPlan, {
+            planNumber,
+            companyId: payload.companyId,
+            purchaseOrderId: payload.orderId,
+            poNumber: order.orderNumber,
+            productId: item.productId,
+            productName: item.productName,
+            warehouseId: warehouse.id,
+            warehouseName: warehouse.name,
+            plannedQty: qty,
+            totalReceivedQty: 0,
+            status: ReceivingPlanStatus.PENDING,
+            plannedByUserId: payload.userId,
+            plannedBy: payload.userId,
+            remarks: `Auto-created from approved PO ${order.orderNumber}`,
+            createdBy: payload.userId,
+          });
 
-        await this.dataSource.manager.save(plan);
-        createdCount++;
-      }
+          await manager.save(plan);
+          created++;
+        }
+        return created;
+      });
 
       if (createdCount > 0) {
         this.logger.log(`Linkage 6: ${createdCount} receiving plans created for approved PO ${order.orderNumber}`);
@@ -398,25 +407,282 @@ export class WorkflowLinkageListener {
     }
   }
 
-  private async generatePlanNumber(companyId?: string): Promise<string> {
-    const currentYear = new Date().getFullYear();
-    const nextYear = currentYear + 1;
-    const fy = `${currentYear}-${nextYear.toString().slice(-2)}`;
+  /**
+   * Linkage 7: GRN Rejected Items → Auto-create RejectActionLog
+   * When a GRN records rejected quantities, auto-create a reject action log.
+   */
+  @OnEvent('grn.items.rejected')
+  async handleGrnItemsRejected(payload: {
+    grnId: string;
+    grnNumber: string;
+    receiptId: string;
+    purchaseOrderId: string;
+    poNumber: string;
+    productId: string;
+    productName: string;
+    rejectedQty: number;
+    companyId: string;
+    userId: string;
+  }) {
+    try {
+      const existing = await this.dataSource.manager.findOne(RejectActionLog, {
+        where: {
+          receiptId: payload.grnId,
+          productId: payload.productId,
+          companyId: payload.companyId,
+        },
+      });
+      if (existing) {
+        this.logger.log(`Reject action already exists for GRN ${payload.grnNumber} product ${payload.productId}, skipping`);
+        return;
+      }
 
-    const lastPlan = await this.dataSource.manager.find(ReceivingPlan, {
-      where: companyId ? { companyId } : {},
-      order: { createdAt: 'DESC' },
-      take: 1,
+      const rand = Math.floor(1000 + Math.random() * 9000);
+      const actionNumber = `REJECT-${rand}`;
+
+      const rejectAction = this.dataSource.manager.create(RejectActionLog, {
+        actionNumber,
+        companyId: payload.companyId,
+        receiptId: payload.grnId,
+        purchaseOrderId: payload.purchaseOrderId,
+        poNumber: payload.poNumber,
+        productId: payload.productId,
+        productName: payload.productName,
+        rejectedQty: payload.rejectedQty,
+        actionType: RejectActionType.RETURN_TO_VENDOR,
+        actionDate: new Date(),
+        status: RejectActionStatus.PENDING,
+        createdBy: payload.userId,
+      });
+
+      await this.dataSource.manager.save(rejectAction);
+      this.logger.log(`Linkage 7: Reject action ${actionNumber} auto-created for GRN ${payload.grnNumber} (${payload.rejectedQty} units rejected)`);
+    } catch (error) {
+      this.logger.error(`Failed to auto-create reject action for GRN ${payload.grnId}:`, error);
+    }
+  }
+
+  /**
+   * Linkage 8: Reject Resolution (Replacement) → Update PO Expected Delivery Date
+   * When a reject action is resolved with replacement expected, update the PO ETA.
+   */
+  @OnEvent('reject.resolution.replacement')
+  async handleRejectResolutionReplacement(payload: {
+    actionId: string;
+    purchaseOrderId: string;
+    replacementEta: Date;
+    companyId: string;
+    userId: string;
+  }) {
+    try {
+      const po = await this.dataSource.manager.findOne(PurchaseOrder, {
+        where: { orderId: payload.purchaseOrderId, companyId: payload.companyId },
+      });
+
+      if (!po) {
+        this.logger.error(`Linkage 8: PO ${payload.purchaseOrderId} not found for company ${payload.companyId}`);
+        return;
+      }
+
+      await this.dataSource.manager.update(PurchaseOrder,
+        { orderId: payload.purchaseOrderId, companyId: payload.companyId },
+        { expectedDeliveryDate: payload.replacementEta, updatedBy: payload.userId },
+      );
+
+      this.logger.log(`Linkage 8: PO ${po.orderNumber} expectedDeliveryDate updated to ${payload.replacementEta} from reject resolution`);
+    } catch (error) {
+      this.logger.error(`Failed to update PO ETA for reject ${payload.actionId}:`, error);
+    }
+  }
+
+  /**
+   * Linkage 9: Reject Resolution (No Replacement) → Close Receiving Plan
+   * When a reject action is resolved with no replacement, cancel the receiving plan.
+   */
+  @OnEvent('reject.resolution.no-replacement')
+  async handleRejectResolutionNoReplacement(payload: {
+    actionId: string;
+    purchaseOrderId: string;
+    productId: string;
+    companyId: string;
+    userId: string;
+  }) {
+    try {
+      const plans = await this.dataSource.manager.find(ReceivingPlan, {
+        where: {
+          purchaseOrderId: payload.purchaseOrderId,
+          productId: payload.productId,
+          companyId: payload.companyId,
+          status: ReceivingPlanStatus.PENDING,
+        },
+      });
+
+      if (!plans.length) {
+        this.logger.log(`Linkage 9: No pending receiving plans for PO ${payload.purchaseOrderId} product ${payload.productId}`);
+        return;
+      }
+
+      for (const plan of plans) {
+        await this.dataSource.manager.update(ReceivingPlan, plan.planId, {
+          status: ReceivingPlanStatus.CANCELLED,
+          updatedBy: payload.userId,
+        });
+      }
+
+      this.logger.log(`Linkage 9: ${plans.length} receiving plan(s) cancelled for PO ${payload.purchaseOrderId} (no replacement)`);
+    } catch (error) {
+      this.logger.error(`Failed to cancel receiving plans for reject ${payload.actionId}:`, error);
+    }
+  }
+
+  /**
+   * Linkage 10: Stock Transfer Received → Update Production Job Status
+   * When all material transfers for a production job are received,
+   * transition the job to READY_FOR_PRODUCTION.
+   */
+  @OnEvent('stock-transfer.received')
+  async handleStockTransferReceived(payload: {
+    transferId: string;
+    productionId: string;
+    destinationWarehouseId: string;
+    companyId: string;
+    userId: string;
+  }) {
+    try {
+      const job = await this.dataSource.manager.findOne(ProductionJob, {
+        where: { jobId: payload.productionId, companyId: payload.companyId },
+      });
+
+      if (!job) {
+        this.logger.log(`Linkage 10: Production job ${payload.productionId} not found for company ${payload.companyId}, skipping`);
+        return;
+      }
+
+      if (job.status !== ProductionJobStatus.WAITING_FOR_MATERIAL) {
+        this.logger.log(`Linkage 10: Job ${job.jobNumber} is ${job.status}, not WAITING_FOR_MATERIAL, skipping auto-transition`);
+        return;
+      }
+
+      const pendingTransfers = await this.dataSource.manager.find(StockTransfer, {
+        where: {
+          productionId: payload.productionId,
+          companyId: payload.companyId,
+        },
+      });
+
+      const allReceived = pendingTransfers.every(
+        (t) => t.status === 'received' || t.status === 'cancelled',
+      );
+
+      if (!allReceived) {
+        this.logger.log(`Linkage 10: Not all transfers received for job ${job.jobNumber}, keeping WAITING_FOR_MATERIAL`);
+        return;
+      }
+
+      await this.dataSource.manager.update(ProductionJob,
+        { jobId: job.jobId, companyId: payload.companyId },
+        { status: ProductionJobStatus.READY_FOR_PRODUCTION, updatedBy: payload.userId },
+      );
+
+      this.logger.log(`Linkage 10: Job ${job.jobNumber} transitioned to READY_FOR_PRODUCTION (all materials received)`);
+    } catch (error) {
+      this.logger.error(`Failed to update job status for transfer ${payload.transferId}:`, error);
+    }
+  }
+
+  /**
+   * Linkage 11: Production Job Completed → Process Material Closures for Stock
+   * When a production job is closed and has material closures,
+   * deduct used materials and return unused materials to source warehouse.
+   */
+  @OnEvent('production.job.completed')
+  async handleProductionJobMaterialClosures(payload: {
+    jobId: string;
+    jobNumber: string;
+    productId: string;
+    warehouseId: string;
+    companyId: string;
+    userId: string;
+    materialClosures?: Array<{
+      materialId: string;
+      materialName: string;
+      usedQty: number;
+      returnedQty: number;
+      sourceWarehouseId: string;
+      productionWarehouseId: string;
+    }>;
+  }) {
+    if (!payload.materialClosures?.length) return;
+
+    try {
+      for (const closure of payload.materialClosures) {
+        if (closure.usedQty > 0) {
+          await this.adjustStockValuation(
+            closure.materialId,
+            closure.productionWarehouseId,
+            -closure.usedQty,
+          );
+          this.logger.log(`Linkage 11: Deducted ${closure.usedQty} of ${closure.materialName} from production warehouse for job ${payload.jobNumber}`);
+        }
+
+        if (closure.returnedQty > 0) {
+          await this.adjustStockValuation(
+            closure.materialId,
+            closure.sourceWarehouseId,
+            closure.returnedQty,
+          );
+          await this.adjustStockValuation(
+            closure.materialId,
+            closure.productionWarehouseId,
+            -closure.returnedQty,
+          );
+          this.logger.log(`Linkage 11: Returned ${closure.returnedQty} of ${closure.materialName} to source warehouse for job ${payload.jobNumber}`);
+        }
+      }
+
+      this.logger.log(`Linkage 11: Material closures processed for job ${payload.jobNumber}`);
+    } catch (error) {
+      this.logger.error(`Failed to process material closures for job ${payload.jobId}:`, error);
+    }
+  }
+
+  private async adjustStockValuation(
+    productId: string,
+    warehouseId: string,
+    quantityChange: number,
+  ): Promise<void> {
+    let valuation = await this.dataSource.manager.findOne(StockValuation, {
+      where: { productId, warehouseId },
     });
 
-    let nextNumber = 1;
-    if (lastPlan.length > 0) {
-      const parts = lastPlan[0].planNumber.split('/');
-      const numPart = parts[parts.length - 1];
-      const parsed = parseInt(numPart, 10);
-      if (!isNaN(parsed)) nextNumber = parsed + 1;
+    if (!valuation) {
+      valuation = this.dataSource.manager.create(StockValuation, {
+        productId,
+        warehouseId,
+        warehouseName: '',
+        quantity: 0,
+        averageCost: 0,
+        totalValue: 0,
+        valuationMethod: ValuationMethod.AVERAGE,
+      });
+      await this.dataSource.manager.save(valuation);
     }
 
-    return `PLAN/${fy}/${nextNumber.toString().padStart(5, '0')}`;
+    const newQty = Number(valuation.quantity) + quantityChange;
+    const avgCost = Number(valuation.averageCost);
+
+    await this.dataSource.manager.update(StockValuation, valuation.valuationId, {
+      quantity: Math.max(0, newQty),
+      totalValue: Math.max(0, newQty) * avgCost,
+    });
+  }
+
+  private async generatePlanNumber(manager: EntityManager): Promise<string> {
+    return generateDocumentNumber({
+      manager,
+      prefix: 'PLAN',
+      table: 'receiving_plans',
+      column: 'plan_number',
+    });
   }
 }

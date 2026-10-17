@@ -5,8 +5,6 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   Index,
-  ManyToOne,
-  JoinColumn,
 } from 'typeorm';
 
 export enum BatchStatus {
@@ -18,7 +16,8 @@ export enum BatchStatus {
 }
 
 @Entity('inventory_batches')
-@Index(['productId', 'batchNumber'], { unique: true })
+@Index(['batchNumber'], { unique: true })
+@Index(['productId', 'batchNumber'])
 @Index(['warehouseId'])
 @Index(['expiryDate'])
 export class InventoryBatch {
@@ -28,44 +27,47 @@ export class InventoryBatch {
   @Column({ nullable: true })
   companyId: string;
 
+  @Column({ unique: true })
+  batchNumber: string;
+
   @Column()
   productId: string;
 
-  @Column()
-  batchNumber: string;
+  @Column({ nullable: true })
+  productName: string;
 
   @Column({ nullable: true })
   warehouseId: string;
 
   @Column({ nullable: true })
-  locationId: string;
-
-  @Column('decimal', { precision: 15, scale: 3, default: 0 })
-  quantity: number;
-
-  @Column('decimal', { precision: 15, scale: 3, default: 0 })
-  reservedQuantity: number;
-
-  @Column('decimal', { precision: 15, scale: 3, default: 0 })
-  availableQuantity: number;
-
-  @Column({ type: 'decimal', precision: 15, scale: 2, default: 0 })
-  unitCost: number;
-
-  @Column({ type: 'decimal', precision: 15, scale: 2, default: 0 })
-  totalValue: number;
+  warehouseName: string;
 
   @Column({ nullable: true })
-  mfgDate: Date;
+  locationId: string;
+
+  @Column({ nullable: true })
+  locationName: string;
+
+  @Column({ nullable: true })
+  manufacturingDate: Date;
 
   @Column({ nullable: true })
   expiryDate: Date;
 
-  @Column({ nullable: true })
-  grnId: string;
+  @Column({ type: 'decimal', precision: 18, scale: 3, default: 0 })
+  quantity: number;
 
-  @Column({ nullable: true })
-  grnNumber: string;
+  @Column({ type: 'decimal', precision: 18, scale: 3, default: 0 })
+  reservedQuantity: number;
+
+  @Column({ type: 'decimal', precision: 15, scale: 3, default: 0 })
+  availableQuantity: number;
+
+  @Column({ type: 'decimal', precision: 18, scale: 2, default: 0 })
+  unitCost: number;
+
+  @Column({ type: 'decimal', precision: 18, scale: 2, default: 0 })
+  totalCost: number;
 
   @Column({ nullable: true })
   vendorId: string;
@@ -74,10 +76,22 @@ export class InventoryBatch {
   vendorName: string;
 
   @Column({ nullable: true })
-  purchaseInvoiceId: string;
+  purchaseOrderId: string;
+
+  @Column({ nullable: true })
+  grnId: string;
+
+  @Column({ nullable: true })
+  grnNumber: string;
 
   @Column({ nullable: true })
   invoiceNumber: string;
+
+  @Column({ nullable: true })
+  mfgLicenseNumber: string;
+
+  @Column({ nullable: true })
+  barcode: string;
 
   @Column({
     type: 'enum',
@@ -85,6 +99,9 @@ export class InventoryBatch {
     default: BatchStatus.ACTIVE,
   })
   status: BatchStatus;
+
+  @Column({ default: true })
+  isActive: boolean;
 
   @Column({ type: 'text', nullable: true })
   remarks: string;
@@ -97,6 +114,9 @@ export class InventoryBatch {
 
   @CreateDateColumn()
   createdAt: Date;
+
+  @Column({ nullable: true })
+  updatedBy: string;
 
   @UpdateDateColumn()
   updatedAt: Date;

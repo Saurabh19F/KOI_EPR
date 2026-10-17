@@ -1,6 +1,6 @@
 import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, DataSource, FindOptionsWhere, LessThanOrEqual, IsNull, Not } from 'typeorm';
+import { Repository, DataSource, LessThanOrEqual, Not } from 'typeorm';
 import {
   InventoryBatch,
   InventorySerialNumber,
@@ -12,8 +12,8 @@ import {
   StockTransferItem,
   ReorderPoint,
   ValuationMethod,
-} from './entities/inventory-tracking.entity';
-import { StockLocationTransferLog } from './entities/stock-location-transfer-log.entity';
+  StockLocationTransferLog,
+} from './entities';
 import {
   CreateBatchDto,
   BatchQueryDto,
@@ -31,18 +31,11 @@ import {
   ReceiveTransferMaterialDto,
 } from './dto/inventory-tracking.dto';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-
-export interface PaginatedResult<T> {
-  data: T[];
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
-}
+import { PaginatedResult } from '../../common/types';
 
 @Injectable()
-export class InventoryTrackingService {
-  private readonly logger = new Logger(InventoryTrackingService.name);
+export class InventoryAdvancedService {
+  private readonly logger = new Logger(InventoryAdvancedService.name);
 
   constructor(
     @InjectRepository(InventoryBatch)
@@ -85,7 +78,6 @@ export class InventoryTrackingService {
 
       const savedBatch = await queryRunner.manager.save(batch);
 
-      // Update stock valuation
       await this.updateStockValuation(
         dto.productId,
         dto.warehouseId,
@@ -233,7 +225,6 @@ export class InventoryTrackingService {
   // ============ STOCK RESERVATION OPERATIONS ============
 
   async createReservation(dto: CreateReservationDto, userId: string): Promise<StockReservation> {
-    // Check available stock
     const availableQty = await this.getAvailableStock(dto.productId, dto.warehouseId);
     if (availableQty < dto.quantity) {
       throw new BadRequestException(`Insufficient stock. Available: ${availableQty}, Requested: ${dto.quantity}`);
@@ -311,7 +302,6 @@ export class InventoryTrackingService {
     await queryRunner.startTransaction();
 
     try {
-      // Generate transfer number within transaction
       const transferNumber = await this.generateTransferNumberForTransfer(queryRunner.manager, dto.companyId);
 
       const transfer = queryRunner.manager.create(StockTransfer, {
@@ -349,7 +339,6 @@ export class InventoryTrackingService {
         });
         await queryRunner.manager.save(item);
 
-        // Deduct from source warehouse
         await this.updateStockValuation(
           itemDto.productId,
           dto.sourceWarehouseId,
@@ -383,7 +372,6 @@ export class InventoryTrackingService {
     await queryRunner.startTransaction();
 
     try {
-      // Add to destination warehouse
       const items = await this.transferItemRepository.find({ where: { transferId } });
       for (const item of items) {
         await this.updateStockValuation(
@@ -412,14 +400,19 @@ export class InventoryTrackingService {
     }
   }
 
-  async findAllTransfers(params: PaginationDto & { companyId?: string; status?: string }): Promise<PaginatedResult<StockTransfer>> {
-    const { page = 1, limit = 20, search, status, companyId } = params;
+  async findAllTransfers(params: PaginationDto & { companyId?: string; status?: string; sourceWarehouseId?: string }): Promise<PaginatedResult<StockTransfer>> {
+    const { page = 1, limit = 20, search, status, companyId, sourceWarehouseId } = params;
     const skip = (page - 1) * limit;
 
     const queryBuilder = this.transferRepository.createQueryBuilder('transfer');
 
-    if (companyId) queryBuilder.andWhere('transfer.companyId = :companyId', { companyId });
+    if (companyId) {
+      queryBuilder.andWhere('transfer.companyId = :companyId', { companyId });
+    } else {
+      queryBuilder.andWhere('(transfer.companyId IS NULL OR transfer.companyId = :companyId)', { companyId: '' });
+    }
     if (status) queryBuilder.andWhere('transfer.status = :status', { status });
+    if (sourceWarehouseId) queryBuilder.andWhere('transfer.sourceWarehouseId = :sourceWarehouseId', { sourceWarehouseId });
     if (search) {
       queryBuilder.andWhere('(transfer.transferNumber ILIKE :search OR transfer.referenceNumber ILIKE :search)', { search: `%${search}%` });
     }
@@ -564,7 +557,6 @@ export class InventoryTrackingService {
         for (let i = 0; i < dto.items.length; i++) {
           const itemDto = dto.items[i];
 
-          // Get system quantity
           const valuation = await this.valuationRepository.findOne({
             where: { productId: itemDto.productId, warehouseId: dto.warehouseId },
           });
@@ -617,12 +609,11 @@ export class InventoryTrackingService {
 
       for (const item of items) {
         if (item.variance !== 0) {
-          // Update stock valuation
           await this.updateStockValuation(
             item.productId,
             count.warehouseId,
             item.variance,
-            0, // Cost doesn't change
+            0,
             queryRunner.manager
           );
         }
@@ -846,7 +837,6 @@ export class InventoryTrackingService {
   // ============ FIFO/LIFO CALCULATIONS ============
 
   async getFifoCost(productId: string, warehouseId?: string): Promise<number> {
-    // Get oldest batch
     const batch = await this.batchRepository.findOne({
       where: {
         productId,
@@ -861,7 +851,6 @@ export class InventoryTrackingService {
   }
 
   async getLifoCost(productId: string, warehouseId?: string): Promise<number> {
-    // Get newest batch
     const batch = await this.batchRepository.findOne({
       where: {
         productId,
@@ -971,7 +960,6 @@ export class InventoryTrackingService {
     await queryRunner.startTransaction();
 
     try {
-      // Validate stock availability (physical minus reserved)
       const stockMap = await this.getWarehouseStockMapInternal(dto.sourceWarehouseId, companyId, queryRunner.manager);
 
       const requestedByProduct: Record<string, number> = {};
@@ -1028,7 +1016,6 @@ export class InventoryTrackingService {
 
         await queryRunner.manager.save(transferItem);
 
-        // For same-warehouse (auto-approved): deduct from source immediately
         if (!isCrossWarehouse) {
           await this.updateStockValuation(
             item.productId,
@@ -1188,6 +1175,16 @@ export class InventoryTrackingService {
 
       await queryRunner.commitTransaction();
 
+      if (transfer.productionId && finalStatus === 'received') {
+        this.eventEmitter.emit('stock-transfer.received', {
+          transferId: transfer.transferId,
+          productionId: transfer.productionId,
+          destinationWarehouseId: transfer.destinationWarehouseId,
+          companyId,
+          userId,
+        });
+      }
+
       const bin = dto.targetBin || 'Inward-Staging';
       return {
         status: 'success',
@@ -1217,7 +1214,6 @@ export class InventoryTrackingService {
   ): Promise<Record<string, number>> {
     const repo = manager || this.dataSource.manager;
 
-    // Get physical stock from valuations
     const valuations = await repo.find(StockValuation, {
       where: { warehouseId, companyId },
     });
@@ -1227,7 +1223,6 @@ export class InventoryTrackingService {
       stockMap[v.productId] = (stockMap[v.productId] || 0) + Number(v.quantity);
     }
 
-    // Subtract outstanding (non-completed) transfer request quantities
     const outstandingTransfers = await repo
       .createQueryBuilder(StockTransfer, 'transfer')
       .innerJoin(StockTransferItem, 'item', 'item.transferId = transfer.transferId')
@@ -1265,5 +1260,101 @@ export class InventoryTrackingService {
     );
 
     return rows.map((r: any) => r.email);
+  }
+
+  // ============ BIN & RACK OPERATIONS ============
+
+  async getBinRackStock(params: {
+    warehouseId: string;
+    companyId?: string;
+    search?: string;
+    page?: number;
+    limit?: number;
+  }) {
+    const { warehouseId, companyId, search, page = 1, limit = 50 } = params;
+
+    let query = `SELECT stock_id, product_id, sku, product_name, bin_location, current_stock, location_id
+      FROM inventory_stock
+      WHERE location_id = $1 AND current_stock > 0`;
+    const queryParams: any[] = [warehouseId];
+    let paramIdx = 2;
+
+    if (companyId) {
+      query += ` AND company_id = $${paramIdx}`;
+      queryParams.push(companyId);
+      paramIdx++;
+    } else {
+      query += ` AND (company_id IS NULL OR company_id = '')`;
+    }
+
+    if (search) {
+      query += ` AND (sku ILIKE $${paramIdx} OR product_name ILIKE $${paramIdx})`;
+      queryParams.push(`%${search}%`);
+      paramIdx++;
+    }
+
+    const countQuery = query.replace(/SELECT .* FROM/, 'SELECT COUNT(*) as cnt FROM');
+    const countResult = await this.dataSource.query(countQuery, queryParams);
+    const total = Number(countResult[0]?.cnt || 0);
+
+    query += ` ORDER BY bin_location ASC, product_name ASC`;
+    query += ` LIMIT $${paramIdx} OFFSET $${paramIdx + 1}`;
+    queryParams.push(limit, (page - 1) * limit);
+
+    const data = await this.dataSource.query(query, queryParams);
+
+    const companyFilter = companyId
+      ? `AND company_id = $2`
+      : `AND (company_id IS NULL OR company_id = '')`;
+    const aggParams = companyId ? [warehouseId, companyId] : [warehouseId];
+
+    const stagingTotal = await this.dataSource.query(
+      `SELECT COALESCE(SUM(current_stock), 0) as total FROM inventory_stock WHERE location_id = $1 ${companyFilter} AND (bin_location = 'Inward-Staging' OR bin_location IS NULL) AND current_stock > 0`,
+      aggParams,
+    );
+
+    const distinctBins = await this.dataSource.query(
+      `SELECT COUNT(DISTINCT bin_location) as cnt FROM inventory_stock WHERE location_id = $1 ${companyFilter} AND bin_location IS NOT NULL AND current_stock > 0`,
+      aggParams,
+    );
+
+    return {
+      data,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit),
+      stagingTotal: Number(stagingTotal[0]?.total || 0),
+      distinctBins: Number(distinctBins[0]?.cnt || 0),
+    };
+  }
+
+  async assignBinRack(params: {
+    stockId: string;
+    newBin: string;
+    companyId?: string;
+    userId: string;
+  }) {
+    const { stockId, newBin, companyId, userId } = params;
+
+    const tenantClause = companyId
+      ? `AND company_id = $2`
+      : `AND (company_id IS NULL OR company_id = '')`;
+    const tenantParams = companyId ? [stockId, companyId] : [stockId];
+
+    const stock = await this.dataSource.query(
+      `SELECT * FROM inventory_stock WHERE stock_id = $1 ${tenantClause}`,
+      tenantParams,
+    );
+
+    if (!stock.length) {
+      throw new NotFoundException('Stock record not found');
+    }
+
+    await this.dataSource.query(
+      `UPDATE inventory_stock SET bin_location = $1 WHERE stock_id = $2 ${tenantClause}`,
+      companyId ? [newBin, stockId, companyId] : [newBin, stockId],
+    );
+
+    return { success: true, message: `Bin/Rack updated to ${newBin}` };
   }
 }
