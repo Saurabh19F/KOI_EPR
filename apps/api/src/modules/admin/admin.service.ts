@@ -127,9 +127,7 @@ export class AdminService {
 
   async deleteNumberSeries(id: string, user?: any) {
     const series = await this.getNumberSeriesById(id, user);
-    series.isActive = false;
-    series.updatedBy = user?.userId;
-    await this.numberSeriesRepo.save(series);
+    await this.numberSeriesRepo.remove(series);
     return { deleted: true };
   }
 
@@ -281,8 +279,7 @@ export class AdminService {
     if (companyId && template.companyId && template.companyId !== companyId) {
       throw new NotFoundException('Email template not found');
     }
-    template.isActive = false;
-    await this.emailTemplateRepo.save(template);
+    await this.emailTemplateRepo.remove(template);
     return { deleted: true };
   }
 
@@ -348,8 +345,7 @@ export class AdminService {
     if (companyId && department.companyId && department.companyId !== companyId) {
       throw new NotFoundException('Department not found');
     }
-    department.isActive = false;
-    await this.departmentRepo.save(department);
+    await this.departmentRepo.remove(department);
     return { deleted: true };
   }
 

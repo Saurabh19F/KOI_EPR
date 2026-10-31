@@ -389,11 +389,13 @@ export class PurchaseService {
 
   async deleteQuote(id: string): Promise<void> {
     const quote = await this.findQuoteById(id);
-    quote.deletedAt = new Date();
-    await this.quoteRepo.save(quote);
-
-    // Soft delete items
-    await this.itemRepo.update({ quoteId: id }, { deletedAt: new Date() });
+    const items = await this.itemRepo.find({ where: { quoteId: id }, select: ['itemId'] });
+    if (items.length > 0) {
+      const itemIds = items.map(i => i.itemId);
+      await this.vendorQuoteRepo.delete({ quoteItemId: In(itemIds) });
+    }
+    await this.itemRepo.delete({ quoteId: id });
+    await this.quoteRepo.remove(quote);
   }
 
   // ========== CONVERT QUOTE TO PO ==========
@@ -598,11 +600,8 @@ export class PurchaseService {
       }
     }
 
-    item.deletedAt = new Date();
-    await this.itemRepo.save(item);
-
-    // Soft delete vendor quotes
-    await this.vendorQuoteRepo.update({ quoteItemId: id }, { deletedAt: new Date() });
+    await this.vendorQuoteRepo.delete({ quoteItemId: id });
+    await this.itemRepo.remove(item);
   }
 
   async addItemsToQuote(quoteId: string, items: CreatePurchaseQuoteItemDto[], userId?: string, currentUser?: any): Promise<PurchaseQuote> {
@@ -1192,8 +1191,7 @@ export class PurchaseService {
 
   async deleteLabel(id: string): Promise<void> {
     const label = await this.findLabelById(id);
-    label.deletedAt = new Date();
-    await this.labelRepo.save(label);
+    await this.labelRepo.remove(label);
   }
 
   // ========== LANDING COSTS ==========

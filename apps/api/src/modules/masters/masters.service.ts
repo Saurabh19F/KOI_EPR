@@ -476,8 +476,7 @@ export class MastersService {
 
   async deleteProduct(id: string, user?: CurrentUserDto) {
     const product = await this.findProductById(id, user);
-    product.deletedAt = new Date();
-    await this.productRepo.save(product);
+    await this.productRepo.remove(product);
     return { deleted: true };
   }
 
@@ -827,8 +826,7 @@ export class MastersService {
 
   async deleteCustomer(id: string, user?: CurrentUserDto) {
     const customer = await this.findCustomerById(id, user);
-    customer.deletedAt = new Date();
-    await this.customerRepo.save(customer);
+    await this.customerRepo.remove(customer);
     return { deleted: true };
   }
 
@@ -1013,7 +1011,7 @@ export class MastersService {
 
   async deleteVendor(id: string, user?: CurrentUserDto) {
     await this.findVendorById(id, user);
-    await this.dataSource.query(`UPDATE vendors SET "deletedAt" = now(), "isActive" = FALSE WHERE "vendorId" = $1`, [id]);
+    await this.dataSource.query(`DELETE FROM vendors WHERE "vendorId" = $1`, [id]);
     return { deleted: true };
   }
 

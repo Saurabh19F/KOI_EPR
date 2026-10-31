@@ -122,9 +122,7 @@ export class PlatformService {
 
   async deleteCompany(id: string, deletedBy: string): Promise<void> {
     const company = await this.findCompanyById(id);
-    company.deletedAt = new Date();
-    company.deletedBy = deletedBy;
-    await this.companyRepository.save(company);
+    await this.companyRepository.remove(company);
   }
 
   // Company Branding Methods

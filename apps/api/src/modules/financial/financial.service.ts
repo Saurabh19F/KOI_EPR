@@ -171,7 +171,7 @@ export class FinancialService {
 
   async deleteAccount(id: string): Promise<boolean> {
     await this.pgPool.query(
-      'UPDATE accounts SET is_active = false, deleted_at = NOW() WHERE account_id = $1',
+      'DELETE FROM accounts WHERE account_id = $1',
       [id]
     );
     return true;
@@ -387,7 +387,7 @@ export class FinancialService {
   }
 
   async deleteJournalEntry(id: string): Promise<boolean> {
-    await this.pgPool.query('UPDATE journal_entries SET deleted_at = NOW() WHERE entry_id = $1', [id]);
+    await this.pgPool.query('DELETE FROM journal_entries WHERE entry_id = $1', [id]);
     return true;
   }
 

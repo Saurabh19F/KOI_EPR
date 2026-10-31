@@ -258,10 +258,7 @@ export class UsersService {
       throw new ForbiddenException('Only super admins can delete super admin users');
     }
 
-    user.deletedAt = new Date();
-    user.isActive = false;
-    user.updatedBy = currentUser?.userId;
-    await this.userRepository.save(user);
+    await this.userRepository.remove(user);
     return { deleted: true };
   }
 

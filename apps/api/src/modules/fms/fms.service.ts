@@ -168,9 +168,7 @@ export class FmsService {
     if (user?.companyId && workflow.companyId && workflow.companyId !== user.companyId) {
       throw new NotFoundException('Workflow not found');
     }
-    workflow.isActive = false;
-    workflow.updatedBy = user?.userId;
-    await this.masterRepository.save(workflow);
+    await this.masterRepository.remove(workflow);
     return { deleted: true };
   }
 
@@ -262,7 +260,7 @@ export class FmsService {
   }
 
   async deleteTask(id: string): Promise<boolean> {
-    const result = await this.taskRepository.update(id, { isActive: false, deletedAt: new Date() });
+    const result = await this.taskRepository.delete(id);
     return (result.affected ?? 0) > 0;
   }
 

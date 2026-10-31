@@ -1331,7 +1331,7 @@ export class PurchaseOrderService {
     const vendor = await this.vendorMasterRepository.findOne({ where });
     if (!vendor) throw new NotFoundException(`Vendor not found: ${id}`);
 
-    await this.vendorMasterRepository.update(id, { isActive: false });
+    await this.vendorMasterRepository.remove(vendor);
     return { success: true };
   }
 

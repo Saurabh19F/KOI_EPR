@@ -592,11 +592,6 @@ export class RateService implements OnApplicationBootstrap, OnModuleDestroy {
 
   async deleteAnalysis(id: string, userId?: string): Promise<void> {
     const analysis = await this.findAnalysisById(id);
-    analysis.deletedAt = new Date();
-    await this.analysisRepo.save(analysis);
-
-    // Soft delete items
-    await this.itemRepo.update({ analysisId: id }, { deletedAt: new Date() });
 
     await this.auditService.log(
       analysis.companyId || '',
@@ -606,6 +601,9 @@ export class RateService implements OnApplicationBootstrap, OnModuleDestroy {
       userId || 'system',
       { oldValue: { analysisNo: analysis.analysisNo } },
     );
+
+    await this.itemRepo.delete({ analysisId: id });
+    await this.analysisRepo.remove(analysis);
   }
 
   // ========== PRICE ANALYSIS ITEMS ==========
@@ -669,8 +667,7 @@ export class RateService implements OnApplicationBootstrap, OnModuleDestroy {
   async deleteAnalysisItem(id: string): Promise<void> {
     const item = await this.itemRepo.findOne({ where: { itemId: id } });
     if (!item) throw new NotFoundException('Analysis Item not found');
-    item.deletedAt = new Date();
-    await this.itemRepo.save(item);
+    await this.itemRepo.remove(item);
   }
 
   // ========== HAULAGE RATES ==========
@@ -705,8 +702,7 @@ export class RateService implements OnApplicationBootstrap, OnModuleDestroy {
   async deleteHaulageRate(id: string): Promise<void> {
     const rate = await this.haulageRepo.findOne({ where: { haulageId: id } });
     if (!rate) throw new NotFoundException('Haulage Rate not found');
-    rate.isActive = false;
-    await this.haulageRepo.save(rate);
+    await this.haulageRepo.remove(rate);
   }
 
   // ========== CURRENCY RATES ==========
@@ -743,8 +739,7 @@ export class RateService implements OnApplicationBootstrap, OnModuleDestroy {
   async deleteCurrencyRate(id: string): Promise<void> {
     const rate = await this.currencyRepo.findOne({ where: { rateId: id } });
     if (!rate) throw new NotFoundException('Currency Rate not found');
-    rate.isActive = false;
-    await this.currencyRepo.save(rate);
+    await this.currencyRepo.remove(rate);
   }
 
   // ========== FINAL CURRENCY RATES ==========

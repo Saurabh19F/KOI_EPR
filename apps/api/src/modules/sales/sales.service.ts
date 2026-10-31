@@ -791,8 +791,7 @@ export class SalesService {
 
   async deleteEnquiry(id: string) {
     const enquiry = await this.findEnquiryById(id);
-    enquiry.deletedAt = new Date();
-    await this.enquiryRepo.save(enquiry);
+    await this.enquiryRepo.remove(enquiry);
     return { deleted: true };
   }
 
