@@ -147,7 +147,7 @@ export default function PostReceiptQCPage() {
         reason: reason || undefined,
         remarks: remarks || undefined,
         inspectionDate: new Date().toISOString(),
-        checkedBy: user?.username || user?.name || '',
+        checkedBy: user?.name || user?.email || '',
         checkedByUserId: user?.userId || '',
       });
 
@@ -171,7 +171,7 @@ export default function PostReceiptQCPage() {
         reason: reason || undefined,
         remarks: remarks || undefined,
         inspectionDate: new Date().toISOString(),
-        checkedBy: user?.username || user?.name || '',
+        checkedBy: user?.name || user?.email || '',
         checkedByUserId: user?.userId || '',
       },
     });

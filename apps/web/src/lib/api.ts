@@ -710,7 +710,7 @@ export const inventoryApi = {
 
 // Inventory Tracking API (v2 — batch, serial, transfer dispatch/receive)
 export const inventoryTrackingApi = {
-  getTransfers: (params?: { page?: number; limit?: number; status?: string; sourceWarehouseId?: string; destinationWarehouseId?: string }) =>
+  getTransfers: (params?: { page?: number; limit?: number; search?: string; status?: string; sourceWarehouseId?: string; destinationWarehouseId?: string }) =>
     api.get('/inventory-tracking/transfers', { params }),
   getTransfer: (transferId: string) =>
     api.get(`/inventory-tracking/transfers/${transferId}`),
