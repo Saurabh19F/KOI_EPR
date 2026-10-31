@@ -72,9 +72,9 @@ export class UsersService {
       throw new ForbiddenException('Only super admins can create super admin users');
     }
 
-    // Check email uniqueness
+    // Check email uniqueness (exclude soft-deleted users)
     const existingUser = await this.userRepository.findOne({
-      where: { email: data.email },
+      where: { email: data.email, deletedAt: IsNull() },
     });
 
     if (existingUser) {
@@ -221,10 +221,10 @@ export class UsersService {
       delete (data as any).roleIds;
     }
 
-    // Check email uniqueness if changing email
+    // Check email uniqueness if changing email (exclude soft-deleted users)
     if (data.email && data.email !== user.email) {
       const existingUser = await this.userRepository.findOne({
-        where: { email: data.email },
+        where: { email: data.email, deletedAt: IsNull() },
       });
       if (existingUser) {
         throw new ConflictException('Email already in use');
