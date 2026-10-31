@@ -90,8 +90,8 @@ export class NotificationsGateway implements OnGatewayConnection, OnGatewayDisco
       const secret = this.configService.get<string>('JWT_SECRET');
       const payload = this.jwtService.verify(token, { secret });
 
-      // Support both sub (standard) and userId
-      const userId = payload.sub || payload.userId;
+      // `sub` is the identity claim carried by access tokens
+      const userId = payload.sub;
       if (userId && payload.type === 'access') {
         client.userId = userId;
         client.companyId = payload.companyId;

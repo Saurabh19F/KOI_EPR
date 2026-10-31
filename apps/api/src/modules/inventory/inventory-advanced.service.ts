@@ -32,6 +32,8 @@ import {
 } from './dto/inventory-tracking.dto';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PaginatedResult } from '../../common/types';
+import { InventoryStock } from '../masters/entities/inventory-stock.entity';
+import { StockMovement, MovementType } from './entities/stock-movement.entity';
 
 @Injectable()
 export class InventoryAdvancedService {
@@ -400,8 +402,8 @@ export class InventoryAdvancedService {
     }
   }
 
-  async findAllTransfers(params: PaginationDto & { companyId?: string; status?: string; sourceWarehouseId?: string }): Promise<PaginatedResult<StockTransfer>> {
-    const { page = 1, limit = 20, search, status, companyId, sourceWarehouseId } = params;
+  async findAllTransfers(params: PaginationDto & { companyId?: string; status?: string; sourceWarehouseId?: string; destinationWarehouseId?: string }): Promise<PaginatedResult<StockTransfer>> {
+    const { page = 1, limit = 20, search, status, companyId, sourceWarehouseId, destinationWarehouseId } = params;
     const skip = (page - 1) * limit;
 
     const queryBuilder = this.transferRepository.createQueryBuilder('transfer');
@@ -413,6 +415,7 @@ export class InventoryAdvancedService {
     }
     if (status) queryBuilder.andWhere('transfer.status = :status', { status });
     if (sourceWarehouseId) queryBuilder.andWhere('transfer.sourceWarehouseId = :sourceWarehouseId', { sourceWarehouseId });
+    if (destinationWarehouseId) queryBuilder.andWhere('transfer.destinationWarehouseId = :destinationWarehouseId', { destinationWarehouseId });
     if (search) {
       queryBuilder.andWhere('(transfer.transferNumber ILIKE :search OR transfer.referenceNumber ILIKE :search)', { search: `%${search}%` });
     }
@@ -1142,6 +1145,7 @@ export class InventoryAdvancedService {
     try {
       const items = await this.transferItemRepository.find({ where: { transferId: dto.transferId } });
 
+      const bin = dto.targetBin || 'Inward-Staging';
       let totalReceived = 0;
       let totalDispatched = 0;
       for (const item of items) {
@@ -1159,6 +1163,48 @@ export class InventoryAdvancedService {
         await queryRunner.manager.update(StockTransferItem, item.itemId, {
           receivedQty: itemReceiveQty,
         });
+        let stock = await queryRunner.manager.findOne(InventoryStock, {
+          where: { productId: item.productId, warehouseId: transfer.destinationWarehouseId },
+        });
+        const qtyBefore = Number(stock?.currentStock || 0);
+        const qtyAfter = qtyBefore + itemReceiveQty;
+
+        if (stock) {
+          stock.currentStock = qtyAfter;
+          stock.binLocation = stock.binLocation || bin;
+          stock.lastMovementDate = new Date();
+          await queryRunner.manager.save(InventoryStock, stock);
+        } else {
+          stock = queryRunner.manager.create(InventoryStock, {
+            companyId,
+            productId: item.productId,
+            sku: item.productName || item.productId,
+            productName: item.productName,
+            warehouseId: transfer.destinationWarehouseId,
+            currentStock: qtyAfter,
+            binLocation: bin,
+            reorderLevel: 0,
+            maxStockLevel: 1000,
+            lastMovementDate: new Date(),
+          });
+          await queryRunner.manager.save(InventoryStock, stock);
+        }
+
+        await queryRunner.manager.save(StockMovement, queryRunner.manager.create(StockMovement, {
+          companyId,
+          productId: item.productId,
+          warehouseId: transfer.destinationWarehouseId,
+          movementType: MovementType.TRANSFER_IN,
+          quantity: itemReceiveQty,
+          quantityBefore: qtyBefore,
+          quantityAfter: qtyAfter,
+          referenceType: 'stock_transfer',
+          referenceId: transfer.transferId,
+          referenceNo: transfer.transferNumber,
+          unitCost: Number(item.unitCost || 0),
+          remarks: `Received from ${transfer.sourceWarehouseName}`,
+          performedBy: userId,
+        }));
 
         totalReceived += itemReceiveQty;
         totalDispatched += dispatched;
@@ -1185,7 +1231,6 @@ export class InventoryAdvancedService {
         });
       }
 
-      const bin = dto.targetBin || 'Inward-Staging';
       return {
         status: 'success',
         message: `Material received (${finalStatus})! ${totalReceived} units added to destination (${bin}).`,

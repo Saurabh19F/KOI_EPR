@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { purchaseApi, salesApi, mastersApi } from '@/lib/api';
+import { purchaseApi, salesApi, mastersApi, purchaseOrderApi } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -29,6 +29,7 @@ import {
   AlertCircle,
   ChevronDown,
   FileText,
+  ShoppingCart,
 } from 'lucide-react';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
@@ -37,10 +38,16 @@ import { formatDate } from '@/lib/utils';
 const STATUS_CONFIG: Record<string, { color: string; label: string }> = {
   draft: { color: 'bg-gray-100 text-gray-700', label: 'Draft' },
   sent: { color: 'bg-blue-100 text-blue-700', label: 'Submitted' },
+  submitted: { color: 'bg-blue-100 text-blue-700', label: 'Submitted' },
+  under_review: { color: 'bg-orange-100 text-orange-700', label: 'Under Review' },
+  vendor_quote_pending: { color: 'bg-yellow-100 text-yellow-700', label: 'Vendor Quote Pending' },
   quote_received: { color: 'bg-purple-100 text-purple-700', label: 'Rates Received' },
   compared: { color: 'bg-cyan-100 text-cyan-700', label: 'Compared' },
+  rate_finalized: { color: 'bg-indigo-100 text-indigo-700', label: 'Rate Finalized' },
+  sent_to_costing: { color: 'bg-amber-100 text-amber-700', label: 'Sent to Costing' },
   approved: { color: 'bg-green-100 text-green-700', label: 'Approved' },
   rejected: { color: 'bg-red-100 text-red-700', label: 'Rejected' },
+  revised: { color: 'bg-teal-100 text-teal-700', label: 'Revised' },
 };
 
 function SearchableSelect({
@@ -382,6 +389,18 @@ export default function PurchaseQuoteDetailPage() {
     mrp: '',
     gstRateId: '',
     locationId: '',
+  });
+
+  // Convert to PO state
+  const [showConvertToPO, setShowConvertToPO] = useState(false);
+  const [vendorSearch, setVendorSearch] = useState('');
+  const [convertForm, setConvertForm] = useState({
+    vendorId: '',
+    vendorName: '',
+    vendorCode: '',
+    vendorGstin: '',
+    expectedDeliveryDate: '',
+    notes: '',
   });
 
   // Quick Create State
@@ -745,6 +764,36 @@ export default function PurchaseQuoteDetailPage() {
     onError: () => toast.error('Failed to approve quote'),
   });
 
+  // Vendor search for Convert to PO
+  const { data: vendorsData } = useQuery({
+    queryKey: ['vendors-for-po', vendorSearch],
+    queryFn: () => purchaseOrderApi.getVendors({ search: vendorSearch || undefined, limit: 50 }),
+    enabled: showConvertToPO,
+  });
+
+  // Convert to PO mutation
+  const convertToPOMutation = useMutation({
+    mutationFn: () => purchaseApi.convertToPO(quoteId, {
+      vendorId: convertForm.vendorId,
+      vendorName: convertForm.vendorName,
+      vendorCode: convertForm.vendorCode,
+      vendorGstin: convertForm.vendorGstin,
+      expectedDeliveryDate: convertForm.expectedDeliveryDate || undefined,
+      notes: convertForm.notes || undefined,
+    }),
+    onSuccess: (res: any) => {
+      queryClient.invalidateQueries({ queryKey: ['purchase-quote', quoteId] });
+      queryClient.invalidateQueries({ queryKey: ['purchase-quotes'] });
+      const poNumber = res?.data?.orderNumber || '';
+      toast.success(`Purchase Order ${poNumber} created successfully!`);
+      setShowConvertToPO(false);
+      if (res?.data?.orderId) {
+        router.push(`/dashboard/purchase/orders/${res.data.orderId}`);
+      }
+    },
+    onError: (err: any) => toast.error(err.response?.data?.message || 'Failed to convert to PO'),
+  });
+
   const handleFieldChange = (field: string, value: any) => {
     if (field === 'currencyId') {
       const newCurrencyCode = currenciesData?.data?.find((c: any) => (c.currencyId || c.id) === value)?.currencyCode || 'USD';
@@ -1088,13 +1137,22 @@ export default function PurchaseQuoteDetailPage() {
             </>
           )}
 
-          {quote?.status === 'quote_received' && (
-            <Button 
-              onClick={() => approveMutation.mutate('')} 
-              disabled={approveMutation.isPending} 
+          {(quote?.status === 'quote_received' || quote?.status === 'rate_finalized' || quote?.status === 'sent_to_costing') && (
+            <Button
+              onClick={() => approveMutation.mutate('')}
+              disabled={approveMutation.isPending}
               className="bg-green-600 hover:bg-green-700 text-white h-9 text-xs font-semibold px-4"
             >
               <CheckCircle className="h-4 w-4 mr-2" /> {approveMutation.isPending ? 'Approving...' : 'Approve Quote'}
+            </Button>
+          )}
+
+          {quote?.status === 'approved' && (
+            <Button
+              onClick={() => setShowConvertToPO(true)}
+              className="bg-orange-600 hover:bg-orange-700 text-white h-9 text-xs font-semibold px-4"
+            >
+              <ShoppingCart className="h-4 w-4 mr-2" /> Convert to PO
             </Button>
           )}
 
@@ -1193,41 +1251,37 @@ export default function PurchaseQuoteDetailPage() {
                 {/* Column alphabetic tags (A, B, C, D...) */}
                 <tr className="bg-slate-100 border-b border-slate-300 text-slate-400 font-medium text-center text-[10px]">
                   <th className="w-10 border-r border-slate-300 bg-slate-200 py-0.5"></th>
-                  <th className="w-[180px] border-r border-slate-300 py-0.5">A</th>
-                  <th className="w-[150px] border-r border-slate-300 py-0.5">B</th>
-                  <th className="w-[260px] border-r border-slate-300 py-0.5">C</th>
-                  <th className="w-[110px] border-r border-slate-300 py-0.5">D</th>
-                  <th className="w-[110px] border-r border-slate-300 py-0.5">E</th>
-                  <th className="w-[100px] border-r border-slate-300 py-0.5">F</th>
-                  <th className="w-[90px] border-r border-slate-300 py-0.5">G</th>
-                  <th className="w-[100px] border-r border-slate-300 py-0.5">H</th>
-                  <th className="w-[100px] border-r border-slate-300 py-0.5">I</th>
-                  <th className="w-[80px] border-r border-slate-300 py-0.5">J</th>
-                  <th className="w-[100px] border-r border-slate-300 py-0.5">K</th>
-                  <th className="w-[120px] border-r border-slate-300 py-0.5">L</th>
-                  <th className="w-[160px] border-r border-slate-300 py-0.5">M</th>
-                  <th className="w-[130px] border-r border-slate-300 py-0.5">N</th>
-                  <th className="w-[110px] text-center text-slate-500 py-0.5">Catalog / Action</th>
+                  <th className="w-[220px] border-r border-slate-300 py-0.5">A</th>
+                  <th className="w-[140px] border-r border-slate-300 py-0.5">B</th>
+                  <th className="w-[120px] border-r border-slate-300 py-0.5">C</th>
+                  <th className="w-[180px] border-r border-slate-300 py-0.5">D</th>
+                  <th className="w-[100px] border-r border-slate-300 py-0.5">E</th>
+                  <th className="w-[110px] border-r border-slate-300 py-0.5">F</th>
+                  <th className="w-[120px] border-r border-slate-300 py-0.5">G</th>
+                  <th className="w-[90px] border-r border-slate-300 py-0.5">H</th>
+                  <th className="w-[90px] border-r border-slate-300 py-0.5">I</th>
+                  <th className="w-[100px] border-r border-slate-300 py-0.5">J</th>
+                  <th className="w-[160px] border-r border-slate-300 py-0.5">K</th>
+                  <th className="w-[200px] border-r border-slate-300 py-0.5">L</th>
+                  <th className="w-[110px] text-center text-slate-500 py-0.5">Action</th>
                 </tr>
-                
+
                 {/* Spreadsheet Headers */}
                 <tr className="border-b border-slate-300 bg-[#1e293b] text-white font-semibold text-[11px] text-center">
                   <td className="border-r border-slate-300 bg-slate-100 text-slate-500 text-center font-medium py-1.5">11</td>
-                  <td className="border-r border-slate-600 px-1 py-1">Product Code</td>
-                  <td className="border-r border-slate-600 px-1 py-1">Category</td>
-                  <td className="border-r border-slate-600 px-1 py-1">Product Description</td>
+                  <td className="border-r border-slate-600 bg-[#2563eb] text-white font-bold px-1 py-1">Product Description</td>
+                  <td className="border-r border-slate-600 px-1 py-1">Code</td>
+                  <td className="border-r border-slate-600 px-1 py-1">Brand</td>
+                  <td className="border-r border-slate-600 px-1 py-1">Product Name</td>
                   <td className="border-r border-slate-600 px-1 py-1">Unit Size</td>
                   <td className="border-r border-slate-600 px-1 py-1">Unit Per Carton</td>
+                  <td className="border-r border-slate-600 px-1 py-1">Category</td>
                   <td className="border-r border-slate-600 px-1 py-1">CBM</td>
-                  <td className="border-r border-slate-600 px-1 py-1">Quantity</td>
-                  <td className="border-r border-slate-600 px-1 py-1">MRP</td>
-                  <td className="border-r border-slate-600 px-1 py-1">Buying Price</td>
-                  <td className="border-r border-slate-600 px-1 py-1">Gst%</td>
-                  <td className="border-r border-slate-600 bg-yellow-400 text-slate-900 font-bold px-1 py-1">Freight</td>
-                  <td className="border-r border-slate-600 bg-yellow-400 text-slate-900 font-bold px-1 py-1">Landing Cost</td>
-                  <td className="border-r border-slate-600 bg-yellow-400 text-slate-900 font-bold px-1 py-1">Remark</td>
-                  <td className="border-r border-slate-300 bg-yellow-400 text-slate-900 font-bold px-1 py-1">Unit (Per Kg / Per Pcs)</td>
-                  <td className="bg-slate-800 text-white">Catalog / Action</td>
+                  <td className="border-r border-slate-600 bg-[#2563eb] text-white font-bold px-1 py-1">Qty</td>
+                  <td className="border-r border-slate-600 px-1 py-1">Total CBM</td>
+                  <td className="border-r border-slate-600 px-1 py-1">Purchase Person Name</td>
+                  <td className="border-r border-slate-600 bg-[#2563eb] text-white font-bold px-1 py-1">Remark</td>
+                  <td className="bg-slate-800 text-white">Action</td>
                 </tr>
               </thead>
 
@@ -1238,22 +1292,22 @@ export default function PurchaseQuoteDetailPage() {
                     <tr key={index} className="border-b border-slate-200 hover:bg-slate-50/50">
                       <td className="border-r border-slate-300 bg-slate-100 text-slate-500 text-center font-medium py-1.5">{rowNum}</td>
                       
-                      {/* A: Product Code (Editable + Search Icon) */}
-                      <td className="border-r border-slate-200 p-0.5">
+                      {/* A: Product Description (YELLOW EDITABLE + Search) */}
+                      <td className="border-r border-slate-200 bg-yellow-50 p-0.5">
                         {isEditing ? (
                           <div className="flex items-center gap-1 w-full">
                             <input
                               type="text"
-                              className="w-full border-none bg-transparent outline-none px-1.5 py-1 text-xs font-mono"
-                              value={item.sku || ''}
-                              onChange={(e) => handleItemChange(index, 'sku', e.target.value)}
-                              placeholder="Product Code"
+                              className="w-full border-none bg-transparent outline-none px-1.5 py-1 text-xs font-medium"
+                              value={item.productName || ''}
+                              onChange={(e) => handleItemChange(index, 'productName', e.target.value)}
+                              placeholder="Product Description"
                             />
                             <Button
                               type="button"
                               variant="ghost"
                               size="icon"
-                              className="h-6 w-6 text-slate-400 hover:text-slate-650 hover:bg-slate-100 shrink-0 rounded-sm"
+                              className="h-6 w-6 text-slate-400 hover:text-slate-600 hover:bg-slate-100 shrink-0 rounded-sm"
                               onClick={() => {
                                 setSelectedItemIndex(index);
                                 setShowProductSearch(true);
@@ -1263,88 +1317,47 @@ export default function PurchaseQuoteDetailPage() {
                             </Button>
                           </div>
                         ) : (
-                          <span className="p-2 block font-mono text-xs text-slate-700">{item.sku || '-'}</span>
-                        )}
-                      </td>
-
-                      {/* B: Category */}
-                      <td className="border-r border-slate-200 p-0.5">
-                        {isEditing ? (
-                          <input
-                            type="text"
-                            className="w-full border-none bg-transparent outline-none px-1.5 py-1 text-xs"
-                            value={item.categoryName || ''}
-                            onChange={(e) => handleItemChange(index, 'categoryName', e.target.value)}
-                            placeholder="Category"
-                          />
-                        ) : (
-                          <span className="p-2 block text-xs text-slate-700">{item.categoryName || '-'}</span>
-                        )}
-                      </td>
-
-                      {/* C: Product Description */}
-                      <td className="border-r border-slate-200 p-0.5">
-                        {isEditing ? (
-                          <input
-                            type="text"
-                            className="w-full border-none bg-transparent outline-none px-1.5 py-1 text-xs"
-                            value={item.productName || ''}
-                            onChange={(e) => handleItemChange(index, 'productName', e.target.value)}
-                            placeholder="Product Description"
-                          />
-                        ) : (
                           <span className="p-2 block text-xs text-slate-700 font-medium">{item.productName || '-'}</span>
                         )}
                       </td>
 
-                      {/* D: Unit Size */}
-                      <td className="border-r border-slate-200 p-0.5">
-                        {isEditing ? (
-                          <input
-                            type="text"
-                            className="w-full border-none bg-transparent outline-none px-1.5 py-1 text-xs text-right"
-                            value={item.unitSize || ''}
-                            onChange={(e) => handleItemChange(index, 'unitSize', e.target.value)}
-                            placeholder="Unit Size"
-                          />
-                        ) : (
-                          <span className="p-2 block text-xs text-slate-700 text-right">{item.unitSize || '-'}</span>
-                        )}
+                      {/* B: Code (READ ONLY) */}
+                      <td className="border-r border-slate-200 px-2 py-1">
+                        <span className="text-xs font-mono text-blue-600 font-semibold">{item.sku || item.productCode || '-'}</span>
                       </td>
 
-                      {/* E: Unit Per Carton */}
-                      <td className="border-r border-slate-200 p-0.5">
-                        {isEditing ? (
-                          <input
-                            type="number"
-                            className="w-full border-none bg-transparent outline-none px-1.5 py-1 text-xs text-right font-mono"
-                            value={item.unitPerCarton || ''}
-                            onChange={(e) => handleItemChange(index, 'unitPerCarton', e.target.value ? parseInt(e.target.value) : 1)}
-                            placeholder="1"
-                          />
-                        ) : (
-                          <span className="p-2 block text-xs text-slate-700 text-right font-mono">{item.unitPerCarton || 1}</span>
-                        )}
+                      {/* C: Brand (READ ONLY) */}
+                      <td className="border-r border-slate-200 px-2 py-1">
+                        <span className="text-xs text-slate-700">{item.brandName || '-'}</span>
                       </td>
 
-                      {/* F: CBM */}
-                      <td className="border-r border-slate-200 p-0.5">
-                        {isEditing ? (
-                          <input
-                            type="number"
-                            step="0.0001"
-                            className="w-full border-none bg-transparent outline-none px-1.5 py-1 text-xs text-right font-mono"
-                            value={item.cbmPerBox || ''}
-                            onChange={(e) => handleItemChange(index, 'cbmPerBox', e.target.value ? parseFloat(e.target.value) : 0)}
-                            placeholder="0.0000"
-                          />
-                        ) : (
-                          <span className="p-2 block text-xs text-slate-700 text-right font-mono">{item.cbmPerBox?.toFixed(4) || '0.0000'}</span>
-                        )}
+                      {/* D: Product Name (READ ONLY) */}
+                      <td className="border-r border-slate-200 px-2 py-1">
+                        <span className="text-xs text-slate-700 font-medium">{item.productName || '-'}</span>
                       </td>
 
-                      {/* G: Quantity */}
-                      <td className="border-r border-slate-200 p-0.5">
+                      {/* E: Unit Size (READ ONLY) */}
+                      <td className="border-r border-slate-200 px-2 py-1">
+                        <span className="text-xs text-slate-700">{item.unitSize || '-'}</span>
+                      </td>
+
+                      {/* F: Unit Per Carton (READ ONLY) */}
+                      <td className="border-r border-slate-200 px-2 py-1 text-right">
+                        <span className="text-xs text-slate-700 font-mono">{item.unitPerCarton || '-'}</span>
+                      </td>
+
+                      {/* G: Category (READ ONLY) */}
+                      <td className="border-r border-slate-200 px-2 py-1">
+                        <span className="text-xs text-slate-700">{item.categoryName || '-'}</span>
+                      </td>
+
+                      {/* H: CBM (READ ONLY) */}
+                      <td className="border-r border-slate-200 px-2 py-1 text-right">
+                        <span className="text-xs text-slate-700 font-mono">{item.cbmPerBox != null ? Number(item.cbmPerBox).toFixed(4) : '-'}</span>
+                      </td>
+
+                      {/* I: Qty (YELLOW EDITABLE) */}
+                      <td className="border-r border-slate-200 bg-yellow-50 p-0.5">
                         {isEditing ? (
                           <input
                             type="number"
@@ -1358,89 +1371,20 @@ export default function PurchaseQuoteDetailPage() {
                         )}
                       </td>
 
-                      {/* H: MRP */}
-                      <td className="border-r border-slate-200 p-0.5">
-                        {isEditing ? (
-                          <input
-                            type="number"
-                            className="w-full border-none bg-transparent outline-none px-1.5 py-1 text-xs text-right font-mono"
-                            value={item.mrp || ''}
-                            onChange={(e) => handleItemChange(index, 'mrp', e.target.value ? parseFloat(e.target.value) : 0)}
-                            placeholder="0.00"
-                          />
-                        ) : (
-                          <span className="p-2 block text-xs text-slate-700 text-right font-mono">₹{item.mrp?.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}</span>
-                        )}
+                      {/* J: Total CBM (READ ONLY - calculated) */}
+                      <td className="border-r border-slate-200 px-2 py-1 text-right">
+                        <span className="text-xs text-slate-700 font-mono font-medium">
+                          {item.cbmPerBox != null && item.quantity ? (Number(item.cbmPerBox) * Number(item.quantity)).toFixed(4) : '-'}
+                        </span>
                       </td>
 
-                      {/* I: Buying Price */}
-                      <td className="border-r border-slate-200 p-0.5">
-                        {isEditing ? (
-                          <input
-                            type="number"
-                            className="w-full border-none bg-transparent outline-none px-1.5 py-1 text-xs text-right font-mono"
-                            value={item.buyingPrice || ''}
-                            onChange={(e) => handleItemChange(index, 'buyingPrice', e.target.value ? parseFloat(e.target.value) : 0)}
-                            placeholder="0.00"
-                          />
-                        ) : (
-                          <span className="p-2 block text-xs text-slate-700 text-right font-mono">₹{item.buyingPrice?.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}</span>
-                        )}
+                      {/* K: Purchase Person Name (READ ONLY) */}
+                      <td className="border-r border-slate-200 px-2 py-1">
+                        <span className="text-xs text-slate-700 font-semibold">{item.purchasePersonName || '-'}</span>
                       </td>
 
-                      {/* J: Gst% */}
-                      <td className="border-r border-slate-200 p-0.5">
-                        {isEditing ? (
-                          <input
-                            type="number"
-                            className="w-full border-none bg-transparent outline-none px-1.5 py-1 text-xs text-right font-mono"
-                            value={item.gstPercent || ''}
-                            onChange={(e) => handleItemChange(index, 'gstPercent', e.target.value ? parseFloat(e.target.value) : 0)}
-                            placeholder="0.0"
-                          />
-                        ) : (
-                          <span className="p-2 block text-xs text-slate-700 text-right font-mono">{item.gstPercent || 0}%</span>
-                        )}
-                      </td>
-
-                      {/* K: Freight (Yellow - Editable Input) */}
-                      <td className="border-r border-slate-200 bg-yellow-50/70 p-0.5">
-                        {isEditing ? (
-                          <input
-                            type="number"
-                            step="0.0001"
-                            className="w-full border-none bg-transparent outline-none px-1.5 py-1 text-xs text-right font-mono font-semibold text-slate-700"
-                            value={item.cbmCostPerBoxInSelectedCurrency || ''}
-                            onChange={(e) => handleItemChange(index, 'cbmCostPerBoxInSelectedCurrency', e.target.value ? parseFloat(e.target.value) : 0)}
-                            placeholder="0.0000"
-                          />
-                        ) : (
-                          <span className="p-2 block text-xs text-right font-mono text-slate-600 font-semibold select-none">
-                            {item.cbmCostPerBoxInSelectedCurrency ? Number(item.cbmCostPerBoxInSelectedCurrency).toFixed(4) : '0.0000'}
-                          </span>
-                        )}
-                      </td>
-
-                      {/* L: Landing Cost (Yellow - Editable Input) */}
-                      <td className="border-r border-slate-200 bg-yellow-50/70 p-0.5">
-                        {isEditing ? (
-                          <input
-                            type="number"
-                            step="0.01"
-                            className="w-full border-none bg-transparent outline-none px-1.5 py-1 text-xs text-right font-mono font-bold text-slate-900"
-                            value={item.rateWithGstCost || ''}
-                            onChange={(e) => handleItemChange(index, 'rateWithGstCost', e.target.value ? parseFloat(e.target.value) : 0)}
-                            placeholder="0.00"
-                          />
-                        ) : (
-                          <span className="p-2 block text-xs text-right font-mono text-slate-800 font-bold select-none text-emerald-700">
-                            ₹{item.rateWithGstCost ? Number(item.rateWithGstCost).toFixed(2) : '0.00'}
-                          </span>
-                        )}
-                      </td>
-
-                      {/* M: Remark (Yellow) */}
-                      <td className="border-r border-slate-200 bg-yellow-50/40 p-0.5">
+                      {/* L: Remark (YELLOW EDITABLE) */}
+                      <td className="border-r border-slate-200 bg-yellow-50 p-0.5">
                         {isEditing ? (
                           <input
                             type="text"
@@ -1451,25 +1395,6 @@ export default function PurchaseQuoteDetailPage() {
                           />
                         ) : (
                           <span className="p-2 block text-xs text-slate-700">{item.remarks || item.remark || '-'}</span>
-                        )}
-                      </td>
-
-                      {/* N: Unit (Per Kg / Per Pcs) (Yellow) */}
-                      <td className="border-r border-slate-200 bg-yellow-50/40 p-0.5 text-center">
-                        {isEditing ? (
-                          <select
-                            className="bg-white hover:bg-slate-50 text-slate-700 font-medium px-2 py-0.5 rounded border border-slate-200 outline-none text-[11px] cursor-pointer"
-                            title="UOM"
-                            value={item.uom || 'Per Pcs'}
-                            onChange={(e) => handleItemChange(index, 'uom', e.target.value)}
-                          >
-                            <option value="Per Pcs">Per Pcs</option>
-                            <option value="Per Kg">Per Kg</option>
-                          </select>
-                        ) : (
-                          <Badge variant="outline" className="text-[10px] bg-slate-50 font-normal">
-                            {item.uom || 'Per Pcs'}
-                          </Badge>
                         )}
                       </td>
 
@@ -1516,10 +1441,10 @@ export default function PurchaseQuoteDetailPage() {
                   return (
                     <tr key={i} className="border-b border-slate-200">
                       <td className="border-r border-slate-300 bg-slate-100 text-slate-500 text-center font-medium py-1.5">{rowNum}</td>
-                      {Array.from({ length: 14 }).map((_, colIdx) => (
-                        <td 
-                          key={colIdx} 
-                          className={`border-r border-slate-200 ${colIdx >= 10 && colIdx <= 13 ? 'bg-yellow-50/10' : 'bg-white'}`}
+                      {Array.from({ length: 12 }).map((_, colIdx) => (
+                        <td
+                          key={colIdx}
+                          className="border-r border-slate-200 bg-white"
                         ></td>
                       ))}
                       <td></td>
@@ -1544,7 +1469,7 @@ export default function PurchaseQuoteDetailPage() {
             <Plus className="h-4 w-4 mr-1.5" /> Add New Row
           </Button>
           <span className="text-xs text-slate-400 italic font-medium">
-            💡 Type the Product Code directly in Column A or click the Search icon inside it. Click "+ Master" to save manual products directly.
+            💡 Type the Product Description in Column A or click the Search icon to find products. Click "+ Master" to save manual products directly.
           </span>
         </div>
       )}
@@ -2050,6 +1975,107 @@ export default function PurchaseQuoteDetailPage() {
               </Button>
             </div>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Convert to PO Dialog */}
+      <Dialog open={showConvertToPO} onOpenChange={setShowConvertToPO}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="text-sm font-bold">Convert to Purchase Order</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 text-xs">
+            <div>
+              <Label className="text-xs font-semibold">Vendor *</Label>
+              <div className="relative mt-1">
+                <Input
+                  placeholder="Search vendor..."
+                  value={vendorSearch}
+                  onChange={(e) => setVendorSearch(e.target.value)}
+                  className="text-xs h-9"
+                />
+                {vendorSearch && !convertForm.vendorId && (
+                  <div className="absolute z-50 w-full mt-1 bg-white border rounded-md shadow-lg max-h-48 overflow-y-auto">
+                    {(vendorsData?.data?.data || []).map((v: any) => (
+                      <button
+                        key={v.vendorId || v.id}
+                        type="button"
+                        className="w-full text-left px-3 py-2 hover:bg-slate-50 text-xs border-b last:border-b-0"
+                        onClick={() => {
+                          setConvertForm(prev => ({
+                            ...prev,
+                            vendorId: v.vendorId || v.id,
+                            vendorName: v.vendorName || v.name || '',
+                            vendorCode: v.vendorCode || v.code || '',
+                            vendorGstin: v.gstin || '',
+                          }));
+                          setVendorSearch(v.vendorName || v.name || '');
+                        }}
+                      >
+                        <span className="font-medium">{v.vendorName || v.name}</span>
+                        {v.vendorCode && <span className="text-slate-400 ml-2">({v.vendorCode})</span>}
+                      </button>
+                    ))}
+                    {(vendorsData?.data?.data || []).length === 0 && (
+                      <p className="px-3 py-2 text-slate-400">No vendors found</p>
+                    )}
+                  </div>
+                )}
+              </div>
+              {convertForm.vendorId && (
+                <div className="mt-1 flex items-center gap-2">
+                  <Badge className="bg-green-50 text-green-700 border-green-200 text-[10px]">
+                    {convertForm.vendorName} {convertForm.vendorCode && `(${convertForm.vendorCode})`}
+                  </Badge>
+                  <button
+                    type="button"
+                    className="text-red-500 text-[10px] hover:underline"
+                    onClick={() => {
+                      setConvertForm(prev => ({ ...prev, vendorId: '', vendorName: '', vendorCode: '', vendorGstin: '' }));
+                      setVendorSearch('');
+                    }}
+                  >
+                    Change
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <div>
+              <Label className="text-xs font-semibold">Expected Delivery Date</Label>
+              <Input
+                type="date"
+                value={convertForm.expectedDeliveryDate}
+                onChange={(e) => setConvertForm(prev => ({ ...prev, expectedDeliveryDate: e.target.value }))}
+                className="text-xs h-9 mt-1"
+              />
+            </div>
+
+            <div>
+              <Label className="text-xs font-semibold">Notes</Label>
+              <Input
+                placeholder="Optional notes for PO..."
+                value={convertForm.notes}
+                onChange={(e) => setConvertForm(prev => ({ ...prev, notes: e.target.value }))}
+                className="text-xs h-9 mt-1"
+              />
+            </div>
+
+            <div className="flex justify-end gap-2 pt-3 border-t">
+              <Button variant="outline" size="sm" onClick={() => setShowConvertToPO(false)}>
+                Cancel
+              </Button>
+              <Button
+                size="sm"
+                disabled={!convertForm.vendorId || convertToPOMutation.isPending}
+                onClick={() => convertToPOMutation.mutate()}
+                className="bg-orange-600 hover:bg-orange-700 text-white h-9 px-4"
+              >
+                <ShoppingCart className="h-4 w-4 mr-2" />
+                {convertToPOMutation.isPending ? 'Creating PO...' : 'Create Purchase Order'}
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

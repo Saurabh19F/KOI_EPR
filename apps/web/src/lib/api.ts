@@ -108,6 +108,7 @@ export interface UserProfile {
   departmentId?: string;
   departmentName?: string;
   companyId?: string;
+  warehouseId?: string;
   role: string;
   roles?: Array<{ roleId: string; roleName: string; roleCode: string }>;
   permissions?: string[];
@@ -489,7 +490,15 @@ export const purchaseOrderApi = {
     api.get<PaginatedResponse<any>>('/purchase-orders/invoices', { params }),
   getInvoice: (id: string) => api.get(`/purchase-orders/invoices/${id}`),
   createInvoice: (data: any) => api.post('/purchase-orders/invoices', data),
+  getDebitNotes: (params?: Record<string, any>) =>
+    api.get<PaginatedResponse<any>>('/purchase-orders/debit-notes', { params }),
   createDebitNote: (data: any) => api.post('/purchase-orders/debit-notes', data),
+  getReturnMaterialNotes: (params?: Record<string, any>) =>
+    api.get<PaginatedResponse<any>>('/purchase-orders/return-material-notes', { params }),
+  getReturnMaterialNote: (id: string) =>
+    api.get(`/purchase-orders/return-material-notes/${id}`),
+  updateReturnMaterialNoteStatus: (id: string, status: string, remarks?: string) =>
+    api.patch(`/purchase-orders/return-material-notes/${id}/status`, { status, remarks }),
 
   // Vendor Master
   getVendors: (params?: { page?: number; limit?: number; search?: string; category?: string }) =>
@@ -699,6 +708,26 @@ export const inventoryApi = {
   }),
 };
 
+// Inventory Tracking API (v2 — batch, serial, transfer dispatch/receive)
+export const inventoryTrackingApi = {
+  getTransfers: (params?: { page?: number; limit?: number; status?: string; sourceWarehouseId?: string; destinationWarehouseId?: string }) =>
+    api.get('/inventory-tracking/transfers', { params }),
+  getTransfer: (transferId: string) =>
+    api.get(`/inventory-tracking/transfers/${transferId}`),
+  dispatchMaterial: (transferId: string, data: { dispatchedQty: number }) =>
+    api.put(`/inventory-tracking/transfers/${transferId}/dispatch`, data),
+  receiveTransferMaterial: (transferId: string, data: { receivedQty: number; targetBin?: string }) =>
+    api.put(`/inventory-tracking/transfers/${transferId}/receive-material`, data),
+  approveTransfer: (transferId: string) =>
+    api.put(`/inventory-tracking/transfers/${transferId}/approve`),
+  rejectTransfer: (transferId: string, reason?: string) =>
+    api.put(`/inventory-tracking/transfers/${transferId}/reject`, { reason }),
+  getBinRackStock: (warehouseId: string, params?: any) =>
+    api.get(`/inventory-tracking/bin-rack/${warehouseId}`, { params }),
+  assignBinRack: (data: { stockId: string; newBin: string }) =>
+    api.put('/inventory-tracking/bin-rack/assign', data),
+};
+
 // Files API
 export interface FileRecord {
   fileId: string;
@@ -864,7 +893,7 @@ export const searchApi = {
 
 // Production API
 export const productionApi = {
-  getJobs: (params?: { page?: number; limit?: number; search?: string; status?: string }) =>
+  getJobs: (params?: { page?: number; limit?: number; search?: string; status?: string; warehouseId?: string }) =>
     api.get<PaginatedResponse<any>>('/production/jobs', { params }),
   getJob: (id: string) => api.get(`/production/jobs/${id}`),
   createJob: (data: any) => api.post('/production/jobs', data),
@@ -930,10 +959,14 @@ export const receivingPlanApi = {
   submitGrn: (planId: string, data: any) => api.post(`/receiving-plans/${planId}/grn`, data),
   getGrnHistory: (planId: string) => api.get(`/receiving-plans/${planId}/grn-history`),
   getGrnDetails: (grnId: string) => api.get(`/receiving-plans/grn/${grnId}`),
+  listAllGrns: (params?: any) => api.get('/receiving-plans/grn-list', { params }),
   getPlannerData: (params?: { search?: string; page?: number; limit?: number }) =>
     api.get<any>('/receiving-plans/planner-data', { params }),
+  getWorkflowTracker: (params?: { search?: string; page?: number; limit?: number }) =>
+    api.get<any>('/receiving-plans/workflow-tracker', { params }),
   allocateToWarehouses: (data: any) => api.post('/receiving-plans/allocate', data),
   bulkAllocate: (data: any) => api.post('/receiving-plans/bulk-allocate', data),
+  bulkGrn: (data: any) => api.post('/receiving-plans/bulk-grn', data),
   downloadPdf: (planId: string) => api.get(`/receiving-plans/${planId}/pdf`, { responseType: 'blob' }),
 };
 
@@ -991,4 +1024,48 @@ export const accountsApi = {
     api.patch(`/accounts/ledger/${id}/reject`, data),
   getThreeWayMatch: (params?: { page?: number; limit?: number; search?: string }) =>
     api.get<PaginatedResponse<any>>('/accounts/three-way-match', { params }),
+};
+
+// Audit API
+export const auditApi = {
+  getLogs: (params?: { page?: number; limit?: number; module?: string; action?: string; changedBy?: string; startDate?: string; endDate?: string }) =>
+    api.get<PaginatedResponse<any>>('/audit', { params }),
+  getAuditTrail: (module: string, recordId: string) =>
+    api.get(`/audit/trail/${module}/${recordId}`),
+  getUserActivity: (userId: string, limit?: number) =>
+    api.get(`/audit/user/${userId}`, { params: limit ? { limit } : {} }),
+  getStatusHistory: (module: string, recordId: string) =>
+    api.get(`/audit/status-history/${module}/${recordId}`),
+};
+
+// Order Review (ORDP) API
+export const orderReviewApi = {
+  getOrders: (params?: { search?: string; status?: string }) =>
+    api.get('/order-review/orders', { params }),
+  getOrderItems: (orderId: string) =>
+    api.get(`/order-review/orders/${orderId}/items`),
+  getBatchOrderItems: (orderIds: string[]) =>
+    api.post('/order-review/orders/batch-items', { orderIds }),
+  getOrderLifecycle: (orderIds: string[]) =>
+    api.post('/order-review/orders/lifecycle', { orderIds }),
+  saveDraft: (orderId: string, items: any[]) =>
+    api.post(`/order-review/orders/${orderId}/draft`, { items }),
+  submitFinal: (orderId: string, itemIds: string[]) =>
+    api.post(`/order-review/orders/${orderId}/submit`, { itemIds }),
+  cancelItem: (orderId: string, itemId: string, reason: string) =>
+    api.post(`/order-review/orders/${orderId}/items/${itemId}/cancel`, { reason }),
+  restoreItem: (cancellationId: string) =>
+    api.patch(`/order-review/cancellations/${cancellationId}/restore`),
+  closeOrder: (orderId: string, notes?: string) =>
+    api.post(`/order-review/orders/${orderId}/close`, { notes }),
+  reopenOrder: (orderId: string, reason: string) =>
+    api.post(`/order-review/orders/${orderId}/reopen`, { reason }),
+  getReviewLogs: (orderId: string) =>
+    api.get(`/order-review/orders/${orderId}/logs`),
+  getSubmissionHistory: (orderId: string, itemId: string) =>
+    api.get(`/order-review/orders/${orderId}/items/${itemId}/history`),
+  getLookupDepartments: () =>
+    api.get('/order-review/lookup/departments'),
+  getLookupUsers: (params?: { departmentId?: string }) =>
+    api.get('/order-review/lookup/users', { params }),
 };

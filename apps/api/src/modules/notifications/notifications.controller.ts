@@ -34,7 +34,7 @@ export class NotificationsController {
     @Query('unreadOnly') unreadOnly?: string,
     @Query('moduleName') moduleName?: string,
   ) {
-    const userId = req.user?.sub || req.user?.userId;
+    const userId = req.user?.userId;
     const result = await this.notificationsService.getUserNotifications(userId, {
       limit: limit ? parseInt(limit, 10) : 50,
       offset: offset ? parseInt(offset, 10) : 0,
@@ -52,7 +52,7 @@ export class NotificationsController {
   @Get('unread-count')
   @ApiOperation({ summary: 'Get unread notification count' })
   async getUnreadCount(@Request() req: any) {
-    const userId = req.user?.sub || req.user?.userId;
+    const userId = req.user?.userId;
     const count = await this.notificationsService.getUnreadCount(userId);
     return {
       success: true,
@@ -74,7 +74,7 @@ export class NotificationsController {
     },
   ) {
     const companyId = req.user?.companyId;
-    const targetUserId = body.userId || req.user?.sub || req.user?.userId;
+    const targetUserId = body.userId || req.user?.userId;
 
     const notification = await this.notificationsService.createNotification({
       companyId,
@@ -118,7 +118,7 @@ export class NotificationsController {
   @Post('mark-all-read')
   @ApiOperation({ summary: 'Mark all notifications as read' })
   async markAllAsRead(@Request() req: any) {
-    const userId = req.user?.sub || req.user?.userId;
+    const userId = req.user?.userId;
     await this.notificationsService.markAllAsRead(userId);
     return {
       success: true,
@@ -132,7 +132,7 @@ export class NotificationsController {
     @Param('id') id: string,
     @Request() req: any,
   ) {
-    const userId = req.user?.sub || req.user?.userId;
+    const userId = req.user?.userId;
     await this.notificationsService.deleteNotification(id, userId);
     return {
       success: true,

@@ -21,7 +21,7 @@ export class RateLimitGuard implements CanActivate {
 
     // Get user identifier (userId for authenticated, IP for anonymous)
     const user = request.user;
-    const userId = user?.sub || user?.userId;
+    const userId = user?.userId;
     const companyId = user?.companyId;
     const ip = request.ip || request.connection?.remoteAddress || 'unknown';
 

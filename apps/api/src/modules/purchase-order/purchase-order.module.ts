@@ -14,6 +14,7 @@ import {
   PurchaseInvoice,
   PurchaseInvoiceItem,
   DebitNote,
+  ReturnMaterialNote,
   VendorMaster,
   POApproval,
 } from './entities/purchase-order.entity';
@@ -29,6 +30,7 @@ import { AccountsPayable } from '../financial/entities/accounting-voucher.entity
       PurchaseInvoice,
       PurchaseInvoiceItem,
       DebitNote,
+      ReturnMaterialNote,
       VendorMaster,
       POApproval,
       AccountsPayable,

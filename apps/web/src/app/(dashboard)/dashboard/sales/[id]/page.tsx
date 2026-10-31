@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { salesApi, fmsApi, mastersApi } from '@/lib/api';
+import { salesApi, fmsApi, mastersApi, rateApi } from '@/lib/api';
 import '@/components/sales/SalesEnquiryGrid.css';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,7 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, Save, Send, CheckCircle, XCircle, Clock, AlertTriangle, ShoppingCart, Package, FileText, Activity, Play, Building, Truck, User, Calendar, ArrowRight, Loader2, RefreshCw, Plus, Trash2, Search } from 'lucide-react';
+import { ArrowLeft, Save, Send, CheckCircle, XCircle, Clock, AlertTriangle, ShoppingCart, Package, FileText, Activity, Play, Building, Truck, User, Calendar, ArrowRight, Loader2, RefreshCw, Plus, Trash2, Search, Calculator, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import { formatDate, getStatusColor } from '@/lib/utils';
@@ -378,6 +378,13 @@ function EnquiryDetailContent({ params }: Props) {
   });
   const { data: tasksData } = useQuery({ queryKey: ['enquiry-tasks', id], queryFn: () => fmsApi.getTasks({ limit: 50 }), enabled: !!enquiry });
 
+  const { data: rateAnalysisData } = useQuery({
+    queryKey: ['rate-analysis-for-enquiry', id],
+    queryFn: () => rateApi.getAnalysis({ enquiryOrderId: id } as any),
+    enabled: !!enquiry && ['rate_calculation', 'approval_pending', 'quotation_created'].includes(enquiry.data?.status),
+  });
+  const linkedRateAnalysis = rateAnalysisData?.data?.data?.[0];
+
   const statusMutation = useMutation({
     mutationFn: ({ status, remarks: r }: { status: string; remarks?: string }) => salesApi.updateEnquiryStatus(id, status, r),
     onSuccess: () => {
@@ -606,6 +613,64 @@ function EnquiryDetailContent({ params }: Props) {
               </Card>
             )}
 
+            {currentStatus === 'rate_calculation' && (
+              <Card className="lg:col-span-2 border-yellow-200 bg-yellow-50/30">
+                <CardHeader>
+                  <CardTitle className="text-yellow-900 flex items-center gap-2">
+                    <Calculator className="h-5 w-5 text-yellow-600" />
+                    Rate Calculation Panel
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <p className="text-sm text-yellow-800 font-medium">
+                    Calculate rates for all product lines including currency conversion, haulage, freight, and margins. Once completed, request approval to proceed.
+                  </p>
+                  {linkedRateAnalysis ? (
+                    <div className="bg-white border border-yellow-200 rounded-md p-3 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-semibold text-gray-800">
+                            {linkedRateAnalysis.analysisNo}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            Status: <Badge variant="outline" className="ml-1 text-xs">{linkedRateAnalysis.status?.toUpperCase()}</Badge>
+                          </p>
+                        </div>
+                        <Link href={`/dashboard/rate/${linkedRateAnalysis.analysisId}`}>
+                          <Button variant="outline" size="sm" className="border-yellow-300 text-yellow-800 hover:bg-yellow-100">
+                            <ExternalLink className="h-4 w-4 mr-2" />Open Rate Analysis
+                          </Button>
+                        </Link>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="bg-white border border-yellow-200 rounded-md p-3">
+                      <p className="text-xs text-gray-500">No rate analysis linked yet. Create one from the Rate Calculation module.</p>
+                    </div>
+                  )}
+                  <div className="flex gap-3">
+                    {linkedRateAnalysis && (
+                      <Link href={`/dashboard/rate/${linkedRateAnalysis.analysisId}`}>
+                        <Button variant="default" className="bg-yellow-600 hover:bg-yellow-700 text-white">
+                          <Calculator className="h-4 w-4 mr-2" />Go to Rate Calculation
+                        </Button>
+                      </Link>
+                    )}
+                    {isAdmin && (
+                      <Button
+                        variant="outline"
+                        className="border-indigo-200 text-indigo-700 hover:bg-indigo-50"
+                        onClick={() => statusMutation.mutate({ status: 'approval_pending' })}
+                        disabled={statusMutation.isPending}
+                      >
+                        <Clock className="h-4 w-4 mr-2" />Request Approval
+                      </Button>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             <Card className="lg:col-span-2">
               <CardHeader><CardTitle>Quick Actions</CardTitle></CardHeader>
               <CardContent className="flex gap-3">
@@ -752,29 +817,18 @@ function EnquiryDetailContent({ params }: Props) {
                             <th className="w-16 text-center">Requote?</th>
                           )}
                           <th className="sales-sticky-col-num-hdr w-10 text-center">#</th>
-                          <th className="sales-sticky-col-sku-hdr min-w-[150px]">Product Code (SKU)</th>
-                          <th className="min-w-[200px]">Product Name</th>
-                          <th className="min-w-[120px]">Quote Status</th>
-                          <th className="min-w-[120px]">Category</th>
-                          <th className="min-w-[180px]">Purchase Person</th>
+                          <th className="sales-sticky-col-sku-hdr min-w-[200px] sales-header-editable">Product Description</th>
+                          <th className="min-w-[140px]">Code</th>
                           <th className="min-w-[120px]">Brand</th>
+                          <th className="min-w-[180px]">Product Name</th>
                           <th className="min-w-[100px]">Unit Size</th>
-                          <th className="w-24 text-right">Units Per Case</th>
-                          <th className="w-24 text-right bg-yellow-50 text-yellow-800">Quantity</th>
-                          <th className="w-24 text-right">CBM/Box</th>
+                          <th className="w-28 text-right">Unit Per Carton</th>
+                          <th className="min-w-[120px]">Category</th>
+                          <th className="w-24 text-right">CBM</th>
+                          <th className="w-24 text-right sales-header-editable">Qty</th>
                           <th className="w-28 text-right">Total CBM</th>
-                          <th className="w-28 text-right">Buying Price</th>
-                          <th className="w-28 text-right">Expected Rate</th>
-                          <th className="w-24 text-right">MRP</th>
-                          <th className="w-24 text-right">GST %</th>
-                          <th className="w-28 text-right bg-yellow-50 text-yellow-800">Freight</th>
-                          <th className="w-28 text-right bg-yellow-50 text-yellow-800">Landing Cost</th>
-                          <th className="min-w-[200px] bg-yellow-50 text-yellow-800">Remarks</th>
-                          <th className="w-32 text-center bg-yellow-50 text-yellow-800">Unit (Per Kg / Per Pcs)</th>
-                          <th className="w-28 text-center bg-yellow-50 text-yellow-800">Currency</th>
-                          <th className="w-28 text-right bg-yellow-50 text-yellow-800">Haulage</th>
-                          <th className="w-32 text-center bg-yellow-50 text-yellow-800">Re-Quote</th>
-                          <th className="w-32 text-center">Source</th>
+                          <th className="min-w-[160px]">Purchase Person Name</th>
+                          <th className="min-w-[200px] sales-header-editable">Remark</th>
                           <th className="w-28 text-center">Actions</th>
                         </tr>
                       </thead>
@@ -803,18 +857,18 @@ function EnquiryDetailContent({ params }: Props) {
                               <td className="sales-sticky-col-num text-center font-medium text-xs">
                                 {index + 1}
                               </td>
-                              <td className="sales-sticky-col-sku p-0.5">
+                              <td className="sales-sticky-col-sku sales-cell-editable p-0.5">
                                 <div className="flex items-center gap-1 w-full px-1">
                                   <input
                                     type="text"
-                                    className="w-full border-none bg-transparent outline-none py-1 text-xs font-mono text-blue-600 font-semibold"
-                                    defaultValue={item.sku || item.productCode || ''}
+                                    className="w-full border-none bg-transparent outline-none py-1 text-xs font-medium"
+                                    defaultValue={item.productName || item.manualProductName || ''}
                                     onBlur={(e) => {
-                                      if (e.target.value !== (item.sku || item.productCode || '')) {
-                                        handleUpdateItemField(item.itemId, 'sku', e.target.value);
+                                      if (e.target.value !== (item.productName || item.manualProductName || '')) {
+                                        handleUpdateItemField(item.itemId, 'productName', e.target.value);
                                       }
                                     }}
-                                    placeholder="Product Code"
+                                    placeholder="Product Description"
                                     disabled={!canEdit || isMasterProduct}
                                   />
                                   {canEdit && !isMasterProduct && (
@@ -822,7 +876,7 @@ function EnquiryDetailContent({ params }: Props) {
                                       type="button"
                                       variant="ghost"
                                       size="icon"
-                                      className="h-5 w-5 text-slate-400 hover:text-slate-650 hover:bg-slate-100 shrink-0 rounded-sm"
+                                      className="h-5 w-5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 shrink-0 rounded-sm"
                                       onClick={() => {
                                         setActiveItemForSearch(item);
                                         setProductSearchInput(item.productName || item.manualProductName || '');
@@ -834,40 +888,30 @@ function EnquiryDetailContent({ params }: Props) {
                                   )}
                                 </div>
                               </td>
-                              <td className="p-0.5">
+                              <td className="px-2 py-1 text-xs font-mono text-blue-600 font-semibold">{item.sku || item.productCode || '-'}</td>
+                              <td className="px-2 py-1 text-xs">{item.brandName || '-'}</td>
+                              <td className="px-2 py-1 text-xs font-medium">{item.productName || item.manualProductName || '-'}</td>
+                              <td className="px-2 py-1 text-xs">{item.unitSize || '-'}</td>
+                              <td className="px-2 py-1 text-xs text-right">{item.unitPerCarton || item.unitsPerCase || '-'}</td>
+                              <td className="px-2 py-1 text-xs">{item.categoryName || '-'}</td>
+                              <td className="px-2 py-1 text-xs text-right">{item.cbmPerBox != null ? Number(item.cbmPerBox).toFixed(4) : '-'}</td>
+                              <td className="p-0.5 sales-cell-editable">
                                 <input
-                                  type="text"
-                                  className="w-full border-none bg-transparent outline-none px-1.5 py-1 text-xs font-medium"
-                                  defaultValue={item.productName || item.manualProductName || ''}
+                                  type="number"
+                                  className="w-full border-none bg-transparent outline-none px-1.5 py-1 text-xs text-right font-semibold"
+                                  defaultValue={item.quantity || ''}
                                   onBlur={(e) => {
-                                    if (e.target.value !== (item.productName || item.manualProductName || '')) {
-                                      handleUpdateItemField(item.itemId, 'productName', e.target.value);
+                                    const val = e.target.value ? Number(e.target.value) : null;
+                                    if (val !== (item.quantity || null)) {
+                                      handleUpdateItemField(item.itemId, 'quantity', val);
                                     }
                                   }}
-                                  placeholder="Product Name"
-                                  disabled={!canEdit || isMasterProduct}
+                                  placeholder="Qty"
+                                  disabled={!canEdit}
                                 />
                               </td>
-                              <td className="px-2 py-1 text-sm">
-                                <Badge variant={item.purchaseStatus === 'submitted' || item.purchaseStatus === 'completed' ? 'default' : 'secondary'} className={item.purchaseStatus === 'submitted' || item.purchaseStatus === 'completed' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}>
-                                  {item.purchaseStatus || 'pending'}
-                                </Badge>
-                              </td>
-                              <td className="p-0.5">
-                                <input
-                                  type="text"
-                                  className="w-full border-none bg-transparent outline-none px-1.5 py-1 text-xs"
-                                  defaultValue={item.categoryName || ''}
-                                  onBlur={(e) => {
-                                    if (e.target.value !== (item.categoryName || '')) {
-                                      handleUpdateItemField(item.itemId, 'categoryName', e.target.value);
-                                    }
-                                  }}
-                                  placeholder="Category"
-                                  disabled={!canEdit || isMasterProduct}
-                                />
-                              </td>
-                              <td className="px-2 py-1 text-sm min-w-[180px]">
+                              <td className="px-2 py-1 text-xs text-right font-medium">{item.totalCbm != null ? Number(item.totalCbm).toFixed(4) : '-'}</td>
+                              <td className="px-2 py-1 text-sm min-w-[160px]">
                                 {(item.purchasePersonName || item.productPurchasePersonName) ? (
                                   <span className="font-semibold text-slate-700 text-xs">
                                     {item.purchasePersonName || item.productPurchasePersonName}
@@ -900,178 +944,7 @@ function EnquiryDetailContent({ params }: Props) {
                                   <span className="text-slate-400 text-xs">-</span>
                                 )}
                               </td>
-                              <td className="p-0.5">
-                                <input
-                                  type="text"
-                                  className="w-full border-none bg-transparent outline-none px-1.5 py-1 text-xs"
-                                  defaultValue={item.brandName || ''}
-                                  onBlur={(e) => {
-                                    if (e.target.value !== (item.brandName || '')) {
-                                      handleUpdateItemField(item.itemId, 'brandName', e.target.value);
-                                    }
-                                  }}
-                                  placeholder="Brand"
-                                  disabled={!canEdit || isMasterProduct}
-                                />
-                              </td>
-                              <td className="p-0.5">
-                                <input
-                                  type="text"
-                                  className="w-full border-none bg-transparent outline-none px-1.5 py-1 text-xs text-right"
-                                  defaultValue={item.unitSize || ''}
-                                  onBlur={(e) => {
-                                    if (e.target.value !== (item.unitSize || '')) {
-                                      handleUpdateItemField(item.itemId, 'unitSize', e.target.value);
-                                    }
-                                  }}
-                                  placeholder="Size"
-                                  disabled={!canEdit || isMasterProduct}
-                                />
-                              </td>
-                              <td className="p-0.5">
-                                <input
-                                  type="number"
-                                  className="w-full border-none bg-transparent outline-none px-1.5 py-1 text-xs text-right"
-                                  defaultValue={item.unitPerCarton || item.unitsPerCase || ''}
-                                  onBlur={(e) => {
-                                    const val = e.target.value ? Number(e.target.value) : null;
-                                    if (val !== (item.unitPerCarton || item.unitsPerCase || null)) {
-                                      handleUpdateItemField(item.itemId, 'unitPerCarton', val);
-                                    }
-                                  }}
-                                  placeholder="Units Per Case"
-                                  disabled={!canEdit || isMasterProduct}
-                                />
-                              </td>
-                              <td className="p-0.5 bg-yellow-50/40">
-                                <input
-                                  type="number"
-                                  className="w-full border-none bg-transparent outline-none px-1.5 py-1 text-xs text-right font-semibold"
-                                  defaultValue={item.quantity || ''}
-                                  onBlur={(e) => {
-                                    const val = e.target.value ? Number(e.target.value) : null;
-                                    if (val !== (item.quantity || null)) {
-                                      handleUpdateItemField(item.itemId, 'quantity', val);
-                                    }
-                                  }}
-                                  placeholder="Qty"
-                                  disabled={!canEdit || (isMasterProduct && !isSales && !isMIS && !user?.isSuperAdmin)}
-                                />
-                              </td>
-                              <td className="p-0.5">
-                                <input
-                                  type="number"
-                                  step="0.0001"
-                                  className="w-full border-none bg-transparent outline-none px-1.5 py-1 text-xs text-right"
-                                  defaultValue={item.cbmPerBox || ''}
-                                  onBlur={(e) => {
-                                    const val = e.target.value ? Number(e.target.value) : null;
-                                    if (val !== (item.cbmPerBox || null)) {
-                                      handleUpdateItemField(item.itemId, 'cbmPerBox', val);
-                                    }
-                                  }}
-                                  placeholder="CBM"
-                                  disabled={!canEdit || isMasterProduct}
-                                />
-                              </td>
-                              <td className="px-2 py-1 text-sm text-right font-medium">{item.totalCbm !== undefined && item.totalCbm !== null ? Number(item.totalCbm).toFixed(4) : '-'}</td>
-                              <td className="p-0.5">
-                                <input
-                                  type="number"
-                                  className="w-full border-none bg-transparent outline-none px-1.5 py-1 text-xs text-right font-semibold text-indigo-600"
-                                  defaultValue={item.buyingPrice || ''}
-                                  onBlur={(e) => {
-                                    const val = e.target.value ? Number(e.target.value) : null;
-                                    if (val !== (item.buyingPrice || null)) {
-                                      handleUpdateItemField(item.itemId, 'buyingPrice', val);
-                                    }
-                                  }}
-                                  placeholder="Price"
-                                  disabled={!canEdit || isMasterProduct}
-                                />
-                              </td>
-                              <td className="p-0.5">
-                                <input
-                                  type="number"
-                                  className="w-full border-none bg-transparent outline-none px-1.5 py-1 text-xs text-right font-semibold text-emerald-600"
-                                  defaultValue={item.expectedRate || ''}
-                                  onBlur={(e) => {
-                                    const val = e.target.value ? Number(e.target.value) : null;
-                                    if (val !== (item.expectedRate || null)) {
-                                      handleUpdateItemField(item.itemId, 'expectedRate', val);
-                                    }
-                                  }}
-                                  placeholder="Rate"
-                                  disabled={!canEdit || isMasterProduct}
-                                />
-                              </td>
-                              <td className="p-0.5">
-                                <input
-                                  type="number"
-                                  className="w-full border-none bg-transparent outline-none px-1.5 py-1 text-xs text-right"
-                                  defaultValue={item.mrp || ''}
-                                  onBlur={(e) => {
-                                    const val = e.target.value ? Number(e.target.value) : null;
-                                    if (val !== (item.mrp || null)) {
-                                      handleUpdateItemField(item.itemId, 'mrp', val);
-                                    }
-                                  }}
-                                  placeholder="MRP"
-                                  disabled={!canEdit || isMasterProduct}
-                                />
-                              </td>
-                              <td className="p-0.5">
-                                <input
-                                  type="number"
-                                  className="w-full border-none bg-transparent outline-none px-1.5 py-1 text-xs text-right"
-                                  defaultValue={item.gstPercent || ''}
-                                  onBlur={(e) => {
-                                    const val = e.target.value ? Number(e.target.value) : null;
-                                    if (val !== (item.gstPercent || null)) {
-                                      handleUpdateItemField(item.itemId, 'gstPercent', val);
-                                    }
-                                  }}
-                                  placeholder="GST %"
-                                  disabled={!canEdit || isMasterProduct}
-                                />
-                              </td>
-                              <td className="p-0.5 bg-yellow-50/40">
-                                {applyAllFreight ? (
-                                  <span className="text-xs text-slate-500 italic text-right block px-1.5">{globalFreight || item.freight || '-'}</span>
-                                ) : (
-                                  <input
-                                    type="number"
-                                    step="0.01"
-                                    className="w-full border-none bg-transparent outline-none px-1.5 py-1 text-xs text-right font-medium"
-                                    defaultValue={item.freight || ''}
-                                    onBlur={(e) => {
-                                      const val = e.target.value ? Number(e.target.value) : null;
-                                      if (val !== (item.freight || null)) {
-                                        handleUpdateItemField(item.itemId, 'freight', val);
-                                      }
-                                    }}
-                                    placeholder="0.00"
-                                    disabled={!(isAdmin || isPurchase || isMIS || user?.isSuperAdmin)}
-                                  />
-                                )}
-                              </td>
-                              <td className="p-0.5 bg-yellow-50/40">
-                                <input
-                                  type="number"
-                                  step="0.01"
-                                  className="w-full border-none bg-transparent outline-none px-1.5 py-1 text-xs text-right font-bold"
-                                  defaultValue={item.landingCost || ''}
-                                  onBlur={(e) => {
-                                    const val = e.target.value ? Number(e.target.value) : null;
-                                    if (val !== (item.landingCost || null)) {
-                                      handleUpdateItemField(item.itemId, 'landingCost', val);
-                                    }
-                                  }}
-                                  placeholder="0.00"
-                                  disabled={!(isAdmin || isPurchase || isMIS || user?.isSuperAdmin)}
-                                />
-                              </td>
-                              <td className="p-0.5 bg-yellow-50/40">
+                              <td className="p-0.5 sales-cell-editable">
                                 <input
                                   type="text"
                                   className="w-full border-none bg-transparent outline-none px-1.5 py-1 text-xs"
@@ -1085,73 +958,6 @@ function EnquiryDetailContent({ params }: Props) {
                                   disabled={!canEdit}
                                 />
                               </td>
-                              <td className="p-0.5 bg-yellow-50/40 text-center">
-                                <select
-                                  className="bg-white hover:bg-slate-50 text-slate-700 font-medium px-2 py-0.5 rounded border border-slate-200 outline-none text-[11px] cursor-pointer"
-                                  defaultValue={item.uom || 'Per Pcs'}
-                                  onChange={(e) => {
-                                    handleUpdateItemField(item.itemId, 'uom', e.target.value);
-                                  }}
-                                  disabled={!(isAdmin || isPurchase || isMIS || user?.isSuperAdmin)}
-                                >
-                                  <option value="Per Pcs">Per Pcs</option>
-                                  <option value="Per Kg">Per Kg</option>
-                                </select>
-                              </td>
-                              {/* Currency per product */}
-                              <td className="p-0.5 bg-yellow-50/40 text-center">
-                                {applyAllCurrency ? (
-                                  <span className="text-xs text-slate-500 italic">{globalCurrency || item.currency || '-'}</span>
-                                ) : (
-                                  <select
-                                    className="bg-white hover:bg-slate-50 text-slate-700 font-medium px-1.5 py-0.5 rounded border border-slate-200 outline-none text-[11px] cursor-pointer"
-                                    defaultValue={item.currency || ''}
-                                    onChange={(e) => handleUpdateItemField(item.itemId, 'currency', e.target.value)}
-                                    disabled={!(isAdmin || isPurchase || isMIS || user?.isSuperAdmin)}
-                                  >
-                                    <option value="">Select</option>
-                                    {currencies.map((c: any) => (
-                                      <option key={c.id || c.currencyId} value={c.currencyCode}>{c.currencyCode}</option>
-                                    ))}
-                                  </select>
-                                )}
-                              </td>
-                              {/* Haulage per product */}
-                              <td className="p-0.5 bg-yellow-50/40">
-                                {applyAllHaulage ? (
-                                  <span className="text-xs text-slate-500 italic text-right block px-1.5">{globalHaulage || item.haulage || '-'}</span>
-                                ) : (
-                                  <input
-                                    type="number"
-                                    step="0.01"
-                                    className="w-full border-none bg-transparent outline-none px-1.5 py-1 text-xs text-right font-medium"
-                                    defaultValue={item.haulage || ''}
-                                    onBlur={(e) => {
-                                      const val = e.target.value ? Number(e.target.value) : null;
-                                      if (val !== (item.haulage || null)) {
-                                        handleUpdateItemField(item.itemId, 'haulage', val);
-                                      }
-                                    }}
-                                    placeholder="0.00"
-                                    disabled={!(isAdmin || isPurchase || isMIS || user?.isSuperAdmin)}
-                                  />
-                                )}
-                              </td>
-                              {/* Re-Quote select per product */}
-                              <td className="p-0.5 bg-yellow-50/40 text-center">
-                                <select
-                                  className="bg-white hover:bg-slate-50 text-slate-700 font-medium px-1.5 py-0.5 rounded border border-slate-200 outline-none text-[11px] cursor-pointer"
-                                  defaultValue={item.requoteStatus || 'none'}
-                                  onChange={(e) => handleUpdateItemField(item.itemId, 'requoteStatus', e.target.value)}
-                                  disabled={!(isAdmin || isPurchase || isMIS || user?.isSuperAdmin)}
-                                >
-                                  <option value="none">No Re-Quote</option>
-                                  <option value="requote_requested">Re-Quote Requested</option>
-                                  <option value="requote_in_progress">Re-Quote In Progress</option>
-                                  <option value="requote_completed">Re-Quote Completed</option>
-                                </select>
-                              </td>
-                              <td className="p-1 text-center">{getSourceBadge(item)}</td>
                               <td className="p-1 text-center font-sans">
                                 <div className="flex items-center justify-center gap-1">
                                   {canEdit && (!item.productId || item.sku === 'NOT IN MASTER' || item.sku?.startsWith('TEMP-') || item.categoryName === 'NOT IN MASTER' || item.isManualEntry) && (

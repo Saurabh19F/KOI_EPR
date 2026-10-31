@@ -30,6 +30,7 @@ function transformUserProfile(apiUser: any): UserProfile {
     avatar: apiUser.avatar || '',
     preferences: apiUser.preferences || {},
     companyId: apiUser.companyId || apiUser.company_id || '',
+    warehouseId: apiUser.warehouseId || apiUser.warehouse_id || '',
     role: roleStr,
     roles: roles.map((r: string) => ({ roleId: '', roleName: r, roleCode: r })),
     permissions: apiUser.permissions || [],

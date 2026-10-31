@@ -30,7 +30,7 @@ export class SalesController {
   @ApiOperation({ summary: 'Create a new sales enquiry' })
   @ApiResponse({ status: 201, description: 'Enquiry created successfully' })
   create(@Body() dto: CreateEnquiryDto, @CurrentUser() user: any) {
-    return this.salesService.createEnquiry(dto, user?.sub || user?.userId, null, user);
+    return this.salesService.createEnquiry(dto, user?.userId, null, user);
   }
 
   @Get()
@@ -104,7 +104,7 @@ export class SalesController {
     return this.salesService.updateEnquiryStatus(
       id,
       body.status,
-      user?.sub || user?.userId,
+      user?.userId,
       body.remarks,
       user?.companyId,
       user?.roles,
@@ -116,7 +116,7 @@ export class SalesController {
   convertToSalesOrder(@Param('id') id: string, @CurrentUser() user: any) {
     return this.salesService.convertEnquiryToSalesOrder(
       id,
-      user?.sub || user?.userId,
+      user?.userId,
       user?.companyId,
     );
   }
@@ -132,7 +132,7 @@ export class SalesController {
       id,
       body.action,
       body.remarks,
-      user?.sub || user?.userId,
+      user?.userId,
       body.requoteItemIds,
     );
   }

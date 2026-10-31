@@ -345,7 +345,6 @@ export class UsersService {
 
     if (departmentId) {
       where.push({ ...base, departmentId });
-      where.push({ ...base, departmentId: null as any });
     } else {
       where.push(base);
     }

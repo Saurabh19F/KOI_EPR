@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import {
@@ -233,19 +232,17 @@ export default function AdminUsersPage() {
         </Button>
       </div>
 
-      {/* Tabs */}
-      <Tabs value="users">
-        <TabsList>
-          <TabsTrigger value="users">
-            <Users className="h-4 w-4 mr-2" />
-            Users
-          </TabsTrigger>
-          <TabsTrigger value="roles" onClick={() => window.location.href = '/dashboard/admin/roles'}>
-            <Shield className="h-4 w-4 mr-2" />
-            Roles & Permissions
-          </TabsTrigger>
-        </TabsList>
-      </Tabs>
+      {/* Navigation */}
+      <div className="flex items-center gap-2">
+        <Button variant="default" size="sm" className="pointer-events-none">
+          <Users className="h-4 w-4 mr-2" />
+          Users
+        </Button>
+        <Button variant="outline" size="sm" onClick={() => window.location.href = '/dashboard/admin/roles'}>
+          <Shield className="h-4 w-4 mr-2" />
+          Roles & Permissions
+        </Button>
+      </div>
 
       {/* Filter and Search Bar */}
       <Card>
@@ -322,6 +319,7 @@ export default function AdminUsersPage() {
                     <th className="py-3 px-4">User</th>
                     <th className="py-3 px-4">Department</th>
                     <th className="py-3 px-4">Role</th>
+                    <th className="py-3 px-4">Warehouse</th>
                     <th className="py-3 px-4">Status</th>
                     <th className="py-3 px-4 text-right">Actions</th>
                   </tr>
@@ -361,6 +359,16 @@ export default function AdminUsersPage() {
                           <Badge variant="outline" className="font-medium">
                             {userRole}
                           </Badge>
+                        </td>
+                        <td className="py-3 px-4 text-sm text-slate-600">
+                          {user.warehouseId ? (
+                            <div className="flex items-center gap-1.5">
+                              <Warehouse className="h-3.5 w-3.5 text-slate-400" />
+                              {warehouses.find((w: any) => w.id === user.warehouseId)?.name || 'Assigned'}
+                            </div>
+                          ) : (
+                            <span className="text-slate-400">—</span>
+                          )}
                         </td>
                         <td className="py-3 px-4 text-sm">
                           {user.isActive !== false ? (

@@ -51,11 +51,13 @@ export class ProductionController {
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({ name: 'search', required: false, type: String })
   @ApiQuery({ name: 'status', required: false, enum: ProductionJobStatus })
+  @ApiQuery({ name: 'warehouseId', required: false, type: String })
   findAllJobs(
     @Query('page') page?: string,
     @Query('limit') limit?: string,
     @Query('search') search?: string,
     @Query('status') status?: ProductionJobStatus,
+    @Query('warehouseId') warehouseId?: string,
     @CurrentUser() user?: any,
   ) {
     return this.productionService.findAllJobs({
@@ -63,6 +65,7 @@ export class ProductionController {
       limit: limit ? Number(limit) : 20,
       search,
       status,
+      warehouseId,
       companyId: user?.companyId,
     });
   }

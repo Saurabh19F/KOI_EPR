@@ -52,7 +52,7 @@ export class RolesGuard implements CanActivate {
     }
 
     // Load fresh roles and permissions from database
-    const userId = user.sub || user.userId;
+    const userId = user.userId;
     if (userId) {
       try {
         // Query the user's role code

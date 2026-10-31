@@ -299,3 +299,147 @@ export const printPDF = (doc: jsPDF): void => {
     };
   }
 };
+
+// Generate Material Transfer Note PDF
+export const generateTransferNotePDF = (transfer: any): void => {
+  const doc = new jsPDF();
+  const pw = doc.internal.pageSize.width;
+  const today = formatDate(new Date());
+
+  // Header
+  doc.setFontSize(9);
+  doc.setTextColor(100);
+  doc.text('INTERNAL LOGISTICS & STOCK TRANSFER', 14, 16);
+
+  doc.setFontSize(22);
+  doc.setTextColor(0);
+  doc.setFont('helvetica', 'bold');
+  doc.text('MATERIAL TRANSFER NOTE', 14, 26);
+
+  doc.setFontSize(10);
+  doc.setFont('courier', 'normal');
+  doc.setTextColor(100);
+  doc.text(`Request ID: ${transfer.transferNumber || '—'}  |  Date: ${transfer.createdAt ? formatDate(transfer.createdAt) : today}`, 14, 34);
+
+  // KOI top-right
+  doc.setFontSize(28);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(0);
+  doc.text('KOI', pw - 14, 20, { align: 'right' });
+
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(34, 139, 34);
+  doc.text(`STATUS: ${(transfer.status || 'APPROVED').toUpperCase()}`, pw - 14, 28, { align: 'right' });
+
+  doc.setDrawColor(200);
+  doc.line(14, 38, pw - 14, 38);
+
+  // Two-column info boxes
+  const boxY = 44;
+  const boxH = 42;
+  const halfW = (pw - 28 - 6) / 2;
+
+  doc.setDrawColor(180);
+  doc.setLineWidth(0.5);
+  doc.rect(14, boxY, halfW, boxH);
+
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(0, 80, 160);
+  doc.text('ORDER & ROUTING DETAILS', 18, boxY + 8);
+  doc.setDrawColor(255, 165, 0);
+  doc.setLineWidth(1.5);
+  doc.line(18, boxY + 10, 80, boxY + 10);
+
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(80);
+  doc.setFontSize(9);
+  doc.text('Order / Job Card:', 18, boxY + 18);
+  doc.text('Requested By:', 18, boxY + 25);
+  doc.text('Transfer Status:', 18, boxY + 32);
+
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(0);
+  doc.text(transfer.orderNo || '—', 62, boxY + 18);
+  doc.text(transfer.requestedByUsername || transfer.requesterName || '—', 62, boxY + 25);
+  doc.setTextColor(34, 139, 34);
+  doc.text((transfer.status || 'Approved').charAt(0).toUpperCase() + (transfer.status || 'approved').slice(1), 62, boxY + 32);
+
+  // Warehouse Locations box
+  const box2X = 14 + halfW + 6;
+  doc.setDrawColor(180);
+  doc.setLineWidth(0.5);
+  doc.rect(box2X, boxY, halfW, boxH);
+
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(0, 80, 160);
+  doc.text('WAREHOUSE LOCATIONS', box2X + 4, boxY + 8);
+  doc.setDrawColor(255, 165, 0);
+  doc.setLineWidth(1.5);
+  doc.line(box2X + 4, boxY + 10, box2X + 60, boxY + 10);
+
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(80);
+  doc.setFontSize(9);
+  doc.text('Source WH (From):', box2X + 4, boxY + 18);
+  doc.text('Requesting WH (To):', box2X + 4, boxY + 25);
+  doc.text('Transfer Type:', box2X + 4, boxY + 32);
+
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(200, 80, 0);
+  doc.text(transfer.sourceWarehouseName || '—', box2X + 48, boxY + 18);
+  doc.text(transfer.destinationWarehouseName || '—', box2X + 48, boxY + 25);
+  doc.text('Internal WH Move', box2X + 48, boxY + 32);
+
+  // Product table
+  autoTable(doc, {
+    startY: boxY + boxH + 8,
+    head: [['PRODUCT CODE', 'PRODUCT DESCRIPTION', 'REQUESTED', 'DISPATCHED', 'RECEIVED']],
+    body: [[
+      transfer.sku || transfer.productId || '—',
+      transfer.finalProductName || transfer.productName || '—',
+      Number(transfer.totalQuantity || 0).toLocaleString(),
+      Number(transfer.dispatchedQty || 0).toLocaleString(),
+      Number(transfer.receivedQty || 0).toLocaleString(),
+    ]],
+    theme: 'grid',
+    headStyles: { fillColor: [245, 245, 245], textColor: [60, 60, 60], fontStyle: 'bold', fontSize: 8, lineWidth: 0.3, lineColor: [180, 180, 180] },
+    bodyStyles: { fontSize: 8, lineWidth: 0.3, lineColor: [200, 200, 200] },
+    columnStyles: {
+      0: { cellWidth: 45, font: 'courier', fontSize: 7 },
+      1: { cellWidth: 60 },
+      2: { halign: 'center', cellWidth: 25 },
+      3: { halign: 'center', cellWidth: 25 },
+      4: { halign: 'center', cellWidth: 25 },
+    },
+    margin: { left: 14, right: 14 },
+  });
+
+  // Signature area
+  const sigY = (doc as any).lastAutoTable?.finalY + 20 || 170;
+  doc.setDrawColor(0);
+  doc.setLineWidth(1);
+  doc.line(14, sigY, pw - 14, sigY);
+
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(80);
+  doc.text('Authorized Requester:', 14, sigY + 10);
+  doc.setFont('courier', 'bold');
+  doc.setTextColor(0);
+  doc.text(transfer.requestedByUsername || transfer.requesterName || '—', 14, sigY + 17);
+
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(80);
+  doc.text('Source WH Sender', pw / 2, sigY + 10, { align: 'center' });
+  doc.text('Target WH Receiver', pw - 14, sigY + 10, { align: 'right' });
+
+  doc.setFontSize(7);
+  doc.setFont('courier', 'normal');
+  doc.setTextColor(150);
+  doc.text(`SYS-GEN-TRANSFER-${transfer.transferNumber || 'UNKNOWN'}`, pw / 2, sigY + 30, { align: 'center' });
+
+  doc.save(`Transfer_Note_${transfer.transferNumber || 'UNKNOWN'}.pdf`);
+};

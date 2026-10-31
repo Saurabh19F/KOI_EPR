@@ -10,6 +10,8 @@ import {
 export enum ProductionJobStatus {
   DRAFT = 'draft',
   PLANNED = 'planned',
+  WAITING_FOR_MATERIAL = 'waiting_for_material',
+  READY_FOR_PRODUCTION = 'ready_for_production',
   IN_PROGRESS = 'in_progress',
   COMPLETED = 'completed',
   CANCELLED = 'cancelled',

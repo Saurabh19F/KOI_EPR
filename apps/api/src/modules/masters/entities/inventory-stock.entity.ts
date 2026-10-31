@@ -18,7 +18,7 @@ export class InventoryStock {
   @Column({ nullable: true })
   productId: string;
 
-  @Column()
+  @Column({ nullable: true })
   sku: string;
 
   @Column({ name: 'location_id', nullable: true })

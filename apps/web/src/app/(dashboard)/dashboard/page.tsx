@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { salesApi, fmsApi, purchaseApi, rateApi, reportsApi } from '@/lib/api';
+import { salesApi, fmsApi, purchaseApi, rateApi, reportsApi, productionApi, qualityApi, inventoryApi, accountsApi } from '@/lib/api';
 import { useAuthStore } from '@/store/auth';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -25,6 +25,13 @@ import {
   ArrowUp,
   FileText,
   Truck,
+  Factory,
+  ShieldCheck,
+  Boxes,
+  ArrowLeftRight,
+  LayoutDashboard,
+  Wrench,
+  Calculator,
 } from 'lucide-react';
 import Link from 'next/link';
 import { formatDate } from '@/lib/utils';
@@ -45,11 +52,25 @@ export default function DashboardPage() {
   const isPurchaseRole = userRoles.includes('PURCHASE_USER') || userRoles.includes('PURCHASE_MANAGER');
   const isCostingRole = userRoles.includes('COSTING_USER') || userRoles.includes('COSTING_MANAGER');
   const isMIS = userRoles.includes('MIS_USER') || userRoles.includes('MIS');
+  const isFmsRole = userRoles.includes('FMS_MANAGER') || userRoles.includes('FMS_USER');
+  const isProductionRole = userRoles.includes('PRODUCTION_MANAGER') || userRoles.includes('PRODUCTION_USER');
+  const isWarehouseRole = userRoles.includes('WAREHOUSE_MANAGER') || userRoles.includes('WAREHOUSE_USER');
+  const isQualityRole = userRoles.includes('QUALITY_MANAGER') || userRoles.includes('QUALITY_USER');
+  const isInventoryRole = userRoles.includes('INVENTORY_MANAGER') || userRoles.includes('INVENTORY_USER');
+  const isFinanceRole = userRoles.includes('FINANCE_USER');
+  const isAccountsRole = userRoles.includes('ACCOUNTS_USER') || userRoles.includes('ACCOUNTS_MANAGER');
+  const isPlannerRole = userRoles.includes('PLANNER');
 
   const hasPurchaseAccess = isAdmin || isManagement || isPurchaseRole || isCostingRole || isMIS || userPermissions.includes('PURCHASE_VIEW');
   const hasRateAccess = isAdmin || userRoles.includes('MANAGEMENT') || isCostingRole || userPermissions.includes('RATE_VIEW');
   const hasFmsAccess = isAdmin || isManagement || isCostingRole || isMIS || userPermissions.includes('FMS_VIEW');
   const hasSalesAccess = isAdmin || isManagement || isSalesRole || isMIS || userPermissions.includes('SALES_VIEW');
+  const hasProductionAccess = isAdmin || isManagement || isProductionRole || userPermissions.includes('PRODUCTION_VIEW');
+  const hasWarehouseAccess = isAdmin || isManagement || isWarehouseRole || isPlannerRole || userPermissions.includes('WAREHOUSE_VIEW');
+  const hasQualityAccess = isAdmin || isManagement || isQualityRole || userPermissions.includes('QUALITY_VIEW');
+  const hasInventoryAccess = isAdmin || isManagement || isInventoryRole || isWarehouseRole || isPlannerRole || userPermissions.includes('INVENTORY_VIEW');
+  const hasFinanceAccess = isAdmin || isManagement || isFinanceRole || isAccountsRole || userPermissions.includes('FINANCE_VIEW');
+  const hasAccountsAccess = isAdmin || isManagement || isAccountsRole || userPermissions.includes('ACCOUNTS_VIEW');
 
   const { data: dashboardStats } = useQuery({
     queryKey: ['dashboard-stats'],
@@ -99,6 +120,42 @@ export default function DashboardPage() {
     enabled: hasRateAccess,
   });
 
+  const { data: productionData } = useQuery({
+    queryKey: ['production-jobs', { limit: 5 }],
+    queryFn: () => productionApi.getJobs({ limit: 5 }),
+    enabled: hasProductionAccess,
+  });
+
+  const { data: qualityData } = useQuery({
+    queryKey: ['quality-inspections', { limit: 5 }],
+    queryFn: () => qualityApi.getInspections({ limit: 5 }),
+    enabled: hasQualityAccess,
+  });
+
+  const { data: warehouseStockData } = useQuery({
+    queryKey: ['warehouse-stock-summary'],
+    queryFn: () => inventoryApi.getStockSummary(),
+    enabled: hasWarehouseAccess && !hasSalesAccess,
+  });
+
+  const { data: stockMovementsData } = useQuery({
+    queryKey: ['stock-movements', { limit: 5 }],
+    queryFn: () => inventoryApi.getMovements({ limit: 5 }),
+    enabled: hasInventoryAccess && !hasSalesAccess,
+  });
+
+  const { data: accountsStatsData } = useQuery({
+    queryKey: ['accounts-stats'],
+    queryFn: () => accountsApi.getStats(),
+    enabled: hasAccountsAccess,
+  });
+
+  const { data: pendingPOsData } = useQuery({
+    queryKey: ['accounts-pending-pos', { limit: 5 }],
+    queryFn: () => accountsApi.getPendingPOs({ limit: 5 }),
+    enabled: hasAccountsAccess,
+  });
+
   const stats = dashboardStats?.data || {};
 
   const metrics = useMemo(() => {
@@ -126,7 +183,7 @@ export default function DashboardPage() {
   const kpis = useMemo(() => {
     const items: Array<{title: string; value: any; trend: string; trendUp: boolean; icon: any; tone: string; href: string}> = [];
 
-    if (hasSalesAccess) {
+    if (hasSalesAccess && (isSalesRole || isAdmin || isManagement || isMIS)) {
       items.push({
         title: 'Total Enquiries',
         value: metrics.totalEnquiries,
@@ -147,7 +204,7 @@ export default function DashboardPage() {
       });
     }
 
-    if (hasFmsAccess) {
+    if (hasFmsAccess && (isSalesRole || isFmsRole || isAdmin || isManagement || isMIS)) {
       items.push({
         title: 'Pending Tasks',
         value: metrics.pendingTasks,
@@ -168,7 +225,20 @@ export default function DashboardPage() {
       });
     }
 
-    if (hasPurchaseAccess && !hasSalesAccess && !hasFmsAccess) {
+    if (isCostingRole) {
+      const analyses = rateData?.data?.data || [];
+      items.push({
+        title: 'Rate Analyses',
+        value: analyses.length,
+        trend: 'Active',
+        trendUp: true,
+        icon: TrendingUp,
+        tone: 'bg-violet-50 text-violet-700 border-violet-100',
+        href: '/dashboard/rate',
+      });
+    }
+
+    if (isPurchaseRole && !isSalesRole) {
       items.push({
         title: 'Purchase Quotes',
         value: metrics.totalQuotes,
@@ -180,8 +250,72 @@ export default function DashboardPage() {
       });
     }
 
+    if (hasProductionAccess) {
+      const prodJobs = productionData?.data?.data || [];
+      items.push({
+        title: 'Production Jobs',
+        value: prodJobs.length,
+        trend: 'Active',
+        trendUp: true,
+        icon: Factory,
+        tone: 'bg-orange-50 text-orange-700 border-orange-100',
+        href: '/dashboard/production',
+      });
+    }
+
+    if (hasQualityAccess) {
+      const inspections = qualityData?.data?.data || [];
+      items.push({
+        title: 'QC Inspections',
+        value: inspections.length,
+        trend: 'Quality',
+        trendUp: true,
+        icon: ShieldCheck,
+        tone: 'bg-teal-50 text-teal-700 border-teal-100',
+        href: '/dashboard/quality',
+      });
+    }
+
+    if (hasWarehouseAccess && !hasSalesAccess && !hasFmsAccess) {
+      const stockSummary = warehouseStockData?.data;
+      items.push({
+        title: 'Stock Items',
+        value: stockSummary?.totalItems || '—',
+        trend: 'Active',
+        trendUp: true,
+        icon: Boxes,
+        tone: 'bg-cyan-50 text-cyan-700 border-cyan-100',
+        href: '/dashboard/warehouse/stock-report',
+      });
+    }
+
+    if (hasAccountsAccess && !hasSalesAccess && !hasFmsAccess) {
+      const accStats = accountsStatsData?.data;
+      items.push({
+        title: 'Pending Approvals',
+        value: accStats?.pendingApprovals || 0,
+        trend: 'Review',
+        trendUp: true,
+        icon: CheckCircle,
+        tone: 'bg-lime-50 text-lime-700 border-lime-100',
+        href: '/dashboard/accounts/approvals',
+      });
+    }
+
+    if (hasFinanceAccess && !hasSalesAccess && !hasFmsAccess && !hasAccountsAccess) {
+      items.push({
+        title: 'Finance',
+        value: '—',
+        trend: 'Active',
+        trendUp: true,
+        icon: Calculator,
+        tone: 'bg-green-50 text-green-700 border-green-100',
+        href: '/dashboard/finance',
+      });
+    }
+
     return items;
-  }, [hasSalesAccess, hasFmsAccess, hasPurchaseAccess, metrics]);
+  }, [hasSalesAccess, hasFmsAccess, hasPurchaseAccess, hasProductionAccess, hasQualityAccess, hasWarehouseAccess, hasAccountsAccess, hasFinanceAccess, isSalesRole, isFmsRole, isCostingRole, isPurchaseRole, isAdmin, isManagement, isMIS, metrics, productionData, qualityData, warehouseStockData, accountsStatsData, rateData]);
 
   const quickActions = useMemo(() => {
     const actions: Array<{title: string; icon: any; href: string; color: string}> = [];
@@ -199,6 +333,36 @@ export default function DashboardPage() {
       actions.push({ title: 'Rate Analysis', icon: TrendingUp, href: '/dashboard/rate/new', color: 'hover:border-violet-300 hover:bg-violet-50 hover:text-violet-700' });
     }
 
+    if (hasProductionAccess) {
+      actions.push({ title: 'Production', icon: Factory, href: '/dashboard/production', color: 'hover:border-orange-300 hover:bg-orange-50 hover:text-orange-700' });
+      actions.push({ title: 'Daily Log', icon: ClipboardList, href: '/dashboard/production/daily-log', color: 'hover:border-amber-300 hover:bg-amber-50 hover:text-amber-700' });
+      actions.push({ title: 'BOM', icon: Wrench, href: '/dashboard/production/bom', color: 'hover:border-yellow-300 hover:bg-yellow-50 hover:text-yellow-700' });
+    }
+
+    if (hasQualityAccess) {
+      actions.push({ title: 'Quality', icon: ShieldCheck, href: '/dashboard/quality', color: 'hover:border-teal-300 hover:bg-teal-50 hover:text-teal-700' });
+      actions.push({ title: 'Reject Actions', icon: AlertTriangle, href: '/dashboard/quality/reject-actions', color: 'hover:border-red-300 hover:bg-red-50 hover:text-red-700' });
+    }
+
+    if (hasWarehouseAccess) {
+      actions.push({ title: 'Stock Report', icon: Boxes, href: '/dashboard/warehouse/stock-report', color: 'hover:border-cyan-300 hover:bg-cyan-50 hover:text-cyan-700' });
+      actions.push({ title: 'Bin Rack', icon: LayoutDashboard, href: '/dashboard/warehouse/bin-rack', color: 'hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-700' });
+      actions.push({ title: 'Receiving', icon: Truck, href: '/dashboard/warehouse/receiving-history', color: 'hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700' });
+    }
+
+    if (hasInventoryAccess && !hasWarehouseAccess) {
+      actions.push({ title: 'Inventory', icon: Package, href: '/dashboard/inventory', color: 'hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700' });
+      actions.push({ title: 'Movements', icon: ArrowLeftRight, href: '/dashboard/inventory/movements', color: 'hover:border-purple-300 hover:bg-purple-50 hover:text-purple-700' });
+    }
+
+    if (hasFinanceAccess) {
+      actions.push({ title: 'Finance', icon: Calculator, href: '/dashboard/finance', color: 'hover:border-green-300 hover:bg-green-50 hover:text-green-700' });
+    }
+
+    if (hasAccountsAccess) {
+      actions.push({ title: 'Approvals', icon: CheckCircle, href: '/dashboard/accounts/approvals', color: 'hover:border-lime-300 hover:bg-lime-50 hover:text-lime-700' });
+    }
+
     actions.push({ title: 'Reports', icon: BarChart3, href: '/dashboard/reports', color: 'hover:border-slate-300 hover:bg-slate-50 hover:text-slate-700' });
 
     if (hasFmsAccess) {
@@ -206,7 +370,7 @@ export default function DashboardPage() {
     }
 
     return actions;
-  }, [hasSalesAccess, hasPurchaseAccess, hasRateAccess, hasFmsAccess]);
+  }, [hasSalesAccess, hasPurchaseAccess, hasRateAccess, hasFmsAccess, hasProductionAccess, hasQualityAccess, hasWarehouseAccess, hasInventoryAccess, hasFinanceAccess, hasAccountsAccess]);
 
   const handleRefresh = () => {
     if (hasSalesAccess) refetchEnquiries();
@@ -216,21 +380,37 @@ export default function DashboardPage() {
     }
   };
 
-  const dashboardTitle = isSalesRole && !isAdmin
-    ? 'Sales Dashboard'
-    : isPurchaseRole && !isAdmin
-      ? 'Purchase Dashboard'
-      : isCostingRole && !isAdmin
-        ? 'Costing Dashboard'
-        : 'Dashboard';
+  const dashboardTitle = (() => {
+    if (isAdmin) return 'Dashboard';
+    if (isProductionRole) return 'Production Dashboard';
+    if (isWarehouseRole) return 'Warehouse Dashboard';
+    if (isQualityRole) return 'Quality Dashboard';
+    if (isPlannerRole) return 'Planner Dashboard';
+    if (isSalesRole) return 'Sales Dashboard';
+    if (isPurchaseRole) return 'Purchase Dashboard';
+    if (isCostingRole) return 'Costing Dashboard';
+    if (isFinanceRole) return 'Finance Dashboard';
+    if (isAccountsRole) return 'Accounts Dashboard';
+    if (isFmsRole) return 'FMS Dashboard';
+    if (isMIS) return 'MIS Dashboard';
+    return 'Dashboard';
+  })();
 
-  const dashboardSubtitle = isSalesRole && !isAdmin
-    ? 'Your sales enquiries, orders, and performance.'
-    : isPurchaseRole && !isAdmin
-      ? 'Purchase orders, quotes, and vendor tracking.'
-      : isCostingRole && !isAdmin
-        ? 'Rate analysis and costing overview.'
-        : 'Live work across sales, purchase, rate, and fulfilment.';
+  const dashboardSubtitle = (() => {
+    if (isAdmin) return 'Live work across sales, purchase, rate, and fulfilment.';
+    if (isProductionRole) return 'Production jobs, daily logs, and BOM management.';
+    if (isWarehouseRole) return 'Stock levels, bin racks, and receiving operations.';
+    if (isQualityRole) return 'Inspections, reject actions, and quality control.';
+    if (isPlannerRole) return 'Inventory planning, transfers, and stock allocation.';
+    if (isSalesRole) return 'Your sales enquiries, orders, and performance.';
+    if (isPurchaseRole) return 'Purchase orders, quotes, and vendor tracking.';
+    if (isCostingRole) return 'Rate analysis and costing overview.';
+    if (isFinanceRole) return 'Journal entries, P&L, and balance sheets.';
+    if (isAccountsRole) return 'Approvals, ledger, and three-way matching.';
+    if (isFmsRole) return 'Tasks, PO tracking, and follow-up management.';
+    if (isMIS) return 'Enquiry review and data analysis.';
+    return 'Live work across sales, purchase, rate, and fulfilment.';
+  })();
 
   return (
     <div className="space-y-4">
@@ -238,7 +418,21 @@ export default function DashboardPage() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#9a6b36]">
-            {isSalesRole && !isAdmin ? 'Sales overview' : 'Operations overview'}
+            {(() => {
+              if (isAdmin || isManagement) return 'Operations overview';
+              if (isSalesRole) return 'Sales overview';
+              if (isPurchaseRole) return 'Purchase overview';
+              if (isProductionRole) return 'Production overview';
+              if (isWarehouseRole) return 'Warehouse overview';
+              if (isQualityRole) return 'Quality overview';
+              if (isPlannerRole) return 'Planner overview';
+              if (isCostingRole) return 'Costing overview';
+              if (isFinanceRole) return 'Finance overview';
+              if (isAccountsRole) return 'Accounts overview';
+              if (isFmsRole) return 'FMS overview';
+              if (isMIS) return 'MIS overview';
+              return 'Operations overview';
+            })()}
           </p>
           <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-slate-950">{dashboardTitle}</h1>
           <p className="mt-1 text-sm text-slate-500">{dashboardSubtitle}</p>
@@ -329,9 +523,9 @@ export default function DashboardPage() {
       )}
 
       {/* Main Grid */}
-      <div className={`grid grid-cols-1 gap-4 ${hasFmsAccess && hasSalesAccess ? 'lg:grid-cols-3' : ''}`}>
+      <div className={`grid grid-cols-1 gap-4 ${(hasFmsAccess && hasSalesAccess) || (hasProductionAccess && hasQualityAccess && !hasSalesAccess) ? 'lg:grid-cols-3' : ''}`}>
         {/* Recent Enquiries */}
-        {hasSalesAccess && (
+        {hasSalesAccess && (isSalesRole || isAdmin || isManagement || isMIS) && (
           <div className={`overflow-hidden rounded-lg border border-[#e5dfd4] bg-white shadow-card ${hasFmsAccess ? 'lg:col-span-2' : ''}`}>
             <div className="flex items-center justify-between border-b border-[#eee8de] px-4 py-3">
               <div className="flex items-center gap-3">
@@ -405,8 +599,8 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* My Tasks - only for roles with FMS access */}
-        {hasFmsAccess && (
+        {/* My Tasks - only for FMS/Sales/Admin roles */}
+        {hasFmsAccess && (isSalesRole || isFmsRole || isAdmin || isManagement || isMIS) && (
           <div className="overflow-hidden rounded-lg border border-[#e5dfd4] bg-white shadow-card">
             <div className="flex items-center justify-between border-b border-[#eee8de] px-4 py-3">
               <div className="flex items-center gap-3">
@@ -482,7 +676,7 @@ export default function DashboardPage() {
         )}
 
         {/* Purchase section for purchase-only roles */}
-        {hasPurchaseAccess && !hasSalesAccess && !hasFmsAccess && (
+        {hasPurchaseAccess && (isPurchaseRole || isAdmin || isManagement) && !isSalesRole && !isCostingRole && (
           <div className="overflow-hidden rounded-lg border border-[#e5dfd4] bg-white shadow-card">
             <div className="flex items-center justify-between border-b border-[#eee8de] px-4 py-3">
               <div className="flex items-center gap-3">
@@ -530,6 +724,402 @@ export default function DashboardPage() {
                   <p className="text-sm text-slate-400 mt-1">Start by creating a purchase quote</p>
                 </div>
               )}
+            </div>
+          </div>
+        )}
+
+        {/* Production Jobs */}
+        {hasProductionAccess && !hasSalesAccess && (
+          <div className={`overflow-hidden rounded-lg border border-[#e5dfd4] bg-white shadow-card ${hasQualityAccess ? 'lg:col-span-2' : ''}`}>
+            <div className="flex items-center justify-between border-b border-[#eee8de] px-4 py-3">
+              <div className="flex items-center gap-3">
+                <div className="rounded-lg bg-orange-50 p-2 text-orange-700">
+                  <Factory className="h-5 w-5" />
+                </div>
+                <h2 className="font-bold text-slate-950">Production Jobs</h2>
+              </div>
+              <Link href="/dashboard/production" className="flex items-center gap-1 text-sm font-bold text-[#9a6b36] hover:text-[#7a4f24]">
+                View all <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+            <div className="divide-y divide-slate-50">
+              {productionData?.data?.data?.slice(0, 5).length ? (
+                productionData.data.data.slice(0, 5).map((job: any) => (
+                  <Link
+                    key={job.productionJobId || job.id}
+                    href="/dashboard/production"
+                    className="flex items-center justify-between px-4 py-3 transition-colors hover:bg-[#fbfaf6]"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-600 text-xs font-bold text-white shadow-sm">
+                        {(job.jobNumber || job.productionJobNo || 'JOB').slice(-4)}
+                      </div>
+                      <div>
+                        <p className="font-bold text-slate-950">{job.jobNumber || job.productionJobNo || 'Production Job'}</p>
+                        <p className="text-sm text-slate-500">{job.productName || job.product?.name || 'No product'}</p>
+                      </div>
+                    </div>
+                    <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                      job.status === 'completed' || job.status === 'closed' ? 'bg-emerald-100 text-emerald-700' :
+                      job.status === 'in_progress' || job.status === 'active' ? 'bg-blue-100 text-blue-700' :
+                      job.status === 'pending' ? 'bg-amber-100 text-amber-700' :
+                      'bg-slate-100 text-slate-600'
+                    }`}>
+                      {(job.status || 'draft').replace(/_/g, ' ')}
+                    </span>
+                  </Link>
+                ))
+              ) : (
+                <div className="p-12 text-center">
+                  <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-lg bg-orange-100">
+                    <Factory className="h-8 w-8 text-orange-400" />
+                  </div>
+                  <p className="text-slate-600 font-medium">No production jobs</p>
+                  <p className="text-sm text-slate-400 mt-1">Jobs will appear here when created</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* QC Inspections */}
+        {hasQualityAccess && !hasSalesAccess && (
+          <div className="overflow-hidden rounded-lg border border-[#e5dfd4] bg-white shadow-card">
+            <div className="flex items-center justify-between border-b border-[#eee8de] px-4 py-3">
+              <div className="flex items-center gap-3">
+                <div className="rounded-lg bg-teal-50 p-2 text-teal-700">
+                  <ShieldCheck className="h-5 w-5" />
+                </div>
+                <h2 className="font-bold text-slate-950">QC Inspections</h2>
+              </div>
+              <Link href="/dashboard/quality" className="text-sm font-bold text-[#9a6b36] hover:text-[#7a4f24]">
+                View all
+              </Link>
+            </div>
+            <div className="divide-y divide-slate-50">
+              {qualityData?.data?.data?.slice(0, 5).length ? (
+                qualityData.data.data.slice(0, 5).map((inspection: any) => (
+                  <Link
+                    key={inspection.inspectionId || inspection.id}
+                    href="/dashboard/quality"
+                    className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-[#fbfaf6]"
+                  >
+                    <div className={`p-2 rounded-lg ${
+                      inspection.status === 'completed' || inspection.status === 'passed' ? 'bg-emerald-100' :
+                      inspection.status === 'failed' ? 'bg-red-100' : 'bg-amber-100'
+                    }`}>
+                      {inspection.status === 'completed' || inspection.status === 'passed' ? (
+                        <CheckCircle className="h-5 w-5 text-emerald-600" />
+                      ) : inspection.status === 'failed' ? (
+                        <AlertTriangle className="h-5 w-5 text-red-600" />
+                      ) : (
+                        <Clock className="h-5 w-5 text-amber-600" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="truncate font-bold text-slate-950">{inspection.inspectionNumber || 'Inspection'}</p>
+                      <p className="text-sm text-slate-500">{inspection.productName || 'Pending review'}</p>
+                    </div>
+                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                      inspection.status === 'completed' || inspection.status === 'passed' ? 'bg-emerald-100 text-emerald-700' :
+                      inspection.status === 'failed' ? 'bg-red-100 text-red-700' :
+                      'bg-amber-100 text-amber-700'
+                    }`}>
+                      {(inspection.status || 'pending').replace(/_/g, ' ')}
+                    </span>
+                  </Link>
+                ))
+              ) : (
+                <div className="p-6 text-center">
+                  <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-teal-100">
+                    <ShieldCheck className="h-6 w-6 text-teal-500" />
+                  </div>
+                  <p className="text-slate-600 font-medium">No inspections</p>
+                  <p className="text-sm text-slate-400 mt-1">Quality checks will appear here</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Warehouse Stock Overview */}
+        {isWarehouseRole && !hasSalesAccess && !hasProductionAccess && (
+          <div className="overflow-hidden rounded-lg border border-[#e5dfd4] bg-white shadow-card lg:col-span-2">
+            <div className="flex items-center justify-between border-b border-[#eee8de] px-4 py-3">
+              <div className="flex items-center gap-3">
+                <div className="rounded-lg bg-cyan-50 p-2 text-cyan-700">
+                  <Boxes className="h-5 w-5" />
+                </div>
+                <h2 className="font-bold text-slate-950">Stock Overview</h2>
+              </div>
+              <Link href="/dashboard/warehouse/stock-report" className="flex items-center gap-1 text-sm font-bold text-[#9a6b36] hover:text-[#7a4f24]">
+                Full report <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+            <div className="divide-y divide-slate-50">
+              {warehouseStockData?.data?.items?.slice(0, 5).length ? (
+                warehouseStockData.data.items.slice(0, 5).map((item: any, idx: number) => (
+                  <div key={item.productId || idx} className="flex items-center justify-between px-4 py-3">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-cyan-600 text-xs font-bold text-white shadow-sm">
+                        {String(idx + 1).padStart(2, '0')}
+                      </div>
+                      <div>
+                        <p className="font-bold text-slate-950">{item.productName || item.name || 'Item'}</p>
+                        <p className="text-sm text-slate-500">{item.warehouseName || item.warehouse || 'Main warehouse'}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-bold text-slate-950">{item.quantity || item.currentStock || 0}</p>
+                      <p className="text-xs text-slate-400">{item.unit || 'units'}</p>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="p-12 text-center">
+                  <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-lg bg-cyan-100">
+                    <Boxes className="h-8 w-8 text-cyan-400" />
+                  </div>
+                  <p className="text-slate-600 font-medium">No stock data</p>
+                  <p className="text-sm text-slate-400 mt-1">Stock levels will appear here</p>
+                  <Link href="/dashboard/warehouse/stock-report" className="mt-4 inline-flex items-center gap-2 rounded-lg bg-[#0f2f29] px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-[#173f37]">
+                    View Stock Report <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Inventory Movements */}
+        {isInventoryRole && !hasSalesAccess && !hasWarehouseAccess && (
+          <div className="overflow-hidden rounded-lg border border-[#e5dfd4] bg-white shadow-card lg:col-span-2">
+            <div className="flex items-center justify-between border-b border-[#eee8de] px-4 py-3">
+              <div className="flex items-center gap-3">
+                <div className="rounded-lg bg-emerald-50 p-2 text-emerald-700">
+                  <ArrowLeftRight className="h-5 w-5" />
+                </div>
+                <h2 className="font-bold text-slate-950">Recent Stock Movements</h2>
+              </div>
+              <Link href="/dashboard/inventory/movements" className="flex items-center gap-1 text-sm font-bold text-[#9a6b36] hover:text-[#7a4f24]">
+                View all <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+            <div className="divide-y divide-slate-50">
+              {stockMovementsData?.data?.data?.slice(0, 5).length ? (
+                stockMovementsData.data.data.slice(0, 5).map((movement: any, idx: number) => (
+                  <div key={movement.movementId || movement.id || idx} className="flex items-center justify-between px-4 py-3">
+                    <div className="flex items-center gap-3">
+                      <div className={`p-2 rounded-lg ${movement.type === 'in' || movement.type === 'receipt' ? 'bg-emerald-100' : 'bg-amber-100'}`}>
+                        {movement.type === 'in' || movement.type === 'receipt' ? (
+                          <ArrowUp className="h-5 w-5 text-emerald-600" />
+                        ) : (
+                          <ArrowDownRight className="h-5 w-5 text-amber-600" />
+                        )}
+                      </div>
+                      <div>
+                        <p className="font-bold text-slate-950">{movement.productName || movement.product?.name || 'Item'}</p>
+                        <p className="text-sm text-slate-500">{movement.warehouseName || 'Warehouse'} &middot; {formatDate(movement.createdAt)}</p>
+                      </div>
+                    </div>
+                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                      movement.type === 'in' || movement.type === 'receipt' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
+                    }`}>
+                      {movement.type === 'in' || movement.type === 'receipt' ? '+' : '-'}{movement.quantity || 0} {movement.unit || ''}
+                    </span>
+                  </div>
+                ))
+              ) : (
+                <div className="p-12 text-center">
+                  <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-lg bg-emerald-100">
+                    <ArrowLeftRight className="h-8 w-8 text-emerald-400" />
+                  </div>
+                  <p className="text-slate-600 font-medium">No recent movements</p>
+                  <p className="text-sm text-slate-400 mt-1">Stock movements will appear here</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Accounts - Pending POs */}
+        {hasAccountsAccess && !hasSalesAccess && !hasPurchaseAccess && (
+          <div className="overflow-hidden rounded-lg border border-[#e5dfd4] bg-white shadow-card lg:col-span-2">
+            <div className="flex items-center justify-between border-b border-[#eee8de] px-4 py-3">
+              <div className="flex items-center gap-3">
+                <div className="rounded-lg bg-lime-50 p-2 text-lime-700">
+                  <CheckCircle className="h-5 w-5" />
+                </div>
+                <h2 className="font-bold text-slate-950">Pending PO Approvals</h2>
+              </div>
+              <Link href="/dashboard/accounts/approvals" className="flex items-center gap-1 text-sm font-bold text-[#9a6b36] hover:text-[#7a4f24]">
+                View all <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+            <div className="divide-y divide-slate-50">
+              {pendingPOsData?.data?.data?.slice(0, 5).length ? (
+                pendingPOsData.data.data.slice(0, 5).map((po: any, idx: number) => (
+                  <div key={po.poId || po.id || idx} className="flex items-center justify-between px-4 py-3">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-lime-600 text-xs font-bold text-white shadow-sm">
+                        {(po.poNumber || 'PO').slice(-4)}
+                      </div>
+                      <div>
+                        <p className="font-bold text-slate-950">{po.poNumber || 'Purchase Order'}</p>
+                        <p className="text-sm text-slate-500">{po.vendorName || 'Vendor'} &middot; ₹{Number(po.totalAmount || 0).toLocaleString()}</p>
+                      </div>
+                    </div>
+                    <span className="inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700">
+                      Pending
+                    </span>
+                  </div>
+                ))
+              ) : (
+                <div className="p-12 text-center">
+                  <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-lg bg-lime-100">
+                    <CheckCircle className="h-8 w-8 text-lime-400" />
+                  </div>
+                  <p className="text-slate-600 font-medium">No pending approvals</p>
+                  <p className="text-sm text-slate-400 mt-1">All approvals are up to date</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Finance Panel */}
+        {hasFinanceAccess && !hasSalesAccess && !hasAccountsAccess && (
+          <div className="overflow-hidden rounded-lg border border-[#e5dfd4] bg-white shadow-card lg:col-span-2">
+            <div className="flex items-center justify-between border-b border-[#eee8de] px-4 py-3">
+              <div className="flex items-center gap-3">
+                <div className="rounded-lg bg-green-50 p-2 text-green-700">
+                  <Calculator className="h-5 w-5" />
+                </div>
+                <h2 className="font-bold text-slate-950">Finance Overview</h2>
+              </div>
+              <Link href="/dashboard/finance" className="flex items-center gap-1 text-sm font-bold text-[#9a6b36] hover:text-[#7a4f24]">
+                Go to Finance <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+            <div className="p-8 text-center">
+              <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-lg bg-green-100">
+                <Calculator className="h-8 w-8 text-green-500" />
+              </div>
+              <p className="text-slate-600 font-medium">Finance Module</p>
+              <p className="text-sm text-slate-400 mt-1">Journal entries, P&L statements, and balance sheets</p>
+              <Link href="/dashboard/finance" className="mt-4 inline-flex items-center gap-2 rounded-lg bg-[#0f2f29] px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-[#173f37]">
+                Open Finance <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+          </div>
+        )}
+
+        {/* Costing / Rate Analysis Panel */}
+        {isCostingRole && !isSalesRole && !isPurchaseRole && (
+          <div className="overflow-hidden rounded-lg border border-[#e5dfd4] bg-white shadow-card lg:col-span-2">
+            <div className="flex items-center justify-between border-b border-[#eee8de] px-4 py-3">
+              <div className="flex items-center gap-3">
+                <div className="rounded-lg bg-violet-50 p-2 text-violet-700">
+                  <TrendingUp className="h-5 w-5" />
+                </div>
+                <h2 className="font-bold text-slate-950">Rate Analysis</h2>
+              </div>
+              <Link href="/dashboard/rate" className="flex items-center gap-1 text-sm font-bold text-[#9a6b36] hover:text-[#7a4f24]">
+                View all <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+            <div className="divide-y divide-slate-50">
+              {rateData?.data?.data?.slice(0, 5).length ? (
+                rateData.data.data.slice(0, 5).map((analysis: any, idx: number) => (
+                  <Link
+                    key={analysis.rateAnalysisId || analysis.id || idx}
+                    href={`/dashboard/rate/${analysis.rateAnalysisId || analysis.id}`}
+                    className="flex items-center justify-between px-4 py-3 transition-colors hover:bg-[#fbfaf6]"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-600 text-xs font-bold text-white shadow-sm">
+                        {String(idx + 1).padStart(2, '0')}
+                      </div>
+                      <div>
+                        <p className="font-bold text-slate-950">{analysis.enquiryNumber || analysis.rateAnalysisNo || 'Rate Analysis'}</p>
+                        <p className="text-sm text-slate-500">{analysis.customerName || analysis.productName || 'Costing'}</p>
+                      </div>
+                    </div>
+                    <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                      analysis.status === 'approved' ? 'bg-emerald-100 text-emerald-700' :
+                      analysis.status === 'pending' ? 'bg-amber-100 text-amber-700' :
+                      'bg-slate-100 text-slate-600'
+                    }`}>
+                      {(analysis.status || 'draft').replace(/_/g, ' ')}
+                    </span>
+                  </Link>
+                ))
+              ) : (
+                <div className="p-12 text-center">
+                  <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-lg bg-violet-100">
+                    <TrendingUp className="h-8 w-8 text-violet-400" />
+                  </div>
+                  <p className="text-slate-600 font-medium">No rate analyses</p>
+                  <p className="text-sm text-slate-400 mt-1">Create a new rate analysis to get started</p>
+                  <Link href="/dashboard/rate/new" className="mt-4 inline-flex items-center gap-2 rounded-lg bg-[#0f2f29] px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-[#173f37]">
+                    New Rate Analysis <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Planner Panel */}
+        {isPlannerRole && !hasSalesAccess && (
+          <div className="overflow-hidden rounded-lg border border-[#e5dfd4] bg-white shadow-card lg:col-span-2">
+            <div className="flex items-center justify-between border-b border-[#eee8de] px-4 py-3">
+              <div className="flex items-center gap-3">
+                <div className="rounded-lg bg-indigo-50 p-2 text-indigo-700">
+                  <LayoutDashboard className="h-5 w-5" />
+                </div>
+                <h2 className="font-bold text-slate-950">Inventory Planner</h2>
+              </div>
+              <Link href="/dashboard/planner" className="flex items-center gap-1 text-sm font-bold text-[#9a6b36] hover:text-[#7a4f24]">
+                Open Planner <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+            <div className="p-8 text-center">
+              <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-lg bg-indigo-100">
+                <LayoutDashboard className="h-8 w-8 text-indigo-500" />
+              </div>
+              <p className="text-slate-600 font-medium">Inventory Planning</p>
+              <p className="text-sm text-slate-400 mt-1">Manage stock allocation, transfers, and receiving plans</p>
+              <Link href="/dashboard/planner" className="mt-4 inline-flex items-center gap-2 rounded-lg bg-[#0f2f29] px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-[#173f37]">
+                Open Planner <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+          </div>
+        )}
+
+        {/* MIS Panel */}
+        {isMIS && !hasSalesAccess && (
+          <div className="overflow-hidden rounded-lg border border-[#e5dfd4] bg-white shadow-card lg:col-span-2">
+            <div className="flex items-center justify-between border-b border-[#eee8de] px-4 py-3">
+              <div className="flex items-center gap-3">
+                <div className="rounded-lg bg-slate-100 p-2 text-slate-700">
+                  <BarChart3 className="h-5 w-5" />
+                </div>
+                <h2 className="font-bold text-slate-950">MIS Reports</h2>
+              </div>
+              <Link href="/dashboard/mis" className="flex items-center gap-1 text-sm font-bold text-[#9a6b36] hover:text-[#7a4f24]">
+                Open MIS <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+            <div className="p-8 text-center">
+              <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-lg bg-slate-100">
+                <BarChart3 className="h-8 w-8 text-slate-500" />
+              </div>
+              <p className="text-slate-600 font-medium">Data & Analysis</p>
+              <p className="text-sm text-slate-400 mt-1">Enquiry review, reports, and data insights</p>
+              <Link href="/dashboard/mis" className="mt-4 inline-flex items-center gap-2 rounded-lg bg-[#0f2f29] px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-[#173f37]">
+                Open MIS <ArrowRight className="h-4 w-4" />
+              </Link>
             </div>
           </div>
         )}

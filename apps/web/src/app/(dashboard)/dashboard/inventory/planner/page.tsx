@@ -47,7 +47,9 @@ import {
   Filter,
   RotateCcw,
   Settings2,
+  GitBranch,
 } from 'lucide-react';
+import { WorkflowTracker } from '@/components/workflow/workflow-tracker';
 
 interface PlannerItem {
   poId: string;
@@ -92,7 +94,7 @@ interface TransferRequest {
   items?: any[];
 }
 
-type ViewTab = 'pending' | 'allocated' | 'approvals' | 'warehouses';
+type ViewTab = 'pending' | 'allocated' | 'approvals' | 'warehouses' | 'workflow';
 
 export default function PlannerPage() {
   const [search, setSearch] = useState('');
@@ -103,6 +105,7 @@ export default function PlannerPage() {
   const [allocations, setAllocations] = useState<AllocationLine[]>([{ warehouseId: '', warehouseName: '', qty: '' }]);
   const [showBulkDialog, setShowBulkDialog] = useState(false);
   const [bulkWarehouseId, setBulkWarehouseId] = useState('');
+  const [bulkAllocationsMap, setBulkAllocationsMap] = useState<Record<string, AllocationLine[]>>({});
   const [rejectDialogTransferId, setRejectDialogTransferId] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState('');
   const [showAddWarehouse, setShowAddWarehouse] = useState(false);
@@ -166,6 +169,7 @@ export default function PlannerPage() {
       setShowBulkDialog(false);
       setSelectedItems(new Set());
       setBulkWarehouseId('');
+      setBulkAllocationsMap({});
     },
     onError: (error: any) => {
       const msg = error?.response?.data?.message || error?.message || 'Bulk allocation failed';
@@ -491,31 +495,92 @@ export default function PlannerPage() {
       return;
     }
     setBulkWarehouseId('');
+    const initMap: Record<string, AllocationLine[]> = {};
+    pendingItems
+      .filter((item) => selectedItems.has(itemKey(item)) && item.unplannedQty > 0)
+      .forEach((item) => {
+        initMap[itemKey(item)] = [{ warehouseId: '', warehouseName: '', qty: String(item.unplannedQty) }];
+      });
+    setBulkAllocationsMap(initMap);
     setShowBulkDialog(true);
   };
 
+  const handleApplyWarehouseToAll = (warehouseId: string) => {
+    setBulkWarehouseId(warehouseId);
+    if (!warehouseId) return;
+    const wh = warehouses.find((w: any) => w.id === warehouseId);
+    if (!wh) return;
+    setBulkAllocationsMap((prev) => {
+      const next = { ...prev };
+      Object.keys(next).forEach((key) => {
+        next[key] = next[key].map((line) => ({ ...line, warehouseId: wh.id, warehouseName: wh.name }));
+      });
+      return next;
+    });
+  };
+
+  const updateBulkAllocation = (itemKey: string, index: number, field: keyof AllocationLine, value: string) => {
+    setBulkAllocationsMap((prev) => {
+      const next = { ...prev };
+      const lines = [...(next[itemKey] || [])];
+      lines[index] = { ...lines[index], [field]: value };
+      if (field === 'warehouseId') {
+        const wh = warehouses.find((w: any) => w.id === value);
+        lines[index].warehouseName = wh?.name || '';
+      }
+      next[itemKey] = lines;
+      return next;
+    });
+  };
+
+  const addBulkAllocationLine = (key: string) => {
+    setBulkAllocationsMap((prev) => ({
+      ...prev,
+      [key]: [...(prev[key] || []), { warehouseId: '', warehouseName: '', qty: '' }],
+    }));
+  };
+
+  const removeBulkAllocationLine = (key: string, index: number) => {
+    setBulkAllocationsMap((prev) => ({
+      ...prev,
+      [key]: (prev[key] || []).filter((_, i) => i !== index),
+    }));
+  };
+
+  const getBulkAllocatedTotal = (key: string) =>
+    (bulkAllocationsMap[key] || []).reduce((sum, a) => sum + (Number(a.qty) || 0), 0);
+
   const handleSubmitBulkAllocate = () => {
-    if (!bulkWarehouseId) {
-      toast.error('Select a warehouse');
-      return;
-    }
-    const wh = warehouses.find((w: any) => w.id === bulkWarehouseId);
-    if (!wh) {
-      toast.error('Invalid warehouse');
-      return;
-    }
-    const plans = pendingItems
-      .filter((item) => selectedItems.has(itemKey(item)) && item.unplannedQty > 0)
-      .map((item) => ({
-        poId: item.poId,
-        poNumber: item.poNumber,
-        productId: item.productId,
-        productName: item.productName,
-        allocations: [{ warehouseId: wh.id, warehouseName: wh.name, qty: item.unplannedQty }],
-      }));
+    const selectedPending = pendingItems.filter(
+      (item) => selectedItems.has(itemKey(item)) && item.unplannedQty > 0
+    );
+
+    const plans = selectedPending
+      .map((item) => {
+        const key = itemKey(item);
+        const lines = (bulkAllocationsMap[key] || []).filter((a) => a.warehouseId && Number(a.qty) > 0);
+        if (lines.length === 0) return null;
+        const total = lines.reduce((s, a) => s + Number(a.qty), 0);
+        if (total > item.unplannedQty) {
+          toast.error(`${item.poNumber}: allocation (${total}) exceeds unplanned qty (${item.unplannedQty})`);
+          return null;
+        }
+        return {
+          poId: item.poId,
+          poNumber: item.poNumber,
+          productId: item.productId,
+          productName: item.productName,
+          allocations: lines.map((a) => ({
+            warehouseId: a.warehouseId,
+            warehouseName: a.warehouseName,
+            qty: Number(a.qty),
+          })),
+        };
+      })
+      .filter(Boolean);
 
     if (plans.length === 0) {
-      toast.error('No items with unplanned qty selected');
+      toast.error('No valid allocations to submit');
       return;
     }
     bulkAllocateMutation.mutate({ plans });
@@ -618,6 +683,14 @@ export default function PlannerPage() {
         >
           <WarehouseIcon className="mr-1 h-4 w-4" />
           Warehouses
+        </Button>
+        <Button
+          variant={tab === 'workflow' ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => setTab('workflow')}
+        >
+          <GitBranch className="mr-1 h-4 w-4" />
+          Workflow Tracker
         </Button>
       </div>
 
@@ -945,6 +1018,9 @@ export default function PlannerPage() {
         </Card>
       )}
 
+      {/* === WORKFLOW TRACKER TAB === */}
+      {tab === 'workflow' && <WorkflowTracker />}
+
       {/* Single Item Allocation Dialog */}
       <Dialog open={!!allocateItem} onOpenChange={(open) => { if (!open) handleCloseAllocate(); }}>
         <DialogContent className="sm:max-w-[600px] max-h-[85vh] overflow-y-auto">
@@ -995,11 +1071,11 @@ export default function PlannerPage() {
                 </div>
                 <div>
                   <p className="text-xs uppercase text-muted-foreground font-semibold">Allocated Qty</p>
-                  <p className="text-2xl font-bold text-green-600">{allocateItem.plannedQty}</p>
+                  <p className="text-2xl font-bold text-green-600">{allocateItem.plannedQty + allocatedTotal}</p>
                 </div>
                 <div>
                   <p className="text-xs uppercase text-muted-foreground font-semibold">Unplanned Qty</p>
-                  <p className="text-2xl font-bold text-primary">{allocateItem.unplannedQty}</p>
+                  <p className="text-2xl font-bold text-primary">{allocateItem.unplannedQty - allocatedTotal}</p>
                 </div>
               </div>
 
@@ -1065,19 +1141,16 @@ export default function PlannerPage() {
 
       {/* Bulk Allocate Dialog */}
       <Dialog open={showBulkDialog} onOpenChange={(open) => { if (!open) setShowBulkDialog(false); }}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Bulk Allocate to Warehouse</DialogTitle>
+            <DialogTitle className="text-xl font-bold text-center">Bulk Plan Item Warehouse Receiving</DialogTitle>
           </DialogHeader>
-          <p className="text-sm text-muted-foreground">
-            Allocate <strong>{selectedItems.size}</strong> selected items to a single warehouse.
-            Each item&apos;s full unplanned qty will be allocated.
-          </p>
-          <div className="space-y-2 py-4">
-            <Label>Target Warehouse</Label>
-            <Select value={bulkWarehouseId} onValueChange={setBulkWarehouseId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select warehouse" />
+
+          <div className="rounded-lg border p-4 flex items-center gap-4">
+            <Label className="whitespace-nowrap font-semibold">Apply one warehouse to all:</Label>
+            <Select value={bulkWarehouseId} onValueChange={handleApplyWarehouseToAll}>
+              <SelectTrigger className="flex-1">
+                <SelectValue placeholder="Choose warehouse (optional)" />
               </SelectTrigger>
               <SelectContent>
                 {warehouses.map((wh: any) => (
@@ -1086,14 +1159,124 @@ export default function PlannerPage() {
               </SelectContent>
             </Select>
           </div>
+
+          {pendingItems
+            .filter((item) => selectedItems.has(itemKey(item)) && item.unplannedQty > 0)
+            .map((item, idx, arr) => {
+              const key = itemKey(item);
+              const lines = bulkAllocationsMap[key] || [];
+              const bulkTotal = getBulkAllocatedTotal(key);
+              return (
+                <div key={key} className="rounded-lg border p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <p className="font-semibold text-sm">Item {idx + 1} of {arr.length}</p>
+                    {item.unplannedQty - bulkTotal > 0 && (
+                      <Badge variant="destructive">Pending: {item.unplannedQty - bulkTotal}</Badge>
+                    )}
+                  </div>
+
+                  <div className="rounded-lg border bg-muted/30 p-3 space-y-2 text-sm">
+                    <div className="grid grid-cols-3 gap-4">
+                      <div>
+                        <span className="text-muted-foreground">PO Number:</span>
+                        <p className="font-semibold text-primary">{item.poNumber}</p>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Order No:</span>
+                        <p className="font-semibold">{item.orderNo || '—'}</p>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Unique Product Code:</span>
+                        <p className="font-semibold text-xs">{item.productCode || '—'}</p>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-3 gap-4">
+                      <div>
+                        <span className="text-muted-foreground">UOM:</span>
+                        <p className="font-semibold text-primary">{item.uom || '—'}</p>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Buyer Code:</span>
+                        <p className="font-semibold">{item.buyerCode || '—'}</p>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Vendor:</span>
+                        <p className="font-semibold">{item.vendorName}</p>
+                      </div>
+                    </div>
+                    <div className="pt-2 border-t">
+                      <span className="text-muted-foreground">Item Description:</span>
+                      <p className="font-semibold">{item.itemDescription || item.productName}</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-4 rounded-lg border p-3 text-center">
+                    <div>
+                      <p className="text-xs uppercase text-muted-foreground font-semibold">Total Required</p>
+                      <p className="text-xl font-bold text-red-600">{item.qty}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs uppercase text-muted-foreground font-semibold">Allocated Qty</p>
+                      <p className="text-xl font-bold text-green-600">{item.plannedQty + bulkTotal}</p>
+                      <p className="text-xs text-muted-foreground">Already planned: {item.plannedQty}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs uppercase text-muted-foreground font-semibold">Unplanned Qty</p>
+                      <p className="text-xl font-bold text-primary">{item.unplannedQty - bulkTotal}</p>
+                    </div>
+                  </div>
+
+                  <div className="rounded-lg border bg-muted/10 p-3 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <p className="font-semibold uppercase text-xs">Warehouse Allocations:</p>
+                      <Button size="sm" variant="default" onClick={() => addBulkAllocationLine(key)}>
+                        <Plus className="mr-1 h-3 w-3" /> Add Line
+                      </Button>
+                    </div>
+                    {lines.map((alloc, lineIdx) => (
+                      <div key={lineIdx} className="flex items-center gap-2">
+                        <Select
+                          value={alloc.warehouseId}
+                          onValueChange={(v) => updateBulkAllocation(key, lineIdx, 'warehouseId', v)}
+                        >
+                          <SelectTrigger className="w-[220px]">
+                            <SelectValue placeholder="Select WH" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {warehouses.map((wh: any) => (
+                              <SelectItem key={wh.id} value={wh.id}>{wh.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Input
+                          type="number"
+                          min="1"
+                          value={alloc.qty}
+                          onChange={(e) => updateBulkAllocation(key, lineIdx, 'qty', e.target.value)}
+                          className="w-[150px]"
+                        />
+                        {lines.length > 1 && (
+                          <Button size="icon" variant="ghost" onClick={() => removeBulkAllocationLine(key, lineIdx)}>
+                            <X className="h-4 w-4 text-red-500" />
+                          </Button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowBulkDialog(false)}>Cancel</Button>
             <Button
               onClick={handleSubmitBulkAllocate}
               disabled={bulkAllocateMutation.isPending}
             >
-              {bulkAllocateMutation.isPending ? 'Allocating...' : 'Allocate All'}
+              {bulkAllocateMutation.isPending
+                ? 'Assigning...'
+                : `Assign Plan (${Object.keys(bulkAllocationsMap).length})`}
             </Button>
+            <Button variant="secondary" onClick={() => setShowBulkDialog(false)}>Cancel</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

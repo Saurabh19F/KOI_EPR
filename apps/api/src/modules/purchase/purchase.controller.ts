@@ -112,12 +112,12 @@ export class PurchaseController {
   // ========== PURCHASE QUOTE ITEMS ==========
   @Post('quotes/:id/items')
   addItems(@Param('id') id: string, @Body() items: CreatePurchaseQuoteItemDto[], @CurrentUser() user: any) {
-    return this.purchaseService.addItemsToQuote(id, items, user?.userId || user?.sub, user);
+    return this.purchaseService.addItemsToQuote(id, items, user?.userId, user);
   }
 
   @Patch('items/:itemId')
   updateQuoteItem(@Param('itemId') itemId: string, @Body() data: any, @CurrentUser() user: any) {
-    return this.purchaseService.updateQuoteItem(itemId, data, user?.userId || user?.sub, user);
+    return this.purchaseService.updateQuoteItem(itemId, data, user?.userId, user);
   }
 
   @Delete('items/:itemId')

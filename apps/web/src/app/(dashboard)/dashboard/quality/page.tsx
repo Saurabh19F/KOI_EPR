@@ -161,13 +161,13 @@ export default function QualityInspectionsPage() {
                   {inspections.map((item: any) => {
                     const statusConfig = STATUS_CONFIG[item.status] || STATUS_CONFIG.pending;
                     return (
-                      <TableRow key={item.qualityLogId || item.id}>
-                        <TableCell className="font-medium">{item.logNumber || item.qualityLogId?.substring(0, 8)}</TableCell>
+                      <TableRow key={item.qcId || item.id}>
+                        <TableCell className="font-medium">{item.qcNumber || item.qcId?.substring(0, 8)}</TableCell>
                         <TableCell>{item.productName || '—'}</TableCell>
                         <TableCell>{item.warehouseName || '—'}</TableCell>
-                        <TableCell>{Number(item.inspectedQty || 0).toLocaleString()}</TableCell>
-                        <TableCell className="text-green-600">{Number(item.passedQty || 0).toLocaleString()}</TableCell>
-                        <TableCell className="text-red-600">{Number(item.rejectedQty || 0).toLocaleString()}</TableCell>
+                        <TableCell>{Number(item.qtyToInspect || 0).toLocaleString()}</TableCell>
+                        <TableCell className="text-green-600">{Number(item.qtyApproved || 0).toLocaleString()}</TableCell>
+                        <TableCell className="text-red-600">{Number(item.qtyRejected || 0).toLocaleString()}</TableCell>
                         <TableCell>
                           <Badge variant={statusConfig.variant}>{statusConfig.label}</Badge>
                         </TableCell>

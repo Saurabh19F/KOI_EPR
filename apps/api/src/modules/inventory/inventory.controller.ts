@@ -134,7 +134,7 @@ export class InventoryController {
   @Post('transfer')
   @ApiOperation({ summary: 'Transfer stock between warehouses' })
   transferStock(@Body() data: any, @CurrentUser() user: any) {
-    return this.inventoryService.transferStock(data, user?.userId);
+    return this.inventoryService.transferStock(data, user?.userId, user?.companyId);
   }
 
   // ========== ALERTS ==========

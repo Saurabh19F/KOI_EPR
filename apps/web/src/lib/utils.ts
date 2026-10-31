@@ -137,6 +137,10 @@ export const STATUS_COLORS: Record<string, string> = {
   sent_to_costing: 'bg-violet-100 text-violet-800 border border-violet-300 font-semibold',
   rate_finalized: 'bg-fuchsia-100 text-fuchsia-800 border border-fuchsia-300 font-semibold',
 
+  // Quality / GRN
+  pending_quality: 'bg-amber-100 text-amber-900 border border-amber-300 font-semibold',
+  quality_done: 'bg-teal-100 text-teal-800 border border-teal-300 font-semibold',
+
   // Approval & Final Statuses
   approval_pending: 'bg-orange-100 text-orange-800 border border-orange-300 font-semibold',
   approved: 'bg-green-100 text-green-800 border border-green-300 font-semibold',

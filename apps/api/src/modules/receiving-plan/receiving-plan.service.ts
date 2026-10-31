@@ -1,11 +1,13 @@
 import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource, EntityManager, In } from 'typeorm';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ReceivingPlan, ReceivingPlanStatus } from './entities/receiving-plan.entity';
 import { PurchaseOrder, PurchaseOrderStatus, PurchaseOrderItem, GoodsReceiptNote, GoodsReceiptNoteItem } from '../purchase-order/entities/purchase-order.entity';
 import { User } from '../users/entities/user.entity';
 import { Warehouse } from '../masters/entities/warehouse.entity';
 import { InventoryService } from '../inventory/inventory.service';
+import { generateDocumentNumber } from '../../common/utils/document-number.util';
 import { MovementType } from '../inventory/entities/stock-movement.entity';
 import {
   CreateReceivingPlanDto,
@@ -40,6 +42,7 @@ export class ReceivingPlanService {
     private readonly grnItemRepository: Repository<GoodsReceiptNoteItem>,
     private readonly inventoryService: InventoryService,
     private readonly dataSource: DataSource,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async create(dto: CreateReceivingPlanDto, userId: string, companyId: string): Promise<ReceivingPlan> {
@@ -171,8 +174,39 @@ export class ReceivingPlanService {
 
     const [data, total] = await query.getManyAndCount();
 
+    const poIds = [...new Set(data.map((p) => p.purchaseOrderId).filter(Boolean))];
+    let enriched: any[] = data;
+
+    if (poIds.length > 0) {
+      const pos = await this.dataSource.manager
+        .getRepository(PurchaseOrder)
+        .find({
+          where: { orderId: In(poIds) },
+          relations: ['items'],
+        });
+
+      const poMap: Record<string, PurchaseOrder> = {};
+      for (const po of pos) {
+        poMap[po.orderId] = po;
+      }
+
+      enriched = data.map((plan) => {
+        const po = poMap[plan.purchaseOrderId];
+        const poItem = po?.items?.find((i) => i.productId === plan.productId);
+        return {
+          ...plan,
+          vendorName: po?.vendorName || '',
+          vendorCode: po?.vendorCode || '',
+          salesOrderNo: po?.orderNumber || '',
+          expectedDate: po?.expectedDeliveryDate || null,
+          uniqueCode: poItem?.uniqueCode || poItem?.productCode || plan.productId || '',
+          uomName: poItem?.uomName || '',
+        };
+      });
+    }
+
     return {
-      data,
+      data: enriched,
       total,
       page,
       limit,
@@ -219,7 +253,7 @@ export class ReceivingPlanService {
 
     try {
       const rows = await queryRunner.query(
-        `SELECT * FROM receiving_plans WHERE plan_id = $1 AND company_id = $2 FOR UPDATE`,
+        `SELECT * FROM receiving_plans WHERE plan_id = $1 AND (company_id = $2 OR ($2::text IS NULL AND company_id IS NULL)) FOR UPDATE`,
         [planId, companyId],
       );
 
@@ -272,40 +306,18 @@ export class ReceivingPlanService {
     return this.receivingPlanRepository.save(plan);
   }
 
-  private hashCode(str: string): number {
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-      const char = str.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
-      hash |= 0;
-    }
-    return hash;
-  }
-
+  /**
+   * `companyId` is accepted for call-site compatibility but deliberately unused:
+   * `receiving_plans.plan_number` is globally unique, so the series has to be global
+   * too - numbering per company hands two companies the same number.
+   */
   async generatePlanNumber(companyId?: string, manager?: EntityManager): Promise<string> {
-    const repo = manager || this.dataSource.manager;
-
-    const lockKey = companyId ? Math.abs(this.hashCode(companyId)) : 0;
-    await repo.query('SELECT pg_advisory_xact_lock($1)', [lockKey]);
-
-    const currentYear = new Date().getFullYear();
-    const nextYear = currentYear + 1;
-    const fy = `${currentYear}-${nextYear.toString().slice(-2)}`;
-
-    const result = await repo.query(
-      `SELECT plan_number FROM receiving_plans WHERE ($1::text IS NULL OR company_id = $1) ORDER BY created_at DESC LIMIT 1`,
-      [companyId || null],
-    );
-
-    let nextNumber = 1;
-    if (result.length > 0) {
-      const parts = result[0].plan_number.split('/');
-      const numPart = parts[parts.length - 1];
-      const parsed = parseInt(numPart, 10);
-      if (!isNaN(parsed)) nextNumber = parsed + 1;
-    }
-
-    return `PLAN/${fy}/${nextNumber.toString().padStart(5, '0')}`;
+    return generateDocumentNumber({
+      manager: manager || this.dataSource.manager,
+      prefix: 'PLAN',
+      table: 'receiving_plans',
+      column: 'plan_number',
+    });
   }
 
   async submitGoodsReceiving(
@@ -321,7 +333,7 @@ export class ReceivingPlanService {
 
     try {
       const planRows = await queryRunner.query(
-        `SELECT * FROM receiving_plans WHERE plan_id = $1 AND company_id = $2 FOR UPDATE`,
+        `SELECT * FROM receiving_plans WHERE plan_id = $1 AND (company_id = $2 OR company_id IS NULL) FOR UPDATE`,
         [planId, companyId],
       );
 
@@ -352,6 +364,12 @@ export class ReceivingPlanService {
         throw new BadRequestException('Rejected quantity cannot exceed received quantity');
       }
 
+      if (balanceBeforeGrn > 0 && acceptedQty > balanceBeforeGrn * 1.15) {
+        throw new BadRequestException(
+          `Accepted quantity (${acceptedQty}) exceeds 15% tolerance of balance (${balanceBeforeGrn}). Max allowed: ${Math.floor(balanceBeforeGrn * 1.15)}`,
+        );
+      }
+
       const grnNumber = await this.generateGrnNumber(companyId, queryRunner.manager);
 
       const grn = queryRunner.manager.create(GoodsReceiptNote, {
@@ -374,6 +392,7 @@ export class ReceivingPlanService {
         receivedByUsername: userName,
         notes: dto.remarks,
         lrNumber: dto.biltyNo,
+        grnType: 'SINGLE',
         status: 'completed',
         createdBy: userId,
         updatedBy: userId,
@@ -419,6 +438,15 @@ export class ReceivingPlanService {
 
       await queryRunner.commitTransaction();
 
+      let productSku: string | undefined;
+      if (plan.purchase_order_id) {
+        const poItemRows = await this.dataSource.query(
+          `SELECT sku FROM purchase_order_items WHERE order_id = $1 AND product_id = $2 LIMIT 1`,
+          [plan.purchase_order_id, plan.product_id],
+        );
+        productSku = poItemRows?.[0]?.sku || undefined;
+      }
+
       if (acceptedQty > 0) {
         try {
           await this.inventoryService.recordMovement(
@@ -434,11 +462,39 @@ export class ReceivingPlanService {
               remarks: `GRN ${grnNumber} against plan ${plan.plan_number}`,
               companyId,
             },
+            { productName: plan.product_name, warehouseName: plan.warehouse_name, sku: productSku },
           );
         } catch (stockErr) {
           this.logger.error(`Stock update failed for GRN ${grnNumber}: ${stockErr.message}`, stockErr.stack);
         }
       }
+
+      if (rejectedQty > 0) {
+        this.eventEmitter.emit('grn.items.rejected', {
+          grnId: savedGrn.grnId,
+          grnNumber,
+          receiptId: savedGrn.grnId,
+          purchaseOrderId: plan.purchase_order_id,
+          poNumber: plan.po_number || '',
+          productId: plan.product_id,
+          productName: plan.product_name,
+          rejectedQty,
+          companyId,
+          userId,
+        });
+      }
+
+      this.eventEmitter.emit('grn.created', {
+        grnId: savedGrn.grnId,
+        grnNumber,
+        productId: plan.product_id,
+        productName: plan.product_name,
+        warehouseId: plan.warehouse_id,
+        warehouseName: plan.warehouse_name || '',
+        receivedQty: receivedQty,
+        companyId,
+        userId,
+      });
 
       return savedGrn;
     } catch (error) {
@@ -447,6 +503,74 @@ export class ReceivingPlanService {
     } finally {
       await queryRunner.release();
     }
+  }
+
+  async listAllGrns(params: {
+    companyId: string;
+    search?: string;
+    warehouseId?: string;
+    page?: number;
+    limit?: number;
+  }): Promise<{ data: any[]; total: number; page: number; totalPages: number }> {
+    const { companyId, search, warehouseId, page = 1, limit = 20 } = params;
+    const qb = this.grnRepository.createQueryBuilder('grn')
+      .where(companyId ? 'grn.companyId = :companyId' : '(grn.companyId IS NULL OR grn.companyId = :companyId)', { companyId: companyId || '' })
+      .orderBy('grn.createdAt', 'DESC');
+
+    if (search) {
+      qb.andWhere(
+        '(grn.grnNumber ILIKE :s OR grn.vendorName ILIKE :s OR grn.invoiceNumber ILIKE :s OR grn.orderId ILIKE :s)',
+        { s: `%${search}%` },
+      );
+    }
+
+    const [grns, total] = await qb
+      .skip((page - 1) * limit)
+      .take(limit)
+      .getManyAndCount();
+
+    const grnIds = grns.map((g) => g.grnId);
+    let itemsMap: Record<string, GoodsReceiptNoteItem[]> = {};
+    if (grnIds.length > 0) {
+      const items = await this.grnItemRepository.find({
+        where: { grnId: In(grnIds) },
+        order: { lineNumber: 'ASC' },
+      });
+      for (const item of items) {
+        if (!itemsMap[item.grnId]) itemsMap[item.grnId] = [];
+        itemsMap[item.grnId].push(item);
+      }
+    }
+
+    const poIds = [...new Set(grns.map((g) => g.orderId).filter(Boolean))];
+    let poMap: Record<string, any> = {};
+    if (poIds.length > 0) {
+      const pos = await this.dataSource.manager
+        .getRepository(PurchaseOrder)
+        .find({ where: { orderId: In(poIds) } });
+      for (const po of pos) { poMap[po.orderId] = po; }
+    }
+
+    const data = grns.map((grn) => {
+      const items = itemsMap[grn.grnId] || [];
+      const po = poMap[grn.orderId];
+      const totalAccepted = items.reduce((sum, i) => sum + Number(i.acceptedQuantity || 0), 0);
+      const totalRejected = items.reduce((sum, i) => sum + Number(i.rejectedQuantity || 0), 0);
+      return {
+        ...grn,
+        items,
+        itemCount: items.length,
+        grnType: grn.grnType === 'MULTI' ? `MULTI GRN` : grn.grnType === 'BULK' ? 'BULK GRN' : 'SINGLE GRN',
+        poNumber: po?.orderNumber || grn.orderId || '',
+        productDetails: items.map((i) => i.productName).join(', '),
+        vendorDetails: grn.vendorName || po?.vendorName || '',
+        buyerCode: po?.vendorCode || '',
+        totalAccepted,
+        totalRejected,
+      };
+    });
+
+    return { data, total, page, totalPages: Math.ceil(total / limit) };
   }
 
   async getGrnHistory(planId: string, companyId: string): Promise<GoodsReceiptNote[]> {
@@ -473,30 +597,14 @@ export class ReceivingPlanService {
     return { ...grn, items };
   }
 
+  /** Globally unique series, see {@link generatePlanNumber} on the unused `companyId`. */
   async generateGrnNumber(companyId?: string, manager?: EntityManager): Promise<string> {
-    const repo = manager || this.dataSource.manager;
-
-    const lockKey = companyId ? Math.abs(this.hashCode(`grn_${companyId}`)) : 1;
-    await repo.query('SELECT pg_advisory_xact_lock($1)', [lockKey]);
-
-    const currentYear = new Date().getFullYear();
-    const nextYear = currentYear + 1;
-    const fy = `${currentYear}-${nextYear.toString().slice(-2)}`;
-
-    const result = await repo.query(
-      `SELECT grn_number FROM goods_receipt_notes WHERE ($1::text IS NULL OR company_id = $1) ORDER BY created_at DESC LIMIT 1`,
-      [companyId || null],
-    );
-
-    let nextNumber = 1;
-    if (result.length > 0) {
-      const parts = result[0].grn_number.split('/');
-      const numPart = parts[parts.length - 1];
-      const parsed = parseInt(numPart, 10);
-      if (!isNaN(parsed)) nextNumber = parsed + 1;
-    }
-
-    return `GRN/${fy}/${nextNumber.toString().padStart(5, '0')}`;
+    return generateDocumentNumber({
+      manager: manager || this.dataSource.manager,
+      prefix: 'GRN',
+      table: 'goods_receipt_notes',
+      column: 'grn_number',
+    });
   }
 
   private async updatePOStatusAfterPlanCreate(
@@ -678,7 +786,7 @@ export class ReceivingPlanService {
 
       for (const item of dto.items) {
         const planRows = await queryRunner.query(
-          `SELECT * FROM receiving_plans WHERE plan_id = $1 AND company_id = $2 FOR UPDATE`,
+          `SELECT * FROM receiving_plans WHERE plan_id = $1 AND (company_id = $2 OR ($2::text IS NULL AND company_id IS NULL)) FOR UPDATE`,
           [item.planId, companyId],
         );
 
@@ -705,8 +813,16 @@ export class ReceivingPlanService {
           throw new BadRequestException(`Rejected qty cannot exceed received qty for plan ${item.planId}`);
         }
 
+        if (balanceBeforeGrn > 0 && acceptedQty > balanceBeforeGrn * 1.15) {
+          throw new BadRequestException(
+            `Plan ${item.planId}: accepted quantity (${acceptedQty}) exceeds 15% tolerance of balance (${balanceBeforeGrn}). Max allowed: ${Math.floor(balanceBeforeGrn * 1.15)}`,
+          );
+        }
+
+        const itemGrnNumber = await this.generateGrnNumber(companyId, queryRunner.manager);
+
         const grn = queryRunner.manager.create(GoodsReceiptNote, {
-          grnNumber: masterReceiptId,
+          grnNumber: itemGrnNumber,
           companyId,
           orderId: plan.purchase_order_id,
           grnDate: new Date(),
@@ -725,6 +841,7 @@ export class ReceivingPlanService {
           receivedByUsername: userName,
           notes: dto.remarks,
           lrNumber: dto.biltyNo,
+          grnType: 'BULK',
           status: 'completed',
           createdBy: userId,
           updatedBy: userId,
@@ -776,13 +893,26 @@ export class ReceivingPlanService {
       await queryRunner.commitTransaction();
 
       for (const item of dto.items) {
+        const matchedGrn = grns.find((g) => g.planId === item.planId);
         const planRows = await this.dataSource.query(
-          `SELECT * FROM receiving_plans WHERE plan_id = $1 AND company_id = $2`,
+          `SELECT * FROM receiving_plans WHERE plan_id = $1 AND (company_id = $2 OR ($2::text IS NULL AND company_id IS NULL))`,
           [item.planId, companyId],
         );
         if (planRows?.[0]) {
           const plan = planRows[0];
+          const grnId = matchedGrn?.grnId || masterReceiptId;
+          const grnNumber = matchedGrn?.grnNumber || masterReceiptId;
           const acceptedQty = item.receivedQty - (item.rejectedQty || 0);
+
+          let bulkSku: string | undefined;
+          if (plan.purchase_order_id) {
+            const poItemRows = await this.dataSource.query(
+              `SELECT sku FROM purchase_order_items WHERE order_id = $1 AND product_id = $2 LIMIT 1`,
+              [plan.purchase_order_id, plan.product_id],
+            );
+            bulkSku = poItemRows?.[0]?.sku || undefined;
+          }
+
           if (acceptedQty > 0) {
             try {
               await this.inventoryService.recordMovement(
@@ -793,16 +923,45 @@ export class ReceivingPlanService {
                 userId,
                 {
                   referenceType: 'goods_receipt',
-                  referenceId: masterReceiptId,
-                  referenceNo: masterReceiptId,
-                  remarks: `Bulk GRN ${masterReceiptId} against plan ${plan.plan_number}`,
+                  referenceId: grnId,
+                  referenceNo: grnNumber,
+                  remarks: `Bulk GRN ${grnNumber} against plan ${plan.plan_number}`,
                   companyId,
                 },
+                { productName: plan.product_name, warehouseName: plan.warehouse_name, sku: bulkSku },
               );
             } catch (stockErr) {
               this.logger.error(`Stock update failed for bulk GRN item ${item.planId}: ${stockErr.message}`);
             }
           }
+
+          const rejectedQty = item.rejectedQty || 0;
+          if (rejectedQty > 0) {
+            this.eventEmitter.emit('grn.items.rejected', {
+              grnId,
+              grnNumber,
+              receiptId: masterReceiptId,
+              purchaseOrderId: plan.purchase_order_id,
+              poNumber: plan.po_number || '',
+              productId: plan.product_id,
+              productName: plan.product_name,
+              rejectedQty,
+              companyId,
+              userId,
+            });
+          }
+
+          this.eventEmitter.emit('grn.created', {
+            grnId,
+            grnNumber,
+            productId: plan.product_id,
+            productName: plan.product_name,
+            warehouseId: plan.warehouse_id,
+            warehouseName: plan.warehouse_name || '',
+            receivedQty: item.receivedQty,
+            companyId,
+            userId,
+          });
         }
       }
 
@@ -860,7 +1019,7 @@ export class ReceivingPlanService {
         seen.add(identityKey);
 
         const planRows = await queryRunner.query(
-          `SELECT * FROM receiving_plans WHERE plan_id = $1 AND company_id = $2 FOR UPDATE`,
+          `SELECT * FROM receiving_plans WHERE plan_id = $1 AND (company_id = $2 OR ($2::text IS NULL AND company_id IS NULL)) FOR UPDATE`,
           [item.planId, companyId],
         );
 
@@ -893,6 +1052,12 @@ export class ReceivingPlanService {
           throw new BadRequestException(`Rejected qty exceeds received qty for plan ${item.planId}`);
         }
 
+        if (balanceBeforeGrn > 0 && acceptedQty > balanceBeforeGrn * 1.15) {
+          throw new BadRequestException(
+            `Plan ${item.planId}: accepted quantity (${acceptedQty}) exceeds 15% tolerance of balance (${balanceBeforeGrn}). Max allowed: ${Math.floor(balanceBeforeGrn * 1.15)}`,
+          );
+        }
+
         let newStatus = plan.status;
         if (totalReceivedAfterGrn >= plannedQty) {
           newStatus = ReceivingPlanStatus.RECEIVED;
@@ -913,8 +1078,10 @@ export class ReceivingPlanService {
         const plannedQty = Number(plan.planned_qty);
         const previousReceivedQty = Number(plan.total_received_qty);
 
+        const itemGrnNumber = await this.generateGrnNumber(companyId, queryRunner.manager);
+
         const grn = queryRunner.manager.create(GoodsReceiptNote, {
-          grnNumber: multiReceiptId,
+          grnNumber: itemGrnNumber,
           companyId,
           orderId: plan.purchase_order_id,
           grnDate: new Date(),
@@ -933,6 +1100,7 @@ export class ReceivingPlanService {
           receivedByUsername: userName,
           notes: item.remarks,
           lrNumber: dto.biltyNo,
+          grnType: 'MULTI',
           status: 'completed',
           createdBy: userId,
           updatedBy: userId,
@@ -974,8 +1142,21 @@ export class ReceivingPlanService {
 
       await queryRunner.commitTransaction();
 
-      // Record stock movements outside transaction
+      // Record stock movements and emit rejection events outside transaction
       for (const v of validatedItems) {
+        const matchedGrn = grns.find((g) => g.planId === v.plan.plan_id);
+        const grnId = matchedGrn?.grnId || multiReceiptId;
+        const grnNumber = matchedGrn?.grnNumber || multiReceiptId;
+
+        let multiSku: string | undefined;
+        if (v.plan.purchase_order_id) {
+          const poItemRows = await this.dataSource.query(
+            `SELECT sku FROM purchase_order_items WHERE order_id = $1 AND product_id = $2 LIMIT 1`,
+            [v.plan.purchase_order_id, v.plan.product_id],
+          );
+          multiSku = poItemRows?.[0]?.sku || undefined;
+        }
+
         if (v.acceptedQty > 0) {
           try {
             await this.inventoryService.recordMovement(
@@ -986,16 +1167,44 @@ export class ReceivingPlanService {
               userId,
               {
                 referenceType: 'goods_receipt',
-                referenceId: multiReceiptId,
-                referenceNo: multiReceiptId,
-                remarks: `Multi-GRN ${multiReceiptId} against plan ${v.plan.plan_number}`,
+                referenceId: grnId,
+                referenceNo: grnNumber,
+                remarks: `Multi-GRN ${grnNumber} against plan ${v.plan.plan_number}`,
                 companyId,
               },
+              { productName: v.plan.product_name, warehouseName: v.plan.warehouse_name, sku: multiSku },
             );
           } catch (stockErr) {
             this.logger.error(`Stock update failed for multi GRN item ${v.item.planId}: ${stockErr.message}`);
           }
         }
+
+        if (v.rejectedQty > 0) {
+          this.eventEmitter.emit('grn.items.rejected', {
+            grnId,
+            grnNumber,
+            receiptId: multiReceiptId,
+            purchaseOrderId: v.plan.purchase_order_id,
+            poNumber: v.plan.po_number || '',
+            productId: v.plan.product_id,
+            productName: v.plan.product_name,
+            rejectedQty: v.rejectedQty,
+            companyId,
+            userId,
+          });
+        }
+
+        this.eventEmitter.emit('grn.created', {
+          grnId,
+          grnNumber,
+          productId: v.plan.product_id,
+          productName: v.plan.product_name,
+          warehouseId: v.plan.warehouse_id,
+          warehouseName: v.plan.warehouse_name || '',
+          receivedQty: v.item.receivedQty,
+          companyId,
+          userId,
+        });
       }
 
       return { multiReceiptId, processedCount: validatedItems.length, totalAccepted, totalRejected, grns };
@@ -1303,9 +1512,152 @@ export class ReceivingPlanService {
     };
   }
 
+  async getWorkflowTracker(
+    companyId: string,
+    filters?: { search?: string; page?: number; limit?: number },
+  ): Promise<{ data: any[]; total: number; page: number; totalPages: number }> {
+    const page = filters?.page || 1;
+    const limit = filters?.limit || 50;
+    const offset = (page - 1) * limit;
+
+    const planQuery = this.receivingPlanRepository
+      .createQueryBuilder('rp')
+      .where('rp.companyId = :companyId', { companyId })
+      .andWhere('rp.status != :cancelled', { cancelled: ReceivingPlanStatus.CANCELLED });
+
+    if (filters?.search) {
+      planQuery.andWhere(
+        '(rp.productName ILIKE :search OR rp.poNumber ILIKE :search OR rp.planNumber ILIKE :search)',
+        { search: `%${filters.search}%` },
+      );
+    }
+
+    const total = await planQuery.getCount();
+    const plans = await planQuery
+      .orderBy('rp.createdAt', 'DESC')
+      .skip(offset)
+      .take(limit)
+      .getMany();
+
+    if (plans.length === 0) {
+      return { data: [], total: 0, page, totalPages: 0 };
+    }
+
+    const poIds = [...new Set(plans.map((p) => p.purchaseOrderId).filter(Boolean))];
+    const productIds = [...new Set(plans.map((p) => p.productId).filter(Boolean))];
+
+    const poMap = new Map<string, any>();
+    if (poIds.length > 0) {
+      const poRows = await this.dataSource.query(
+        `SELECT po.order_id, po.status, po.approved_at, po.created_at,
+                pi.product_id, pi.quantity
+         FROM purchase_orders po
+         LEFT JOIN purchase_order_items pi ON pi.order_id::text = po.order_id::text
+         WHERE po.order_id::text = ANY($1) AND po.company_id::text = $2`,
+        [poIds, companyId],
+      );
+      for (const row of poRows) {
+        const key = row.order_id;
+        if (!poMap.has(key)) {
+          poMap.set(key, { orderId: key, status: row.status, approvedAt: row.approved_at, createdAt: row.created_at, items: [] });
+        }
+        if (row.product_id) {
+          poMap.get(key).items.push({ productId: row.product_id, quantity: row.quantity });
+        }
+      }
+    }
+
+    const grnMap = new Map<string, any>();
+    if (poIds.length > 0) {
+      const grns = await this.dataSource.query(
+        `SELECT grn.grn_id, grn.grn_number, grn.grn_date, grn.order_id,
+                gi.product_id, gi.accepted_quantity
+         FROM goods_receipt_notes grn
+         LEFT JOIN goods_receipt_note_items gi ON gi.grn_id::text = grn.grn_id::text
+         WHERE grn.order_id::text = ANY($1) AND grn.company_id::text = $2`,
+        [poIds, companyId],
+      );
+      for (const grn of grns) {
+        const key = `${grn.order_id}___${grn.product_id}`;
+        const existing = grnMap.get(key);
+        if (!existing || new Date(grn.grn_date) > new Date(existing.grn_date)) {
+          grnMap.set(key, grn);
+        }
+      }
+    }
+
+    const prodMap = new Map<string, any>();
+    if (productIds.length > 0) {
+      const jobs = await this.dataSource.query(
+        `SELECT job_id, product_id, order_qty, final_produced_qty, status, closing_date
+         FROM production_jobs
+         WHERE product_id::text = ANY($1) AND company_id::text = $2
+         ORDER BY created_at DESC`,
+        [productIds, companyId],
+      );
+      for (const job of jobs) {
+        if (!prodMap.has(job.product_id)) {
+          prodMap.set(job.product_id, job);
+        }
+      }
+    }
+
+    const data = plans.map((plan) => {
+      const po = poMap.get(plan.purchaseOrderId);
+      const poItem = po?.items?.find((i: any) => i.productId === plan.productId);
+      const poQty = poItem ? Number(poItem.quantity) : Number(plan.plannedQty);
+      const poApproved = po && (po.status === 'approved' || po.status === 'planned' || po.status === 'partially_planned' || po.status === 'partially_received' || po.status === 'received');
+
+      const grnKey = `${plan.purchaseOrderId}___${plan.productId}`;
+      const grnData = grnMap.get(grnKey);
+      const receivedQty = Number(plan.totalReceivedQty) || 0;
+      const grnComplete = receivedQty >= Number(plan.plannedQty);
+
+      const prodJob = prodMap.get(plan.productId);
+      const producedQty = prodJob ? Number(prodJob.final_produced_qty) : 0;
+      const prodComplete = prodJob?.status === 'completed';
+
+      return {
+        planId: plan.planId,
+        planNumber: plan.planNumber,
+        productId: plan.productId,
+        productName: plan.productName,
+        poNumber: plan.poNumber,
+        plan: {
+          status: 'complete',
+          qty: Number(plan.plannedQty),
+          label: `${Number(plan.plannedQty)} planned`,
+        },
+        poStatus: {
+          status: poApproved ? 'complete' : 'pending',
+          qty: poQty,
+          date: po?.approvedAt || po?.createdAt || null,
+          label: `${poQty} PO qty`,
+        },
+        grn: {
+          status: grnComplete ? 'complete' : 'pending',
+          qty: receivedQty,
+          date: grnData?.grn_date || null,
+          label: `${receivedQty} recvd`,
+        },
+        production: {
+          status: prodComplete ? 'complete' : 'pending',
+          qty: producedQty,
+          date: prodJob?.closing_date || null,
+          label: `${producedQty} prod`,
+        },
+      };
+    });
+
+    return { data, total, page, totalPages: Math.ceil(total / limit) };
+  }
+
   private async generateBulkGrnId(companyId?: string, manager?: EntityManager): Promise<string> {
-    const repo = manager || this.dataSource.manager;
-    const digits = String(Math.floor(10000 + Math.random() * 90000));
-    return `RCPT-${digits}`;
+    return generateDocumentNumber({
+      manager: manager || this.dataSource.manager,
+      prefix: 'RCPT',
+      table: 'goods_receipt_notes',
+      column: 'grn_number',
+    });
   }
 }

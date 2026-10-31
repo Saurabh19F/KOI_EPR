@@ -42,8 +42,8 @@ export class NotificationsGateway implements OnGatewayConnection, OnGatewayDisco
           secret: this.configService.get('JWT_SECRET'),
         });
 
-        if ((payload.sub || payload.userId) && payload.type === 'access') {
-          const userId = payload.sub || payload.userId;
+        if (payload.sub && payload.type === 'access') {
+          const userId = payload.sub;
           const companyId = payload.companyId;
 
           // Join user room

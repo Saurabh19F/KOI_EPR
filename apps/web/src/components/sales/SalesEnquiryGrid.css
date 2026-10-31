@@ -16,14 +16,14 @@
 }
 
 .sales-grid-table th {
-  background-color: #f1f5f9;
-  color: #334155;
+  background-color: #1e293b;
+  color: #ffffff;
   font-weight: 600;
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   padding: 8px 12px;
-  border: 1px solid #cbd5e1;
+  border: 1px solid #334155;
   text-align: left;
 }
 
@@ -33,9 +33,24 @@
   background-color: #ffffff;
 }
 
+/* Editable yellow cells (Qty, Remarks) */
+.sales-grid-table td.sales-cell-editable {
+  background-color: #fef9c3 !important;
+}
+
+.sales-grid-table th.sales-header-editable {
+  background-color: #2563eb !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+}
+
 /* Grid row hover state */
 .sales-grid-row:hover td {
   background-color: #f8fafc;
+}
+
+.sales-grid-row:hover td.sales-cell-editable {
+  background-color: #fef3c7 !important;
 }
 
 /* Cell inputs style */
@@ -82,7 +97,7 @@
   left: 40px;
   background-color: #ffffff;
   z-index: 10;
-  min-width: 140px;
+  min-width: 200px;
   box-shadow: 4px 0 6px -2px rgba(0, 0, 0, 0.05);
 }
 
@@ -95,13 +110,13 @@
   position: sticky;
   left: 0;
   z-index: 20;
-  background-color: #e2e8f0 !important;
+  background-color: #0f172a !important;
 }
 
 .sales-sticky-col-sku-hdr {
   position: sticky;
   left: 40px;
   z-index: 20;
-  background-color: #e2e8f0 !important;
-  box-shadow: 4px 0 6px -2px rgba(0, 0, 0, 0.05);
+  background-color: #1e293b !important;
+  box-shadow: 4px 0 6px -2px rgba(0, 0, 0, 0.15);
 }

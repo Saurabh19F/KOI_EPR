@@ -22,11 +22,18 @@ export enum InspectionDecision {
 }
 
 export enum RejectActionType {
-  RETURN_TO_VENDOR = 'return_to_vendor',
-  CREDIT_NOTE = 'credit_note',
-  REPLACEMENT = 'replacement',
-  SCRAP = 'scrap',
-  REWORK = 'rework',
+  PACKING_ISSUE = 'packing_issue',
+  EXPIRED = 'expired',
+  BET_CTN = 'bet_ctn',
+  BENT_CTN = 'bent_ctn',
+  SHORTAGE_PCS_CTN = 'shortage_pcs_ctn',
+  DIFFERENT_ITEM_AS_PO = 'different_item_as_po',
+  INFECTED = 'infected',
+  IMPACTED = 'impacted',
+  INFECTION_IN_MATERIAL = 'infection_in_material',
+  MOISTURE_DAMAGE = 'moisture_damage',
+  OTHERS = 'others',
+  SHORT_KG = 'short_kg',
 }
 
 export enum RejectActionStatus {
@@ -47,6 +54,30 @@ export class QualityLog {
   @Index({ unique: true })
   @Column()
   qcNumber: string;
+
+  @Column({ nullable: true })
+  grnId: string;
+
+  @Column({ nullable: true })
+  grnNumber: string;
+
+  @Column({ nullable: true })
+  grnItemId: string;
+
+  @Column({ nullable: true })
+  orderId: string;
+
+  @Column({ nullable: true })
+  sku: string;
+
+  @Column({ type: 'decimal', precision: 18, scale: 2, nullable: true })
+  unitPrice: number;
+
+  @Column({ nullable: true })
+  batchNumber: string;
+
+  @Column({ nullable: true })
+  expiryDate: Date;
 
   @Column({ nullable: true })
   productionLogId: string;
@@ -147,6 +178,12 @@ export class RejectActionLog {
   @Column({ nullable: true })
   productName: string;
 
+  @Column({ nullable: true })
+  vendorId: string;
+
+  @Column({ nullable: true })
+  vendorName: string;
+
   @Column('decimal', { precision: 15, scale: 3 })
   rejectedQty: number;
 
@@ -178,8 +215,20 @@ export class RejectActionLog {
   @Column({ nullable: true })
   replacementVendor: string;
 
+  @Column({ nullable: true })
+  replacementVendorId: string;
+
   @Column({ type: 'date', nullable: true })
   replacementEta: Date;
+
+  @Column({ nullable: true })
+  supplierOption: string;
+
+  @Column({ nullable: true })
+  documentNoteType: string;
+
+  @Column({ nullable: true })
+  freightCharges: string;
 
   @Column({ nullable: true })
   resolutionPath: string;

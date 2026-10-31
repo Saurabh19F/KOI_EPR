@@ -4,6 +4,7 @@ import { Repository, Between, MoreThanOrEqual, LessThanOrEqual, In, IsNull, Not,
 import { InventoryStock } from '../masters/entities/inventory-stock.entity';
 import { Warehouse } from '../masters/entities/warehouse.entity';
 import { StockMovement, MovementType } from './entities/stock-movement.entity';
+import { StockTransfer, StockTransferItem } from './entities/inventory-tracking.entity';
 import { Product } from '../masters/entities/product.entity';
 import { PaginatedResult } from '../../common/types';
 
@@ -40,6 +41,7 @@ export interface StockAdjustmentDto {
 
 export interface StockTransferDto {
   productId: string;
+  sku?: string;
   fromWarehouseId: string;
   toWarehouseId: string;
   quantity: number;
@@ -117,21 +119,21 @@ export class InventoryService {
   async getStockOverview(filters: StockFilters): Promise<PaginatedResult<any>> {
     const { search, warehouseId, status, categoryId, page = 1, limit = 20 } = filters;
 
-    // Simple query without joins to avoid UUID type mismatch issues
     const queryBuilder = this.stockRepo
       .createQueryBuilder('stock')
       .where('stock.stockId IS NOT NULL');
 
     if (search) {
-      // Search by productId or sku directly
-      queryBuilder.andWhere('stock.sku LIKE :search', { search: `%${search}%` });
+      queryBuilder.andWhere(
+        '(stock.sku ILIKE :search OR stock.productName ILIKE :search)',
+        { search: `%${search}%` },
+      );
     }
 
     if (warehouseId) {
       queryBuilder.andWhere('stock.warehouseId = :warehouseId', { warehouseId });
     }
 
-    // Status filtering
     if (status && status !== 'all') {
       switch (status) {
         case 'low_stock':
@@ -151,11 +153,23 @@ export class InventoryService {
       }
     }
 
-    const [data, total] = await queryBuilder
+    const [rawData, total] = await queryBuilder
       .orderBy('stock.currentStock', 'ASC')
       .skip((page - 1) * limit)
       .take(limit)
       .getManyAndCount();
+
+    const warehouseIds = [...new Set(rawData.map((s) => s.warehouseId).filter(Boolean))];
+    let warehouseMap: Record<string, string> = {};
+    if (warehouseIds.length > 0) {
+      const warehouses = await this.warehouseRepo.find({ where: { id: In(warehouseIds) } });
+      warehouseMap = Object.fromEntries(warehouses.map((w) => [w.id, w.name]));
+    }
+
+    const data = rawData.map((s) => ({
+      ...s,
+      warehouseName: warehouseMap[s.warehouseId] || null,
+    }));
 
     return {
       data,
@@ -278,6 +292,7 @@ export class InventoryService {
     quantity: number,
     userId?: string,
     data?: Partial<StockMovement>,
+    stockMetadata?: { productName?: string; warehouseName?: string; sku?: string },
   ): Promise<StockMovement> {
     // Get or create stock record
     let stock = await this.stockRepo.findOne({
@@ -310,8 +325,12 @@ export class InventoryService {
     if (stock) {
       stock.currentStock = quantityAfter;
       stock.lastMovementDate = new Date();
+      if (!stock.sku && stockMetadata?.sku) {
+        stock.sku = stockMetadata.sku;
+      }
       await this.stockRepo.save(stock);
     } else {
+      const product = await this.productRepo.findOne({ where: { productId } });
       stock = this.stockRepo.create({
         productId,
         warehouseId,
@@ -319,6 +338,9 @@ export class InventoryService {
         reorderLevel: 0,
         maxStockLevel: 1000,
         lastMovementDate: new Date(),
+        productName: product?.productName || stockMetadata?.productName,
+        sku: product?.sku || stockMetadata?.sku,
+        companyId: data?.companyId,
       });
       await this.stockRepo.save(stock);
     }
@@ -368,15 +390,21 @@ export class InventoryService {
 
   // ========== STOCK TRANSFER ==========
 
-  async transferStock(dto: StockTransferDto, userId?: string): Promise<{ out: StockMovement; in: StockMovement }> {
-    const { productId, fromWarehouseId, toWarehouseId, quantity, referenceType, referenceId, remarks } = dto;
+  async transferStock(dto: StockTransferDto, userId?: string, companyId?: string): Promise<{ out: StockMovement; in: StockMovement }> {
+    const { productId, sku, fromWarehouseId, toWarehouseId, quantity, referenceType, referenceId, remarks } = dto;
 
     // Use transaction for atomicity
     return this.dataSource.transaction(async manager => {
-      // Get source stock
-      const sourceStock = await manager.findOne(InventoryStock, {
+      // Get source stock — try productId first, fall back to sku
+      let sourceStock = await manager.findOne(InventoryStock, {
         where: { productId, warehouseId: fromWarehouseId },
       });
+
+      if (!sourceStock && sku) {
+        sourceStock = await manager.findOne(InventoryStock, {
+          where: { sku, warehouseId: fromWarehouseId },
+        });
+      }
 
       if (!sourceStock || sourceStock.currentStock < quantity) {
         throw new Error('Insufficient stock for transfer');
@@ -387,9 +415,12 @@ export class InventoryService {
       sourceStock.lastMovementDate = new Date();
       await manager.save(sourceStock);
 
+      const resolvedProductId = sourceStock.productId || productId;
+      const resolvedSku = sourceStock.sku || sku || '';
+
       // Record outgoing movement
       const outMovement = manager.create(StockMovement, {
-        productId,
+        productId: resolvedProductId,
         warehouseId: fromWarehouseId,
         movementType: MovementType.TRANSFER_OUT,
         quantity,
@@ -402,9 +433,11 @@ export class InventoryService {
       });
       await manager.save(outMovement);
 
-      // Add to destination
+      // Add to destination — match by same key that found the source
       let destStock = await manager.findOne(InventoryStock, {
-        where: { productId, warehouseId: toWarehouseId },
+        where: resolvedProductId
+          ? { productId: resolvedProductId, warehouseId: toWarehouseId }
+          : { sku: resolvedSku, warehouseId: toWarehouseId },
       });
 
       if (destStock) {
@@ -413,7 +446,10 @@ export class InventoryService {
         await manager.save(destStock);
       } else {
         destStock = manager.create(InventoryStock, {
-          productId,
+          productId: resolvedProductId,
+          sku: resolvedSku,
+          productName: sourceStock.productName,
+          category: sourceStock.category,
           warehouseId: toWarehouseId,
           currentStock: quantity,
           reorderLevel: 0,
@@ -425,7 +461,7 @@ export class InventoryService {
 
       // Record incoming movement
       const inMovement = manager.create(StockMovement, {
-        productId,
+        productId: resolvedProductId,
         warehouseId: toWarehouseId,
         movementType: MovementType.TRANSFER_IN,
         quantity,
@@ -437,6 +473,54 @@ export class InventoryService {
         remarks,
       });
       await manager.save(inMovement);
+
+      // Also create a StockTransfer record so the transfer shows in Transfer History
+      const fromWh = await manager.findOne(Warehouse, { where: { id: fromWarehouseId } });
+      const toWh = await manager.findOne(Warehouse, { where: { id: toWarehouseId } });
+
+      const currentYear = new Date().getFullYear();
+      const fy = `${currentYear}-${(currentYear + 1).toString().slice(-2)}`;
+      const lastTransfer = await manager.findOne(StockTransfer, {
+        where: {},
+        order: { createdAt: 'DESC' },
+      });
+      let nextNum = 1;
+      if (lastTransfer) {
+        const parts = lastTransfer.transferNumber.split('/');
+        nextNum = parseInt(parts[parts.length - 1], 10) + 1;
+      }
+      const transferNumber = `ST/${fy}/${nextNum.toString().padStart(5, '0')}`;
+
+      const transfer = manager.create(StockTransfer, {
+        transferNumber,
+        transferDate: new Date(),
+        sourceWarehouseId: fromWarehouseId,
+        sourceWarehouseName: fromWh?.name || fromWarehouseId,
+        destinationWarehouseId: toWarehouseId,
+        destinationWarehouseName: toWh?.name || toWarehouseId,
+        totalQuantity: quantity,
+        status: 'received',
+        finalProductName: sourceStock.productName || resolvedSku,
+        notes: remarks || 'Quick transfer from Stock Report',
+        companyId: companyId || undefined,
+        createdBy: userId,
+        sentBy: userId,
+        sentAt: new Date(),
+        receivedBy: userId,
+        receivedAt: new Date(),
+      });
+      const savedTransfer = await manager.save(transfer);
+
+      const transferItem = manager.create(StockTransferItem, {
+        transferId: savedTransfer.transferId,
+        productId: resolvedProductId,
+        productName: sourceStock.productName || resolvedSku,
+        quantity,
+        unitCost: 0,
+        companyId: companyId || undefined,
+        createdBy: userId,
+      });
+      await manager.save(transferItem);
 
       return { out: outMovement, in: inMovement };
     });

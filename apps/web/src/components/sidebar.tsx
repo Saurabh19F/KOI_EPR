@@ -19,16 +19,12 @@ import {
   Wrench,
   Warehouse,
   Tag,
-  Palette,
-  CheckSquare,
-  PackageSearch,
   BookOpen,
   Factory,
   ClipboardCheck,
   DollarSign,
-  PackagePlus,
-  SlidersHorizontal,
   Building2,
+  CalendarRange,
 } from 'lucide-react';
 import { useState, useRef } from 'react';
 import { useAuthStore } from '@/store/auth';
@@ -73,6 +69,7 @@ const navItems: NavItem[] = [
       { title: 'Sales Orders', href: '/dashboard/sales/orders', permissions: ['SALES_VIEW'] },
       { title: 'Delivery Notes', href: '/dashboard/sales/delivery-notes', permissions: ['SALES_VIEW'] },
       { title: 'Sales Invoices', href: '/dashboard/sales/invoices', permissions: ['SALES_VIEW'] },
+      { title: 'Order Review (ORDP)', href: '/dashboard/sales/order-review', permissions: ['SALES_VIEW'] },
     ],
   },
   {
@@ -88,16 +85,19 @@ const navItems: NavItem[] = [
       { title: 'Purchase Invoices', href: '/dashboard/purchase/invoices', permissions: ['PURCHASE_VIEW'] },
       { title: 'Price Approval', href: '/dashboard/purchase/price-approval', permissions: ['PURCHASE_VIEW', 'RATE_APPROVE'] },
       { title: 'PO Approvals', href: '/dashboard/purchase/po-dashboard?tab=approvals', roles: ['ADMIN'] },
+      { title: 'GRN Notifications', href: '/dashboard/purchase/grn-notifications', permissions: ['PURCHASE_VIEW'] },
+      { title: 'Reject Actions', href: '/dashboard/purchase/reject-actions', permissions: ['PURCHASE_VIEW'] },
+      { title: 'Return Material Notes', href: '/dashboard/purchase/return-material-notes', permissions: ['PURCHASE_VIEW'] },
     ],
   },
   {
     title: 'Rate Calculation',
     href: '/dashboard/rate',
     icon: BarChart3,
-    roles: ['ADMIN'],
+    permissions: ['RATE_VIEW'],
     children: [
-      { title: 'Price Analysis', href: '/dashboard/rate', roles: ['ADMIN'] },
-      { title: 'Currency Rates', href: '/dashboard/rate/currency', roles: ['ADMIN'] },
+      { title: 'Price Analysis', href: '/dashboard/rate', permissions: ['RATE_VIEW'] },
+      { title: 'Currency & Haulage', href: '/dashboard/rate/currency', permissions: ['RATE_VIEW'] },
     ],
   },
   {
@@ -123,7 +123,70 @@ const navItems: NavItem[] = [
       { title: 'Stock Movements', href: '/dashboard/inventory/movements', permissions: ['INVENTORY_VIEW', 'PURCHASE_VIEW'] },
       { title: 'Stock Adjustments', href: '/dashboard/inventory/adjustments', permissions: ['INVENTORY_VIEW', 'PURCHASE_VIEW'] },
       { title: 'Receiving Plans', href: '/dashboard/inventory/receiving-plans', permissions: ['INVENTORY_VIEW', 'PURCHASE_VIEW'] },
-      { title: 'Planner', href: '/dashboard/inventory/planner', permissions: ['RECEIVING_PLAN_VIEW', 'INVENTORY_VIEW'] },
+    ],
+  },
+  {
+    title: 'Planner',
+    href: '/dashboard/planner',
+    icon: CalendarRange,
+    permissions: ['RECEIVING_PLAN_VIEW', 'INVENTORY_VIEW'],
+    children: [
+      { title: 'Dashboard', href: '/dashboard/planner', permissions: ['RECEIVING_PLAN_VIEW', 'INVENTORY_VIEW'] },
+      { title: 'Purchase Orders', href: '/dashboard/planner/purchase-orders', permissions: ['RECEIVING_PLAN_VIEW', 'INVENTORY_VIEW'] },
+      { title: 'Material Requests', href: '/dashboard/planner/material-request-dashboard', permissions: ['RECEIVING_PLAN_VIEW', 'INVENTORY_VIEW'] },
+      {
+        title: 'Inbound & GRN',
+        href: '/dashboard/planner/grn-plan',
+        permissions: ['RECEIVING_PLAN_VIEW', 'INVENTORY_VIEW'],
+        children: [
+          { title: 'Inbound GRN', href: '/dashboard/planner/grn-plan', permissions: ['RECEIVING_PLAN_VIEW', 'INVENTORY_VIEW'] },
+          { title: 'Offloading Plan', href: '/dashboard/planner/offloading-plan', permissions: ['RECEIVING_PLAN_VIEW', 'INVENTORY_VIEW'] },
+          { title: 'Receiving History', href: '/dashboard/planner/receiving-history', permissions: ['INVENTORY_VIEW'] },
+          { title: 'GRN History', href: '/dashboard/planner/grn-history', permissions: ['INVENTORY_VIEW'] },
+        ],
+      },
+      {
+        title: 'Transfers',
+        href: '/dashboard/planner/transfer-requests',
+        permissions: ['RECEIVING_PLAN_VIEW', 'INVENTORY_VIEW'],
+        children: [
+          { title: 'Send Materials', href: '/dashboard/planner/transfer-requests', permissions: ['RECEIVING_PLAN_VIEW', 'INVENTORY_VIEW'] },
+          { title: 'Receive Materials', href: '/dashboard/planner/incoming-transfers', permissions: ['RECEIVING_PLAN_VIEW', 'INVENTORY_VIEW'] },
+          { title: 'Transfer Approvals', href: '/dashboard/planner/approval-console', permissions: ['RECEIVING_PLAN_VIEW', 'INVENTORY_VIEW'] },
+          { title: 'Transfer History', href: '/dashboard/planner/transfer-history', permissions: ['INVENTORY_VIEW'] },
+        ],
+      },
+      {
+        title: 'Inventory',
+        href: '/dashboard/planner/stock-report',
+        permissions: ['INVENTORY_VIEW'],
+        children: [
+          { title: 'Stock Report', href: '/dashboard/planner/stock-report', permissions: ['INVENTORY_VIEW'] },
+          { title: 'Stock Locations', href: '/dashboard/planner/stock-location', permissions: ['RECEIVING_PLAN_VIEW', 'INVENTORY_VIEW'] },
+          { title: 'Stock Ledger', href: '/dashboard/planner/centralized-stock-ledger', permissions: ['RECEIVING_PLAN_VIEW', 'INVENTORY_VIEW'] },
+          { title: 'Bin / Rack', href: '/dashboard/planner/bin-rack', permissions: ['INVENTORY_VIEW'] },
+          { title: 'Warehouse Planning', href: '/dashboard/planner/warehouse-planning', permissions: ['INVENTORY_VIEW'] },
+        ],
+      },
+      {
+        title: 'Production',
+        href: '/dashboard/planner/production-history',
+        permissions: ['RECEIVING_PLAN_VIEW', 'INVENTORY_VIEW'],
+        children: [
+          { title: 'Production History & QC', href: '/dashboard/planner/production-history', permissions: ['RECEIVING_PLAN_VIEW', 'INVENTORY_VIEW'] },
+          { title: 'Job Panel', href: '/dashboard/planner/job-panel', permissions: ['RECEIVING_PLAN_VIEW', 'INVENTORY_VIEW'] },
+          { title: 'Production Returns', href: '/dashboard/planner/production-returns', permissions: ['RECEIVING_PLAN_VIEW', 'INVENTORY_VIEW'] },
+        ],
+      },
+      {
+        title: 'Rejects',
+        href: '/dashboard/planner/reject-actions',
+        permissions: ['INVENTORY_VIEW'],
+        children: [
+          { title: 'Reject Actions', href: '/dashboard/planner/reject-actions', permissions: ['INVENTORY_VIEW'] },
+          { title: 'Reject History', href: '/dashboard/planner/reject-history', permissions: ['INVENTORY_VIEW'] },
+        ],
+      },
     ],
   },
   {
@@ -133,10 +196,18 @@ const navItems: NavItem[] = [
     permissions: ['INVENTORY_VIEW'],
     children: [
       { title: 'Department Dashboard', href: '/dashboard/warehouse', permissions: ['INVENTORY_VIEW'] },
+      { title: 'GRN Plan', href: '/dashboard/warehouse/grn-plan', permissions: ['INVENTORY_VIEW'] },
+      { title: 'GRN History', href: '/dashboard/warehouse/grn-history', permissions: ['INVENTORY_VIEW'] },
       { title: 'Stock Report', href: '/dashboard/warehouse/stock-report', permissions: ['INVENTORY_VIEW'] },
       { title: 'Receiving History Log', href: '/dashboard/warehouse/receiving-history', permissions: ['INVENTORY_VIEW'] },
       { title: 'Transfer History Log', href: '/dashboard/warehouse/transfer-history', permissions: ['INVENTORY_VIEW'] },
       { title: 'Bin / Rack Management', href: '/dashboard/warehouse/bin-rack', permissions: ['INVENTORY_VIEW'] },
+      { title: 'Return Material Inspection', href: '/dashboard/warehouse/return-material-inspection', permissions: ['INVENTORY_VIEW'] },
+      { title: 'Production Material Issue', href: '/dashboard/warehouse/production-material-issue', permissions: ['INVENTORY_VIEW'] },
+      { title: 'Extra Qty Request (15%+)', href: '/dashboard/warehouse/extra-qty-request', permissions: ['INVENTORY_VIEW'] },
+      { title: 'Material Movement', href: '/dashboard/warehouse/material-movement', permissions: ['INVENTORY_VIEW'] },
+      { title: 'Floor / Location Stock', href: '/dashboard/warehouse/floor-stock', permissions: ['INVENTORY_VIEW'] },
+      { title: 'Material Request Dashboard', href: '/dashboard/warehouse/material-request-dashboard', permissions: ['INVENTORY_VIEW'] },
     ],
   },
   {
@@ -145,8 +216,12 @@ const navItems: NavItem[] = [
     icon: Factory,
     permissions: ['PRODUCTION_VIEW'],
     children: [
-      { title: 'Production Jobs', href: '/dashboard/production', permissions: ['PRODUCTION_VIEW'] },
-      { title: 'Bill of Materials', href: '/dashboard/production/bom', permissions: ['PRODUCTION_VIEW'] },
+      { title: 'Department Dashboard', href: '/dashboard/production', permissions: ['PRODUCTION_VIEW'] },
+      { title: 'Stock Report', href: '/dashboard/production/stock-report', permissions: ['PRODUCTION_VIEW'] },
+      { title: 'Receiving History Log', href: '/dashboard/production/receiving-history', permissions: ['PRODUCTION_VIEW'] },
+      { title: 'Transfer History Log', href: '/dashboard/production/transfer-history', permissions: ['PRODUCTION_VIEW'] },
+      { title: 'Production Tracking', href: '/dashboard/production/job-panel', permissions: ['PRODUCTION_VIEW'] },
+      { title: 'Material Request Dashboard', href: '/dashboard/production/material-request-dashboard', permissions: ['PRODUCTION_VIEW'] },
     ],
   },
   {
@@ -156,6 +231,7 @@ const navItems: NavItem[] = [
     permissions: ['QUALITY_VIEW'],
     children: [
       { title: 'Inspections', href: '/dashboard/quality', permissions: ['QUALITY_VIEW'] },
+      { title: 'Post-Receipt QC', href: '/dashboard/quality/post-receipt-qc', permissions: ['QUALITY_VIEW'] },
       { title: 'Reject Actions', href: '/dashboard/quality/reject-actions', permissions: ['QUALITY_VIEW'] },
     ],
   },
@@ -166,6 +242,8 @@ const navItems: NavItem[] = [
     permissions: ['ACCOUNTS_VIEW'],
     children: [
       { title: 'Accountant Review', href: '/dashboard/accounts/accountant-review', permissions: ['ACCOUNTS_VIEW'] },
+      { title: 'PO / Invoice Status', href: '/dashboard/accounts/po-invoice-status', permissions: ['ACCOUNTS_VIEW'] },
+      { title: 'Debit Notes', href: '/dashboard/accounts/debit-notes', permissions: ['ACCOUNTS_VIEW'] },
       { title: 'Approvals', href: '/dashboard/accounts/approvals', permissions: ['ACCOUNTS_VIEW', 'ACCOUNTS_APPROVE'] },
     ],
   },
@@ -201,6 +279,10 @@ const navItems: NavItem[] = [
     href: '/dashboard/reports',
     icon: FileText,
     permissions: ['REPORTS_VIEW'],
+    children: [
+      { title: 'Reports Dashboard', href: '/dashboard/reports', permissions: ['REPORTS_VIEW'] },
+      { title: 'Pending PO Weekly', href: '/dashboard/reports/pending-po', permissions: ['REPORTS_VIEW'] },
+    ],
   },
   {
     title: 'Settings',
@@ -242,9 +324,39 @@ const navItems: NavItem[] = [
       { title: 'Roles', href: '/dashboard/admin/roles', roles: ['ADMIN'] },
       { title: 'Permissions', href: '/dashboard/admin/permissions', roles: ['ADMIN'] },
       { title: 'Settings', href: '/dashboard/admin/settings', roles: ['ADMIN'] },
+      { title: 'Audit Trail', href: '/dashboard/admin/audit-trail', roles: ['ADMIN'] },
     ],
   },
 ];
+
+// Department roles → allowed sidebar sections (Dashboard + Settings always visible)
+const DEPARTMENT_NAV_SECTIONS: Record<string, string[]> = {
+  SALES_MANAGER: ['/dashboard/sales', '/dashboard/fms', '/dashboard/reports'],
+  SALES_USER: ['/dashboard/sales', '/dashboard/fms', '/dashboard/reports'],
+  SALES_COORDINATOR: ['/dashboard/sales', '/dashboard/fms', '/dashboard/reports'],
+  PURCHASE_MANAGER: ['/dashboard/purchase', '/dashboard/inventory', '/dashboard/labels', '/dashboard/reports'],
+  PURCHASE_USER: ['/dashboard/purchase', '/dashboard/inventory', '/dashboard/labels', '/dashboard/reports'],
+  PURCHASE_COORDINATOR: ['/dashboard/purchase', '/dashboard/inventory', '/dashboard/labels', '/dashboard/reports'],
+  COSTING_MANAGER: ['/dashboard/rate', '/dashboard/reports'],
+  COSTING_USER: ['/dashboard/rate', '/dashboard/reports'],
+  FMS_MANAGER: ['/dashboard/fms', '/dashboard/reports'],
+  FMS_USER: ['/dashboard/fms', '/dashboard/reports'],
+  MIS_USER: ['/dashboard/mis', '/dashboard/reports'],
+  MIS: ['/dashboard/mis', '/dashboard/reports'],
+  PLANNER_MANAGER: ['/dashboard/planner'],
+  PLANNER_USER: ['/dashboard/planner'],
+  PRODUCTION_MANAGER: ['/dashboard/production', '/dashboard/quality', '/dashboard/reports'],
+  PRODUCTION_USER: ['/dashboard/production', '/dashboard/quality', '/dashboard/reports'],
+  WAREHOUSE_MANAGER: ['/dashboard/warehouse', '/dashboard/reports'],
+  WAREHOUSE_USER: ['/dashboard/warehouse', '/dashboard/reports'],
+  QUALITY_MANAGER: ['/dashboard/quality', '/dashboard/reports'],
+  QUALITY_USER: ['/dashboard/quality', '/dashboard/reports'],
+  INVENTORY_MANAGER: ['/dashboard/inventory', '/dashboard/warehouse', '/dashboard/reports'],
+  INVENTORY_USER: ['/dashboard/inventory', '/dashboard/warehouse', '/dashboard/reports'],
+  FINANCE_USER: ['/dashboard/finance', '/dashboard/reports'],
+  ACCOUNTS_USER: ['/dashboard/accounts', '/dashboard/finance', '/dashboard/reports'],
+  ACCOUNTS_MANAGER: ['/dashboard/accounts', '/dashboard/finance', '/dashboard/reports'],
+};
 
 // Check if user has access to a nav item
 function hasAccess(item: NavItem, user: any): boolean {
@@ -256,6 +368,22 @@ function hasAccess(item: NavItem, user: any): boolean {
   // Get user's roles - backend returns array of strings like ['ADMIN'] or ['SALES_USER']
   const userRoles = user.roles || [];
   const roleStrings = userRoles.map((r: any) => typeof r === 'string' ? r : (r.roleCode || r.roleName || ''));
+
+  // Department-only users: restrict sidebar to their department sections
+  const isDepartmentOnly = roleStrings.length > 0
+    && roleStrings.every((r: string) => DEPARTMENT_NAV_SECTIONS[r] !== undefined);
+  if (isDepartmentOnly) {
+    if (item.href === '/dashboard') return true;
+    if (item.href.startsWith('/dashboard/settings')) return true;
+    const allowedSections: string[] = [];
+    for (const role of roleStrings) {
+      const sections = DEPARTMENT_NAV_SECTIONS[role] || [];
+      for (const s of sections) {
+        if (!allowedSections.includes(s)) allowedSections.push(s);
+      }
+    }
+    return allowedSections.some(section => item.href.startsWith(section));
+  }
 
   const hasRequiredRole = item.roles && item.roles.length > 0
     ? item.roles.some(role => roleStrings.includes(role))

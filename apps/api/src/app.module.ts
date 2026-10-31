@@ -35,6 +35,7 @@ import { ProductionModule } from './modules/production/production.module';
 import { QualityModule } from './modules/quality/quality.module';
 import { SystemErrorLogModule } from './modules/system-error-log/system-error-log.module';
 import { StockAdjustmentModule } from './modules/stock-adjustment/stock-adjustment.module';
+import { OrderReviewModule } from './modules/order-review/order-review.module';
 import { SnakeNamingStrategy } from './common/typeorm/snake-naming.strategy';
 import { RolesGuard } from './modules/auth/guards/roles.guard';
 import { HealthController } from './health.controller';
@@ -160,6 +161,7 @@ const isQueueEnabled = queuesEnabled();
     QualityModule,
     SystemErrorLogModule,
     StockAdjustmentModule,
+    OrderReviewModule,
 
   ],
   controllers: [HealthController],

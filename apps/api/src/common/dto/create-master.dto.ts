@@ -312,6 +312,26 @@ export class UpdateProductDto {
   @ApiPropertyOptional()
   @IsNumber()
   @IsOptional()
+  weight?: number;
+
+  @ApiPropertyOptional()
+  @IsNumber()
+  @IsOptional()
+  cbmPerBox?: number;
+
+  @ApiPropertyOptional()
+  @IsNumber()
+  @IsOptional()
+  unitsPerCase?: number;
+
+  @ApiPropertyOptional()
+  @IsNumber()
+  @IsOptional()
+  totalCbm?: number;
+
+  @ApiPropertyOptional()
+  @IsNumber()
+  @IsOptional()
   standardCost?: number;
 
   @ApiPropertyOptional()

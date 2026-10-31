@@ -248,6 +248,7 @@ async function seed() {
         'PURCHASE_VIEW', 'PURCHASE_CREATE', 'PURCHASE_EDIT',
         'LABELS_VIEW', 'LABELS_CREATE', 'LABELS_EDIT',
         'RECEIVING_PLAN_VIEW',
+        'REJECT_ACTION_VIEW', 'REJECT_ACTION_EDIT',
         'REPORTS_VIEW',
       ],
       'COSTING_MANAGER': [
@@ -780,6 +781,19 @@ async function seed() {
     }
     console.log('  ✅ Ports\n');
 
+    // ========== 4b. SEED DEFAULT COMPANY ==========
+    console.log('📦 Seeding default company...');
+    let companyRows = await queryRunner.query(`SELECT id FROM companies WHERE company_code = 'DEFAULT' LIMIT 1`);
+    if (companyRows.length === 0) {
+      companyRows = await queryRunner.query(
+        `INSERT INTO companies (id, company_code, display_name, status, is_active, created_at, updated_at)
+         VALUES (gen_random_uuid(), 'DEFAULT', 'KOI Trading', 'active', true, NOW(), NOW())
+         RETURNING id`,
+      );
+    }
+    const companyId = companyRows[0].id;
+    console.log('✅ Default company:', companyId, '\n');
+
     // ========== 5. SEED DEMO USERS ==========
     console.log('📦 Seeding demo users...');
 
@@ -820,17 +834,36 @@ async function seed() {
       const roleId = roleResult[0]?.role_id;
 
       await queryRunner.query(`
-        INSERT INTO users (user_id, email, password_hash, name, user_code, role_id, is_active, is_super_admin, created_at, updated_at)
-        VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, true, $6, NOW(), NOW())
+        INSERT INTO users (user_id, company_id, email, password_hash, name, user_code, role_id, is_active, is_super_admin, created_at, updated_at)
+        VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6, true, $7, NOW(), NOW())
         ON CONFLICT (email) DO UPDATE SET
           password_hash = EXCLUDED.password_hash,
           name = EXCLUDED.name,
           user_code = EXCLUDED.user_code,
           role_id = COALESCE(EXCLUDED.role_id, users.role_id),
+          company_id = COALESCE(EXCLUDED.company_id, users.company_id),
           is_active = true
-      `, [user.email, hashedPassword, user.name, user.userCode, roleId, user.role === 'ADMIN']);
+      `, [companyId, user.email, hashedPassword, user.name, user.userCode, roleId, user.role === 'ADMIN']);
     }
     console.log('✅ Demo users seeded\n');
+
+    // ========== 5b. BACKFILL COMPANY_ID ON ALL RECORDS ==========
+    console.log('📦 Backfilling company_id on records missing it...');
+    const backfillTables = [
+      'users', 'sales_orders', 'sales_order_items', 'enquiries', 'enquiry_items',
+      'customers', 'products',
+    ];
+    for (const table of backfillTables) {
+      try {
+        const result = await queryRunner.query(
+          `UPDATE ${table} SET company_id = $1 WHERE company_id IS NULL`, [companyId],
+        );
+        if (result?.[1] > 0) console.log(`  Updated ${result[1]} rows in ${table}`);
+      } catch {
+        // Table may not exist or lack company_id column — skip
+      }
+    }
+    console.log('✅ Company backfill done\n');
 
     // ========== 6. SEED SAMPLE CUSTOMERS ==========
     console.log('📦 Seeding sample customers...');

@@ -215,13 +215,14 @@ export class InventoryAdvancedController {
   @ApiOperation({ summary: 'Query transfers' })
   @ApiResponse({ status: 200, description: 'List of transfers' })
   async findAllTransfers(
-    @Query() query: PaginationDto & { status?: string; sourceWarehouseId?: string },
+    @Query() query: PaginationDto & { status?: string; sourceWarehouseId?: string; destinationWarehouseId?: string },
     @Request() req: any,
   ) {
     return this.inventoryService.findAllTransfers({
       ...query,
       companyId: req.user.companyId,
       sourceWarehouseId: query.sourceWarehouseId,
+      destinationWarehouseId: query.destinationWarehouseId,
     });
   }
 

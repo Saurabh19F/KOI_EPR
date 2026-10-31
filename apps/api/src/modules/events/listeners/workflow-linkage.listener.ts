@@ -5,8 +5,9 @@ import { ReceivingPlan, ReceivingPlanStatus } from '../../receiving-plan/entitie
 import { QualityLog, QualityLogStatus } from '../../quality/entities/quality.entity';
 import { RejectActionLog, RejectActionType, RejectActionStatus } from '../../quality/entities/quality.entity';
 import { PurchaseIndentItem, IndentStatus } from '../../purchase/entities/purchase-indent.entity';
-import { StockTransfer, StockTransferItem, StockValuation, InventoryBatch, ValuationMethod } from '../../inventory/entities';
-import { PurchaseOrder, PurchaseOrderItem } from '../../purchase-order/entities/purchase-order.entity';
+import { StockTransfer, StockTransferItem, StockValuation, InventoryBatch, ValuationMethod, StockMovement, MovementType } from '../../inventory/entities';
+import { InventoryStock } from '../../masters/entities/inventory-stock.entity';
+import { PurchaseOrder, PurchaseOrderItem, DebitNote, ReturnMaterialNote } from '../../purchase-order/entities/purchase-order.entity';
 import { ProductionJob, ProductionJobStatus, ProductionMaterialClosure } from '../../production/entities/production.entity';
 import { Warehouse } from '../../masters/entities/warehouse.entity';
 import { generateDocumentNumber } from '../../../common/utils/document-number.util';
@@ -22,7 +23,7 @@ export class WorkflowLinkageListener {
    * When a GRN is created, find matching receiving plans for the same PO + product
    * and update their received quantities.
    */
-  @OnEvent('grn.created')
+  @OnEvent('grn.created.po')
   async handleGrnCreated(payload: {
     grnId: string;
     orderId: string;
@@ -307,6 +308,55 @@ export class WorkflowLinkageListener {
     } catch (error) {
       this.logger.error(`Failed to create inventory batch for QC ${payload.qualityLogId}:`, error);
     }
+
+    // Update InventoryStock (warehouse stock) so the stock overview reflects approved qty
+    try {
+      let stock = await this.dataSource.manager.findOne(InventoryStock, {
+        where: {
+          productId: payload.productId,
+          warehouseId: payload.warehouseId,
+        },
+      });
+
+      const quantityBefore = stock ? Number(stock.currentStock) : 0;
+      const quantityAfter = quantityBefore + payload.qtyApproved;
+
+      if (stock) {
+        stock.currentStock = quantityAfter;
+        stock.lastMovementDate = new Date();
+        await this.dataSource.manager.save(InventoryStock, stock);
+      } else {
+        stock = this.dataSource.manager.create(InventoryStock, {
+          productId: payload.productId,
+          warehouseId: payload.warehouseId,
+          productName: payload.productName,
+          currentStock: quantityAfter,
+          lastMovementDate: new Date(),
+          companyId: payload.companyId,
+        });
+        await this.dataSource.manager.save(InventoryStock, stock);
+      }
+
+      const movement = this.dataSource.manager.create(StockMovement, {
+        companyId: payload.companyId,
+        productId: payload.productId,
+        warehouseId: payload.warehouseId,
+        movementType: MovementType.PURCHASE_RECEIPT,
+        quantity: payload.qtyApproved,
+        quantityBefore,
+        quantityAfter,
+        referenceType: 'quality_inspection',
+        referenceId: payload.qualityLogId,
+        referenceNo: payload.qcNumber,
+        remarks: `QC approved ${payload.qtyApproved} units`,
+        performedBy: payload.userId,
+      });
+      await this.dataSource.manager.save(StockMovement, movement);
+
+      this.logger.log(`Linkage 5: Updated inventory stock for product ${payload.productId} in warehouse ${payload.warehouseId}: ${quantityBefore} → ${quantityAfter}`);
+    } catch (error) {
+      this.logger.error(`Failed to update inventory stock for QC ${payload.qualityLogId}:`, error);
+    }
   }
 
   /**
@@ -449,7 +499,7 @@ export class WorkflowLinkageListener {
         productId: payload.productId,
         productName: payload.productName,
         rejectedQty: payload.rejectedQty,
-        actionType: RejectActionType.RETURN_TO_VENDOR,
+        actionType: RejectActionType.PACKING_ISSUE,
         actionDate: new Date(),
         status: RejectActionStatus.PENDING,
         createdBy: payload.userId,
@@ -675,6 +725,194 @@ export class WorkflowLinkageListener {
       quantity: Math.max(0, newQty),
       totalValue: Math.max(0, newQty) * avgCost,
     });
+  }
+
+  /**
+   * Linkage: Return Material Note → Create Receiving Plan for Planner GRN
+   */
+  @OnEvent('reject.document-note-routing')
+  async handleReturnMaterialNoteRouting(payload: {
+    actionId: string;
+    actionNumber: string;
+    purchaseOrderId: string;
+    poNumber: string;
+    productId: string;
+    productName: string;
+    rejectedQty: number;
+    documentNoteType: string;
+    companyId: string;
+    userId: string;
+  }) {
+    if (payload.documentNoteType !== 'return_material_note') return;
+
+    try {
+      const existingPlan = await this.dataSource.manager.findOne(ReceivingPlan, {
+        where: {
+          purchaseOrderId: payload.purchaseOrderId,
+          productId: payload.productId,
+          companyId: payload.companyId,
+        },
+        order: { createdAt: 'DESC' },
+      });
+
+      const warehouseId = existingPlan?.warehouseId;
+      const warehouseName = existingPlan?.warehouseName || '';
+
+      if (!warehouseId) {
+        this.logger.error(`Return Material Note: No warehouse found for PO ${payload.poNumber} product ${payload.productId}`);
+        return;
+      }
+
+      const planNumber = await this.generatePlanNumber(this.dataSource.manager);
+
+      const plan = this.dataSource.manager.create(ReceivingPlan, {
+        planNumber,
+        companyId: payload.companyId,
+        purchaseOrderId: payload.purchaseOrderId,
+        poNumber: payload.poNumber,
+        productId: payload.productId,
+        productName: payload.productName,
+        warehouseId,
+        warehouseName,
+        plannedQty: payload.rejectedQty,
+        totalReceivedQty: 0,
+        status: ReceivingPlanStatus.PENDING,
+        plannedBy: payload.userId,
+        plannedByUserId: payload.userId,
+        remarks: `Return Material Note – from reject action ${payload.actionNumber}`,
+        createdBy: payload.userId,
+        updatedBy: payload.userId,
+      });
+
+      await this.dataSource.manager.save(plan);
+      this.logger.log(`Return Material Note: Created receiving plan ${planNumber} for ${payload.rejectedQty} units of ${payload.productName} at warehouse ${warehouseName}`);
+
+      const po = await this.dataSource.manager.findOne(PurchaseOrder, {
+        where: { orderId: payload.purchaseOrderId },
+        relations: ['items'],
+      });
+
+      if (po) {
+        const item = po.items?.find(i => i.productId === payload.productId);
+        const unitPrice = item ? Number(item.unitPrice) : 0;
+        const totalAmount = unitPrice * payload.rejectedQty;
+
+        const rmnNumber = await generateDocumentNumber({
+          manager: this.dataSource.manager,
+          prefix: 'RMN',
+          table: 'return_material_notes',
+          column: 'rmn_number',
+        });
+
+        const rmn = this.dataSource.manager.create(ReturnMaterialNote, {
+          rmnNumber,
+          vendorId: po.vendorId,
+          vendorName: po.vendorName,
+          vendorGstin: po.vendorGstin || null,
+          purchaseOrderId: payload.purchaseOrderId,
+          poNumber: payload.poNumber,
+          productId: payload.productId,
+          productName: payload.productName,
+          returnQty: payload.rejectedQty,
+          unitPrice,
+          totalAmount,
+          rmnDate: new Date(),
+          reason: `Quality rejection – ${payload.rejectedQty} units of ${payload.productName} rejected (Action ${payload.actionNumber})`,
+          notes: `Auto-created from reject action ${payload.actionNumber} against PO ${payload.poNumber}`,
+          status: 'draft',
+          companyId: payload.companyId,
+          createdBy: payload.userId,
+        });
+
+        await this.dataSource.manager.save(rmn);
+        this.logger.log(`Return Material Note: Created ${rmnNumber} for ${payload.rejectedQty} units of ${payload.productName} against PO ${payload.poNumber}`);
+      }
+
+      const existingIndent = await this.dataSource.manager.findOne(PurchaseIndentItem, {
+        where: {
+          remarks: `RMN replacement indent for reject action ${payload.actionNumber}`,
+          companyId: payload.companyId,
+        },
+      });
+      if (!existingIndent) {
+        const indent = this.dataSource.manager.create(PurchaseIndentItem, {
+          companyId: payload.companyId,
+          orderNo: payload.poNumber,
+          productId: payload.productId,
+          productName: payload.productName,
+          quantity: payload.rejectedQty,
+          indentStatus: IndentStatus.PENDING,
+          isIndentRaised: false,
+          remarks: `RMN replacement indent for reject action ${payload.actionNumber}`,
+          createdBy: payload.userId,
+        });
+        await this.dataSource.manager.save(indent);
+        this.logger.log(`Return Material Note: Created purchase indent for ${payload.rejectedQty} units of ${payload.productName} → Planner orders`);
+      }
+    } catch (error) {
+      this.logger.error(`Failed to create receiving plan for return material note ${payload.actionNumber}:`, error);
+    }
+  }
+
+  @OnEvent('reject.document-note-routing')
+  async handleDebitNoteCreation(payload: {
+    actionId: string;
+    actionNumber: string;
+    purchaseOrderId: string;
+    poNumber: string;
+    productId: string;
+    productName: string;
+    rejectedQty: number;
+    documentNoteType: string;
+    companyId: string;
+    userId: string;
+  }) {
+    if (payload.documentNoteType !== 'debit_note') return;
+
+    try {
+      const po = await this.dataSource.manager.findOne(PurchaseOrder, {
+        where: { orderId: payload.purchaseOrderId },
+        relations: ['items'],
+      });
+
+      if (!po) {
+        this.logger.error(`Debit Note: PO ${payload.poNumber} not found`);
+        return;
+      }
+
+      const item = po.items?.find(i => i.productId === payload.productId);
+      const unitPrice = item ? Number(item.unitPrice) : 0;
+      const totalAmount = unitPrice * payload.rejectedQty;
+      const gstRate = item ? Number(item.gstRate || 0) : 18;
+      const taxAmount = totalAmount * gstRate / (100 + gstRate);
+
+      const dnNumber = await generateDocumentNumber({
+        manager: this.dataSource.manager,
+        prefix: 'DN',
+        table: 'debit_notes',
+        column: 'debit_note_number',
+      });
+
+      const debitNote = this.dataSource.manager.create(DebitNote, {
+        debitNoteNumber: dnNumber,
+        vendorId: po.vendorId,
+        vendorName: po.vendorName,
+        vendorGstin: po.vendorGstin || null,
+        debitNoteDate: new Date(),
+        totalAmount,
+        taxAmount,
+        reason: `Quality rejection – ${payload.rejectedQty} units of ${payload.productName} rejected (Action ${payload.actionNumber})`,
+        notes: `Auto-created from reject action ${payload.actionNumber} against PO ${payload.poNumber}`,
+        status: 'draft',
+        companyId: payload.companyId,
+        createdBy: payload.userId,
+      });
+
+      await this.dataSource.manager.save(debitNote);
+      this.logger.log(`Debit Note: Created ${dnNumber} for ₹${totalAmount} against PO ${payload.poNumber} (${payload.rejectedQty} × ₹${unitPrice})`);
+    } catch (error) {
+      this.logger.error(`Failed to create debit note for reject action ${payload.actionNumber}:`, error);
+    }
   }
 
   private async generatePlanNumber(manager: EntityManager): Promise<string> {

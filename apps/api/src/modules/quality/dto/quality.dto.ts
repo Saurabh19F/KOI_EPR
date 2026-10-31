@@ -203,8 +203,28 @@ export class UpdateRejectActionLogDto {
 
   @ApiPropertyOptional()
   @IsOptional()
+  @IsString()
+  replacementVendorId?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
   @IsDateString()
   replacementEta?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  supplierOption?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  documentNoteType?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  freightCharges?: string;
 
   @ApiPropertyOptional()
   @IsOptional()

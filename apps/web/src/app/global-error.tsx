@@ -1,7 +1,5 @@
 'use client';
 
-import { useEffect } from 'react';
-
 export default function GlobalError({
   error,
   reset,
@@ -9,24 +7,20 @@ export default function GlobalError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  useEffect(() => {
-    console.error('Global Application Error:', error);
-  }, [error]);
-
   return (
     <html>
-      <body className="bg-slate-50 flex items-center justify-center min-h-screen font-sans">
-        <div className="bg-white p-8 rounded-xl shadow-lg border max-w-md w-full text-center space-y-4">
-          <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mx-auto text-red-600 font-bold text-xl">
+      <body style={{ backgroundColor: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', fontFamily: 'sans-serif' }}>
+        <div style={{ backgroundColor: '#fff', padding: 32, borderRadius: 12, boxShadow: '0 4px 6px rgba(0,0,0,0.1)', border: '1px solid #e2e8f0', maxWidth: 400, width: '100%', textAlign: 'center' }}>
+          <div style={{ width: 48, height: 48, borderRadius: '50%', backgroundColor: '#fee2e2', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', color: '#dc2626', fontWeight: 'bold', fontSize: 20 }}>
             !
           </div>
-          <h2 className="text-xl font-bold text-slate-900">Application Error</h2>
-          <p className="text-sm text-slate-600 bg-slate-100 p-3 rounded text-left font-mono text-xs overflow-auto max-h-28">
-            {error.message || 'An error occurred'}
+          <h2 style={{ fontSize: 20, fontWeight: 'bold', color: '#0f172a', marginBottom: 12 }}>Application Error</h2>
+          <p style={{ fontSize: 12, color: '#475569', backgroundColor: '#f1f5f9', padding: 12, borderRadius: 6, textAlign: 'left', fontFamily: 'monospace', overflow: 'auto', maxHeight: 112, marginBottom: 16 }}>
+            {error?.message || 'An error occurred'}
           </p>
           <button
             onClick={() => reset()}
-            className="w-full py-2 px-4 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors"
+            style={{ width: '100%', padding: '8px 16px', backgroundColor: '#4f46e5', color: '#fff', borderRadius: 8, fontWeight: 500, border: 'none', cursor: 'pointer' }}
           >
             Refresh &amp; Try Again
           </button>

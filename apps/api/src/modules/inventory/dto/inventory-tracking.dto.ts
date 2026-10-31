@@ -645,9 +645,10 @@ export class RequestMaterialDto {
 }
 
 export class DispatchMaterialDto {
-  @ApiProperty()
+  @ApiPropertyOptional()
   @IsString()
-  transferId: string;
+  @IsOptional()
+  transferId?: string;
 
   @ApiProperty()
   @IsNumber()
@@ -656,9 +657,10 @@ export class DispatchMaterialDto {
 }
 
 export class ReceiveTransferMaterialDto {
-  @ApiProperty()
+  @ApiPropertyOptional()
   @IsString()
-  transferId: string;
+  @IsOptional()
+  transferId?: string;
 
   @ApiProperty()
   @IsNumber()

@@ -5,6 +5,9 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   Index,
+  OneToMany,
+  ManyToOne,
+  JoinColumn,
 } from 'typeorm';
 
 // Serial number tracking for individual items
@@ -430,6 +433,7 @@ export class StockTransfer {
   @UpdateDateColumn()
   updatedAt: Date;
 
+  @OneToMany(() => StockTransferItem, (item) => item.transfer)
   items: StockTransferItem[];
 }
 
@@ -441,9 +445,11 @@ export class StockTransferItem {
   @Column({ nullable: true })
   companyId: string;
 
-  @Column({ name: 'transfer_id', nullable: true })
+  @Column({ name: 'transfer_id', type: 'uuid', nullable: true })
   transferId: string;
 
+  @ManyToOne(() => StockTransfer, (transfer) => transfer.items)
+  @JoinColumn({ name: 'transfer_id' })
   transfer: StockTransfer;
 
   @Column()

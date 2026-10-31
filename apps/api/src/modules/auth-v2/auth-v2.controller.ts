@@ -81,8 +81,7 @@ export class AuthV2Controller {
   @ApiResponse({ status: 200, description: 'User profile retrieved' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async getProfile(@Request() req: any) {
-    // Support both sub and userId from JWT payload
-    const userId = req.user?.sub || req.user?.userId;
+    const userId = req.user?.userId;
     return this.authV2Service.getProfile(userId);
   }
 

@@ -102,6 +102,7 @@ export class AuthV2Service {
       isSuperAdmin: isSuperAdmin,
       roles: roleCodes,
       permissions: permissions,
+      warehouseId: user.warehouseId || null,
     };
 
     const twoFactorConfig = await this.twoFactorRepo.findOne({ where: { userId: user.userId } });
@@ -136,6 +137,7 @@ export class AuthV2Service {
         isSuperAdmin,
         roles: roleCodes,
         permissions: permissions,
+        warehouseId: user.warehouseId || null,
       },
     };
   }
@@ -266,6 +268,7 @@ export class AuthV2Service {
         isSuperAdmin: user.isSuperAdmin,
         roles: [roleCode],
         permissions: permissions,
+        warehouseId: user.warehouseId || null,
       };
 
       return {
@@ -302,6 +305,7 @@ export class AuthV2Service {
       isSuperAdmin: user.isSuperAdmin,
       roles: [roleCode],
       permissions: permissions,
+      warehouseId: user.warehouseId || null,
     };
   }
 
@@ -311,7 +315,7 @@ export class AuthV2Service {
 
     await this.blacklistRepo.save({
       token,
-      userId: payload?.sub || payload?.userId || 'unknown',
+      userId: payload?.sub || 'unknown',
       tokenType: payload?.type || 'access',
       expiresAt,
       reason: 'logout',
@@ -498,6 +502,7 @@ export class AuthV2Service {
         isSuperAdmin: user.isSuperAdmin === true,
         roles: roleCode ? [roleCode] : [],
         permissions,
+        warehouseId: user.warehouseId || null,
       };
 
       const accessTokenExpiry = (this.configService.get<string>('JWT_ACCESS_EXPIRY') || '15m') as SignOptions['expiresIn'];
@@ -517,6 +522,7 @@ export class AuthV2Service {
           isSuperAdmin: user.isSuperAdmin === true,
           roles: roleCode ? [roleCode] : [],
           permissions,
+          warehouseId: user.warehouseId || null,
         },
       };
     };

@@ -80,9 +80,10 @@ export class ProductionService {
     limit?: number;
     search?: string;
     status?: ProductionJobStatus;
+    warehouseId?: string;
     companyId?: string;
   }): Promise<PaginatedResult<ProductionJob>> {
-    const { page = 1, limit = 20, search, status, companyId } = params;
+    const { page = 1, limit = 20, search, status, warehouseId, companyId } = params;
     const skip = (page - 1) * limit;
 
     const where: FindOptionsWhere<ProductionJob>[] = [];
@@ -90,6 +91,7 @@ export class ProductionService {
 
     if (companyId) baseWhere.companyId = companyId;
     if (status) baseWhere.status = status;
+    if (warehouseId) baseWhere.warehouseId = warehouseId;
 
     if (search) {
       where.push(
@@ -141,7 +143,9 @@ export class ProductionService {
 
     const allowedTransitions: Record<string, ProductionJobStatus[]> = {
       [ProductionJobStatus.DRAFT]: [ProductionJobStatus.PLANNED, ProductionJobStatus.IN_PROGRESS],
-      [ProductionJobStatus.PLANNED]: [ProductionJobStatus.IN_PROGRESS],
+      [ProductionJobStatus.PLANNED]: [ProductionJobStatus.IN_PROGRESS, ProductionJobStatus.WAITING_FOR_MATERIAL],
+      [ProductionJobStatus.WAITING_FOR_MATERIAL]: [ProductionJobStatus.IN_PROGRESS],
+      [ProductionJobStatus.READY_FOR_PRODUCTION]: [ProductionJobStatus.IN_PROGRESS],
     };
 
     const allowed = allowedTransitions[job.status];
@@ -194,6 +198,26 @@ export class ProductionService {
       const saved = await manager.save(ProductionJob, job);
       this.logger.log(`Production job closed: ${saved.jobNumber}, produced: ${saved.finalProducedQty}`);
 
+      const closures = await manager.find(ProductionMaterialClosure, {
+        where: { productionJobId: id },
+      });
+
+      const materialClosureData: Array<{
+        materialId: string;
+        materialName: string;
+        usedQty: number;
+        returnedQty: number;
+        sourceWarehouseId: string;
+        productionWarehouseId: string;
+      }> = closures.map((c) => ({
+        materialId: c.materialId,
+        materialName: c.materialName,
+        usedQty: Number(c.usedQty),
+        returnedQty: Number(c.returnedQty),
+        sourceWarehouseId: c.sourceWarehouseId,
+        productionWarehouseId: c.productionWarehouseId,
+      }));
+
       this.eventEmitter.emit('production.job.completed', {
         jobId: saved.jobId,
         jobNumber: saved.jobNumber,
@@ -204,6 +228,7 @@ export class ProductionService {
         finalProducedQty: Number(saved.finalProducedQty),
         companyId: saved.companyId,
         userId: user?.userId || user?.email,
+        materialClosures: materialClosureData,
       });
 
       return saved;

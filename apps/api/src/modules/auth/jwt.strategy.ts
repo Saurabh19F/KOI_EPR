@@ -17,6 +17,18 @@ export interface JwtPayload {
   type?: 'access' | 'refresh';
 }
 
+/**
+ * Shape of `request.user` on routes guarded by the 'jwt' strategy.
+ *
+ * `userId` is the canonical identity key across the codebase - the refresh
+ * strategy sets it too, and every `@CurrentUser()` consumer reads it. `sub`
+ * is retained because it is the standard JWT claim `userId` is derived from,
+ * but application code should always read `userId`.
+ */
+export interface AuthenticatedUser extends JwtPayload {
+  userId: string;
+}
+
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(
@@ -44,7 +56,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     return authorization.slice('Bearer '.length).trim();
   }
 
-  async validate(req: Request, payload: JwtPayload): Promise<JwtPayload> {
+  async validate(req: Request, payload: JwtPayload): Promise<AuthenticatedUser> {
     if (!payload.sub) {
       throw new UnauthorizedException('Invalid token payload');
     }
@@ -70,6 +82,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     const permissions = Array.isArray(payload.permissions) ? payload.permissions : [];
 
     return {
+      userId: payload.sub,
       sub: payload.sub,
       email: payload.email,
       companyId: payload.companyId,

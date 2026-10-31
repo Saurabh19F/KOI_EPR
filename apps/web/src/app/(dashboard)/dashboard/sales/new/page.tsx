@@ -733,10 +733,10 @@ export default function NewSalesEnquiryPage() {
                       <th className="min-w-[100px]">Unit Size</th>
                       <th className="w-24 text-right">Units Per Case</th>
                       <th className="w-28 text-right">CBM</th>
-                      <th className="w-24 text-right">Quantity</th>
+                      <th className="w-24 text-right sales-header-editable">Quantity</th>
                       <th className="min-w-[120px]">Category</th>
                       <th className="w-28 text-right">Total CBM</th>
-                      <th className="min-w-[200px]">Remarks</th>
+                      <th className="min-w-[200px] sales-header-editable">Remarks</th>
                       <th className="w-16 text-center">Action</th>
                     </tr>
                   </thead>
@@ -835,10 +835,10 @@ export default function NewSalesEnquiryPage() {
                             placeholder="0.0000"
                           />
                         </td>
-                        <td>
+                        <td className="sales-cell-editable">
                           <input
                             type="number"
-                            className="sales-grid-input text-right font-semibold"
+                            className="sales-grid-input text-right font-semibold bg-transparent"
                             value={item.quantity || ''}
                             onChange={(e) => handleItemChange(index, 'quantity', e.target.value ? parseInt(e.target.value) : 0)}
                             placeholder="0"
@@ -871,10 +871,10 @@ export default function NewSalesEnquiryPage() {
                         <td className="p-2 text-right font-mono text-xs text-slate-500 font-medium">
                           {item.totalCbm?.toFixed(4) || '0.0000'}
                         </td>
-                        <td>
+                        <td className="sales-cell-editable">
                           <input
                             type="text"
-                            className="sales-grid-input"
+                            className="sales-grid-input bg-transparent"
                             value={item.remarks || ''}
                             onChange={(e) => handleItemChange(index, 'remarks', e.target.value)}
                             placeholder="Add remark..."

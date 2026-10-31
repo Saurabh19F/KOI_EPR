@@ -9,6 +9,7 @@ import {
   PurchaseInvoice,
   PurchaseInvoiceItem,
   DebitNote,
+  ReturnMaterialNote,
   VendorMaster,
   POApproval,
   PurchaseOrderStatus,
@@ -28,6 +29,7 @@ import {
 } from './dto/purchase-order.dto';
 import { AccountsPayable, PaymentStatus } from '../financial/entities/accounting-voucher.entity';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { OnEvent } from '@nestjs/event-emitter';
 import { InventoryStock } from '../masters/entities/inventory-stock.entity';
 import { Warehouse } from '../masters/entities/warehouse.entity';
 import { StockMovement, MovementType } from '../inventory/entities/stock-movement.entity';
@@ -494,7 +496,6 @@ export class PurchaseOrderService {
         }
 
         const receivedQuantity = Number(itemDto.receivedQuantity || 0);
-        const acceptedQuantity = Number(itemDto.acceptedQuantity ?? itemDto.receivedQuantity);
         const newReceivedQty = Number(orderItem.receivedQuantity || 0) + receivedQuantity;
         if (newReceivedQty > Number(orderItem.quantity)) {
           throw new BadRequestException(`Cannot receive more than ordered quantity for ${orderItem.productName}`);
@@ -511,8 +512,8 @@ export class PurchaseOrderService {
           uomName: itemDto.uomName || orderItem.uomName,
           orderedQuantity: itemDto.orderedQuantity,
           receivedQuantity,
-          acceptedQuantity,
-          rejectedQuantity: itemDto.rejectedQuantity || 0,
+          acceptedQuantity: 0,
+          rejectedQuantity: 0,
           unitPrice: itemDto.unitPrice,
           taxableAmount: receivedQuantity * itemDto.unitPrice,
           batchNumber: itemDto.batchNumber,
@@ -522,50 +523,63 @@ export class PurchaseOrderService {
           createdBy: userId,
         });
 
-        await queryRunner.manager.save(item);
+        const savedItem = await queryRunner.manager.save(item);
 
         await queryRunner.manager.update(PurchaseOrderItem, itemDto.orderItemId, { receivedQuantity: newReceivedQty });
 
-        if (orderItem.productId && acceptedQuantity > 0) {
-          defaultWarehouse ??= await this.resolveDefaultWarehouse(queryRunner.manager);
-          await this.recordInventoryMovement(queryRunner.manager, {
-            companyId,
-            productId: orderItem.productId,
-            sku: orderItem.sku || itemDto.sku || orderItem.productName,
-            warehouseId: defaultWarehouse.id,
-            movementType: MovementType.PURCHASE_RECEIPT,
-            quantity: acceptedQuantity,
-            userId,
-            referenceType: 'goods_receipt_note',
-            referenceId: savedGrn.grnId,
-            referenceNo: grnNumber,
-            batchNumber: itemDto.batchNumber,
-            expiryDate: itemDto.expiryDate,
-            unitCost: Number(itemDto.unitPrice || orderItem.unitPrice || 0),
-            remarks: `GRN against purchase order ${order.orderNumber}`,
-          });
-        }
-
         totalAmount += receivedQuantity * itemDto.unitPrice;
         if (orderItem.productId) {
-          grnItemDetails.push({ productId: orderItem.productId, acceptedQuantity });
+          defaultWarehouse ??= await this.resolveDefaultWarehouse(queryRunner.manager);
+          grnItemDetails.push({
+            productId: orderItem.productId,
+            grnItemId: savedItem.itemId,
+            receivedQuantity,
+            sku: orderItem.sku || itemDto.sku || orderItem.productName,
+            productName: itemDto.productName || orderItem.productName,
+            unitPrice: Number(itemDto.unitPrice || orderItem.unitPrice || 0),
+            batchNumber: itemDto.batchNumber,
+            expiryDate: itemDto.expiryDate,
+          });
         }
       }
 
-      await queryRunner.manager.update(GoodsReceiptNote, savedGrn.grnId, { totalAmount });
+      await queryRunner.manager.update(GoodsReceiptNote, savedGrn.grnId, {
+        totalAmount,
+        status: 'pending_quality',
+      });
 
       // Update PO status
       await this.updatePoReceiptStatus(dto.orderId, companyId, queryRunner.manager);
 
       await queryRunner.commitTransaction();
 
-      this.eventEmitter.emit('grn.created', {
+      this.eventEmitter.emit('grn.created.po', {
         grnId: savedGrn.grnId,
         orderId: dto.orderId,
         planId: dto.planId,
         companyId,
         items: grnItemDetails,
       });
+
+      for (const grnItem of grnItemDetails) {
+        this.eventEmitter.emit('grn.created', {
+          grnId: savedGrn.grnId,
+          grnNumber,
+          grnItemId: grnItem.grnItemId,
+          productId: grnItem.productId,
+          productName: grnItem.productName,
+          warehouseId: defaultWarehouse?.id || '',
+          warehouseName: defaultWarehouse?.name || '',
+          receivedQty: grnItem.receivedQuantity,
+          sku: grnItem.sku,
+          unitPrice: grnItem.unitPrice,
+          batchNumber: grnItem.batchNumber,
+          expiryDate: grnItem.expiryDate,
+          orderId: dto.orderId,
+          companyId,
+          userId,
+        });
+      }
 
       return this.findGrnById(savedGrn.grnId, companyId);
     } catch (error) {
@@ -863,6 +877,120 @@ export class PurchaseOrderService {
 
   // ============ DEBIT NOTE OPERATIONS ============
 
+  async findAllDebitNotes(
+    params: { page: number; limit: number; search?: string; status?: string },
+    companyId: string,
+  ) {
+    const { page, limit, search, status } = params;
+    const skip = (page - 1) * limit;
+
+    const qb = this.dataSource.getRepository(DebitNote)
+      .createQueryBuilder('dn')
+      .where('dn.isActive = :isActive', { isActive: true });
+
+    if (companyId) {
+      qb.andWhere('dn.companyId = :companyId', { companyId });
+    }
+
+    if (search) {
+      qb.andWhere(
+        '(dn.debitNoteNumber ILIKE :search OR dn.vendorName ILIKE :search OR dn.reason ILIKE :search)',
+        { search: `%${search}%` },
+      );
+    }
+
+    if (status) {
+      qb.andWhere('dn.status = :status', { status });
+    }
+
+    qb.orderBy('dn.createdAt', 'DESC')
+      .skip(skip)
+      .take(limit);
+
+    const [data, total] = await qb.getManyAndCount();
+    return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
+  }
+
+  async findAllReturnMaterialNotes(
+    params: { page: number; limit: number; search?: string; status?: string },
+    companyId: string,
+  ) {
+    const { page, limit, search, status } = params;
+    const skip = (page - 1) * limit;
+
+    const qb = this.dataSource.getRepository(ReturnMaterialNote)
+      .createQueryBuilder('rmn')
+      .where('rmn.isActive = :isActive', { isActive: true });
+
+    if (companyId) {
+      qb.andWhere('rmn.companyId = :companyId', { companyId });
+    }
+
+    if (search) {
+      qb.andWhere(
+        '(rmn.rmnNumber ILIKE :search OR rmn.vendorName ILIKE :search OR rmn.productName ILIKE :search OR rmn.poNumber ILIKE :search)',
+        { search: `%${search}%` },
+      );
+    }
+
+    if (status) {
+      qb.andWhere('rmn.status = :status', { status });
+    }
+
+    qb.orderBy('rmn.createdAt', 'DESC')
+      .skip(skip)
+      .take(limit);
+
+    const [data, total] = await qb.getManyAndCount();
+    return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
+  }
+
+  async findReturnMaterialNoteById(rmnId: string, companyId: string) {
+    const qb = this.dataSource.getRepository(ReturnMaterialNote)
+      .createQueryBuilder('rmn')
+      .where('rmn.rmnId = :rmnId', { rmnId })
+      .andWhere('rmn.isActive = :isActive', { isActive: true });
+
+    if (companyId) {
+      qb.andWhere('rmn.companyId = :companyId', { companyId });
+    }
+
+    const rmn = await qb.getOne();
+    if (!rmn) {
+      throw new NotFoundException('Return Material Note not found');
+    }
+    return rmn;
+  }
+
+  async updateReturnMaterialNoteStatus(
+    rmnId: string,
+    status: string,
+    remarks: string | undefined,
+    companyId: string,
+  ) {
+    const rmn = await this.findReturnMaterialNoteById(rmnId, companyId);
+
+    const validTransitions: Record<string, string[]> = {
+      draft: ['submitted'],
+      submitted: ['dispatched', 'cancelled'],
+      dispatched: ['completed'],
+    };
+
+    const allowed = validTransitions[rmn.status] || [];
+    if (!allowed.includes(status)) {
+      throw new BadRequestException(
+        `Cannot transition from '${rmn.status}' to '${status}'`,
+      );
+    }
+
+    await this.dataSource.getRepository(ReturnMaterialNote).update(rmnId, {
+      status,
+      ...(remarks ? { notes: remarks } : {}),
+    });
+
+    return this.findReturnMaterialNoteById(rmnId, companyId);
+  }
+
   async createDebitNote(dto: CreateDebitNoteDto, userId: string, companyId: string): Promise<DebitNote> {
     const debitNoteNumber = await this.generateNumber('DN', companyId);
 
@@ -991,6 +1119,81 @@ export class PurchaseOrderService {
       remarks: params.remarks,
       performedBy: params.userId,
     }));
+  }
+
+  @OnEvent('quality.grn.decided')
+  async handleQualityGrnDecided(payload: {
+    qualityLogId: string;
+    qcNumber: string;
+    grnId: string;
+    grnNumber: string;
+    grnItemId?: string;
+    orderId?: string;
+    productId: string;
+    productName: string;
+    sku?: string;
+    warehouseId: string;
+    warehouseName?: string;
+    qtyApproved: number;
+    qtyRejected: number;
+    unitPrice?: number;
+    batchNumber?: string;
+    expiryDate?: Date;
+    decision: string;
+    companyId: string;
+    userId: string;
+  }) {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      if (payload.grnItemId) {
+        await queryRunner.manager.update(GoodsReceiptNoteItem, payload.grnItemId, {
+          acceptedQuantity: payload.qtyApproved,
+          rejectedQuantity: payload.qtyRejected,
+        });
+      }
+
+      if (payload.qtyApproved > 0 && payload.warehouseId) {
+        await this.recordInventoryMovement(queryRunner.manager, {
+          companyId: payload.companyId,
+          productId: payload.productId,
+          sku: payload.sku || payload.productName,
+          warehouseId: payload.warehouseId,
+          movementType: MovementType.PURCHASE_RECEIPT,
+          quantity: payload.qtyApproved,
+          userId: payload.userId,
+          referenceType: 'goods_receipt_note',
+          referenceId: payload.grnId,
+          referenceNo: payload.grnNumber || '',
+          batchNumber: payload.batchNumber,
+          expiryDate: payload.expiryDate,
+          unitCost: Number(payload.unitPrice || 0),
+          remarks: `QC approved (${payload.qcNumber}) for GRN ${payload.grnNumber}`,
+        });
+      }
+
+      const allItems = await queryRunner.manager.find(GoodsReceiptNoteItem, {
+        where: { grnId: payload.grnId },
+      });
+      const allDecided = allItems.every(
+        (item) => Number(item.acceptedQuantity) + Number(item.rejectedQuantity) >= Number(item.receivedQuantity),
+      );
+      if (allDecided) {
+        await queryRunner.manager.update(GoodsReceiptNote, payload.grnId, {
+          status: 'quality_done',
+        });
+      }
+
+      await queryRunner.commitTransaction();
+      this.logger.log(`QC decision applied for GRN item ${payload.grnItemId}: approved=${payload.qtyApproved}, rejected=${payload.qtyRejected}`);
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+      this.logger.error(`Failed to apply QC decision for GRN item ${payload.grnItemId}: ${err.message}`, err.stack);
+    } finally {
+      await queryRunner.release();
+    }
   }
 
   private async generateNumber(prefix: string, companyId: string): Promise<string> {

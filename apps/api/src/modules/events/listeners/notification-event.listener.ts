@@ -503,4 +503,60 @@ export class NotificationEventListener {
       this.logger.error(`Failed to notify accountants of PO approval: ${err.message}`, err.stack);
     }
   }
+
+  @OnEvent('reject.document-note-routing')
+  async handleDocumentNoteRouting(payload: {
+    actionId: string;
+    actionNumber: string;
+    productName: string;
+    documentNoteType: string;
+    companyId: string;
+    userId: string;
+  }): Promise<void> {
+    try {
+      let roleCodes: string[];
+      let title: string;
+      let message: string;
+      let moduleName: string;
+
+      if (payload.documentNoteType === 'debit_note') {
+        roleCodes = ['ACCOUNTANT', 'CHIEF_ACCOUNTANT'];
+        title = 'Debit Note – Reject Action';
+        message = `Reject action ${payload.actionNumber} for "${payload.productName}" requires a Debit Note. Please process accordingly.`;
+        moduleName = 'accounts';
+      } else if (payload.documentNoteType === 'return_material_note') {
+        roleCodes = ['PLANNER_MANAGER', 'PLANNER_USER'];
+        title = 'Return Material Note – Product Allocation Required';
+        message = `Reject action ${payload.actionNumber} for "${payload.productName}" requires a Return Material Note. Please allocate the product.`;
+        moduleName = 'planning';
+      } else {
+        return;
+      }
+
+      const placeholders = roleCodes.map((_, i) => `$${i + 1}`).join(', ');
+      const users = await this.dataSource.query(
+        `SELECT u.user_id FROM users u
+         INNER JOIN roles r ON u.role_id = r.role_id
+         WHERE r.role_code IN (${placeholders})
+         AND u.is_active = true
+         AND ($${roleCodes.length + 1}::text IS NULL OR u.company_id = $${roleCodes.length + 1})`,
+        [...roleCodes, payload.companyId || null],
+      );
+
+      for (const user of users) {
+        await this.triggerNotification({
+          userId: user.user_id,
+          companyId: payload.companyId || 'system',
+          title,
+          message,
+          moduleName,
+          recordId: payload.actionId,
+        });
+      }
+
+      this.logger.log(`Document note routing: sent ${payload.documentNoteType} notification to ${users.length} user(s) for ${payload.actionNumber}`);
+    } catch (err) {
+      this.logger.error(`Failed to route document note type for ${payload.actionNumber}: ${err.message}`, err.stack);
+    }
+  }
 }

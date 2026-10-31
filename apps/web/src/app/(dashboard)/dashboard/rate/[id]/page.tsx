@@ -3,7 +3,8 @@
 import { useState, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { rateApi, mastersApi } from '@/lib/api';
+import { rateApi, mastersApi, purchaseApi, salesApi, salesOrderApi } from '@/lib/api';
+import { useAuthStore } from '@/store/auth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -43,6 +44,12 @@ import {
   DollarSign,
   Truck,
   Activity,
+  FileText,
+  Clock,
+  ShoppingCart,
+  User,
+  AlertTriangle,
+  ArrowRight,
 } from 'lucide-react';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
@@ -63,6 +70,20 @@ const STATUS_CONFIG: Record<string, { color: string; label: string }> = {
   LOCKED: { color: 'bg-emerald-100 text-emerald-700', label: 'Locked' },
   REJECTED: { color: 'bg-red-100 text-red-700', label: 'Rejected' },
 };
+
+const ENQUIRY_STATUS_FLOW = [
+  { status: 'draft', label: 'Draft', icon: FileText, color: 'gray' },
+  { status: 'submitted', label: 'Submitted', icon: Send, color: 'blue' },
+  { status: 'purchase_assigned', label: 'Purchase Assigned', icon: User, color: 'indigo' },
+  { status: 'purchase_in_progress', label: 'Purchase In Progress', icon: ShoppingCart, color: 'orange' },
+  { status: 'purchase_completed', label: 'Purchase Completed', icon: CheckCircle, color: 'teal' },
+  { status: 'mis_review', label: 'MIS Review', icon: Activity, color: 'purple' },
+  { status: 'mis_requote_required', label: 'Requote Required', icon: AlertTriangle, color: 'red' },
+  { status: 'mis_approved', label: 'MIS Approved', icon: CheckCircle, color: 'green' },
+  { status: 'rate_calculation', label: 'Rate Calculation', icon: Calculator, color: 'yellow' },
+  { status: 'approval_pending', label: 'Approval Pending', icon: Clock, color: 'indigo' },
+  { status: 'quotation_created', label: 'Quotation Created', icon: FileText, color: 'green' },
+];
 
 export default function RateDetailPage() {
   const params = useParams();
@@ -95,6 +116,12 @@ export default function RateDetailPage() {
   const [applyAllHaulage, setApplyAllHaulage] = useState(true);
   const [globalTargetCurrency, setGlobalTargetCurrency] = useState<string>('USD');
 
+  const { user } = useAuthStore();
+  const userRoles = useMemo(() => {
+    return user?.roles?.map((r: any) => r.roleCode?.toUpperCase()) || [user?.role?.toUpperCase()].filter(Boolean);
+  }, [user]);
+  const isAdmin = useMemo(() => userRoles.includes('ADMIN') || userRoles.includes('MANAGEMENT') || user?.isSuperAdmin, [userRoles, user]);
+
   // Fetch analysis data
   const { data: analysis, isLoading, refetch } = useQuery({
     queryKey: ['rate-analysis', analysisId],
@@ -102,6 +129,40 @@ export default function RateDetailPage() {
   });
 
   const analysisData = analysis?.data;
+
+  // Fetch linked enquiry for status stepper
+  const { data: linkedEnquiry } = useQuery({
+    queryKey: ['linked-enquiry', analysisData?.enquiryOrderId],
+    queryFn: () => salesApi.getEnquiry(analysisData.enquiryOrderId),
+    enabled: !!analysisData?.enquiryOrderId,
+  });
+
+  const enquiryStatus = linkedEnquiry?.data?.status;
+  const enquiryStepIndex = ENQUIRY_STATUS_FLOW.findIndex((s) => s.status === enquiryStatus);
+
+  // Mutation to advance enquiry status
+  const enquiryStatusMutation = useMutation({
+    mutationFn: ({ status }: { status: string }) =>
+      salesApi.updateEnquiryStatus(analysisData.enquiryOrderId, status),
+    onSuccess: () => {
+      toast.success('Enquiry status updated');
+      queryClient.invalidateQueries({ queryKey: ['linked-enquiry', analysisData?.enquiryOrderId] });
+    },
+    onError: (err: any) => toast.error(err.response?.data?.message || 'Failed to update enquiry status'),
+  });
+
+  const convertToOrderMutation = useMutation({
+    mutationFn: () => salesApi.convertToSalesOrder(analysisData.enquiryOrderId),
+    onSuccess: (res: any) => {
+      toast.success('Sales Order / Quotation created successfully');
+      queryClient.invalidateQueries({ queryKey: ['linked-enquiry', analysisData?.enquiryOrderId] });
+      const orderId = res?.data?.salesOrderId || res?.data?.id;
+      if (orderId) {
+        router.push(`/dashboard/sales/orders`);
+      }
+    },
+    onError: (err: any) => toast.error(err.response?.data?.message || 'Failed to create sales order'),
+  });
 
   // Sync state once analysis data loaded
   const [hasSynced, setHasSynced] = useState(false);
@@ -205,6 +266,16 @@ export default function RateDetailPage() {
     onError: (error: any) => toast.error(error?.response?.data?.message || 'Failed to lock'),
   });
 
+  // Approve linked purchase quote mutation
+  const approveQuoteMutation = useMutation({
+    mutationFn: () => purchaseApi.approveQuote(analysisData?.purchaseQuoteId, ''),
+    onSuccess: () => {
+      toast.success('Purchase Quote approved');
+      queryClient.invalidateQueries({ queryKey: ['rate-analysis', analysisId] });
+    },
+    onError: (error: any) => toast.error(error?.response?.data?.message || 'Failed to approve quote'),
+  });
+
   // Calculate mutation
   const calculateMutation = useMutation({
     mutationFn: () => rateApi.calculateAnalysis(analysisId),
@@ -262,6 +333,18 @@ export default function RateDetailPage() {
             Lock Rates
           </Button>
         );
+        break;
+      case 'locked':
+        if (analysisData?.purchaseQuoteId) {
+          buttons.push(
+            <Button key="approve-quote" onClick={() => {
+              approveQuoteMutation.mutate();
+            }} disabled={approveQuoteMutation.isPending} className="bg-green-600 hover:bg-green-700 text-white">
+              <CheckCircle className="h-4 w-4 mr-2" />
+              {approveQuoteMutation.isPending ? 'Approving...' : 'Approve Quote'}
+            </Button>
+          );
+        }
         break;
     }
 
@@ -348,6 +431,98 @@ export default function RateDetailPage() {
         </div>
       </div>
 
+      {/* Enquiry Status Stepper */}
+      {linkedEnquiry?.data && (
+        <Card className="border-slate-200">
+          <CardContent className="py-4">
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-xs font-semibold text-slate-600 uppercase tracking-wide">Enquiry Workflow</p>
+              {isAdmin && enquiryStatus === 'rate_calculation' && analysisData?.status === 'locked' && (
+                <Button
+                  size="sm"
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white"
+                  onClick={() => enquiryStatusMutation.mutate({ status: 'approval_pending' })}
+                  disabled={enquiryStatusMutation.isPending}
+                >
+                  <ArrowRight className="h-4 w-4 mr-2" />
+                  {enquiryStatusMutation.isPending ? 'Updating...' : 'Request Approval'}
+                </Button>
+              )}
+              {isAdmin && enquiryStatus === 'approval_pending' && (
+                <Button
+                  size="sm"
+                  className="bg-green-600 hover:bg-green-700 text-white"
+                  onClick={() => enquiryStatusMutation.mutate({ status: 'quotation_created' })}
+                  disabled={enquiryStatusMutation.isPending}
+                >
+                  <FileText className="h-4 w-4 mr-2" />
+                  {enquiryStatusMutation.isPending ? 'Updating...' : 'Approve & Create Quotation'}
+                </Button>
+              )}
+              {isAdmin && enquiryStatus === 'quotation_created' && (
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                    onClick={() => convertToOrderMutation.mutate()}
+                    disabled={convertToOrderMutation.isPending}
+                  >
+                    <FileText className="h-4 w-4 mr-2" />
+                    {convertToOrderMutation.isPending ? 'Creating...' : 'Convert to Sales Order'}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="border-green-300 text-green-700 hover:bg-green-50"
+                    onClick={() => enquiryStatusMutation.mutate({ status: 'won' })}
+                    disabled={enquiryStatusMutation.isPending}
+                  >
+                    <CheckCircle className="h-4 w-4 mr-2" />Mark Won
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="border-red-300 text-red-700 hover:bg-red-50"
+                    onClick={() => enquiryStatusMutation.mutate({ status: 'lost' })}
+                    disabled={enquiryStatusMutation.isPending}
+                  >
+                    <XCircle className="h-4 w-4 mr-2" />Mark Lost
+                  </Button>
+                </div>
+              )}
+            </div>
+            <div className="flex items-center overflow-x-auto pb-1">
+              {ENQUIRY_STATUS_FLOW.filter(s => s.status !== 'mis_requote_required').map((step, i, arr) => {
+                const isCompleted = enquiryStepIndex > ENQUIRY_STATUS_FLOW.indexOf(step);
+                const isCurrent = step.status === enquiryStatus;
+                const Icon = step.icon;
+                return (
+                  <div key={step.status} className="flex items-center shrink-0">
+                    <div className="flex flex-col items-center">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                        isCompleted ? 'bg-green-500 text-white' :
+                        isCurrent ? 'bg-blue-600 text-white ring-2 ring-blue-300' :
+                        'bg-gray-200 text-gray-400'
+                      }`}>
+                        <Icon className="h-4 w-4" />
+                      </div>
+                      <span className={`text-[9px] mt-1 text-center max-w-[70px] leading-tight ${
+                        isCurrent ? 'font-bold text-blue-700' : isCompleted ? 'text-green-700' : 'text-gray-400'
+                      }`}>
+                        {step.label}
+                      </span>
+                    </div>
+                    {i < arr.length - 1 && (
+                      <div className={`w-6 h-0.5 mx-0.5 mt-[-12px] ${isCompleted ? 'bg-green-400' : 'bg-gray-200'}`} />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Analysis Details at the top */}
       <Card>
         <CardHeader>
@@ -397,22 +572,6 @@ export default function RateDetailPage() {
           <DollarSign className="h-3.5 w-3.5 text-blue-600" /> Currency & Haulage
         </span>
         <div className="flex items-center gap-4">
-          {/* Currency Apply-All Toggle */}
-          <div className="flex items-center gap-1.5">
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input type="checkbox" checked={applyAllCurrency} onChange={(e) => setApplyAllCurrency(e.target.checked)} className="sr-only peer" disabled={isLocked} />
-              <div className="w-8 h-4 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[0px] after:left-[0px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
-            </label>
-            <span className="text-[10px] font-medium text-slate-600">Currency {applyAllCurrency ? '(All)' : '(Per Product)'}</span>
-          </div>
-          {/* Haulage Apply-All Toggle */}
-          <div className="flex items-center gap-1.5">
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input type="checkbox" checked={applyAllHaulage} onChange={(e) => setApplyAllHaulage(e.target.checked)} className="sr-only peer" disabled={isLocked} />
-              <div className="w-8 h-4 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[0px] after:left-[0px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
-            </label>
-            <span className="text-[10px] font-medium text-slate-600">Haulage {applyAllHaulage ? '(All)' : '(Per Product)'}</span>
-          </div>
           {isRatesSettingsDirty && (
             <Button size="sm" onClick={handleSaveRates} className="h-6 text-[10px] px-2 bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-1">
               <Save className="h-3 w-3" /> Save
@@ -420,138 +579,78 @@ export default function RateDetailPage() {
           )}
         </div>
       </div>
-      <div className="grid grid-cols-7 gap-1.5">
-        {/* GBP */}
-        <div className="rounded-md border border-blue-200 bg-blue-50/60 p-1.5">
-          <p className="text-[10px] font-bold text-blue-700 text-center mb-1">GBP</p>
-          <div className="flex items-center gap-1 text-[9px] mb-0.5">
-            <span className="text-slate-500 w-7 shrink-0">Rate</span>
-            <input title="GBP Base Rate" type="number" step="0.01" className="w-full h-4 px-0.5 text-right border rounded font-mono bg-white text-[9px]" value={gbpRate || 0} onChange={(e) => setGbpRate(Number(e.target.value))} disabled={isLocked} />
-          </div>
-          <div className="flex items-center gap-1 text-[9px] mb-0.5">
-            <span className="text-slate-500 w-7 shrink-0">Buf.</span>
-            <input title="GBP Buffer" type="number" step="0.01" className="w-full h-4 px-0.5 text-right border rounded font-mono bg-white text-[9px]" value={gbpMargin || 0} onChange={(e) => setGbpMargin(Number(e.target.value))} disabled={isLocked} />
-          </div>
-          <div className="border-t border-blue-200 pt-0.5 flex justify-between text-[9px] font-bold text-blue-900 font-mono">
-            <span>Final</span><span>{finalGbp.toFixed(2)}</span>
-          </div>
-        </div>
-
-        {/* USD */}
-        <div className="rounded-md border border-green-200 bg-green-50/60 p-1.5">
-          <p className="text-[10px] font-bold text-green-700 text-center mb-1">USD</p>
-          <div className="flex items-center gap-1 text-[9px] mb-0.5">
-            <span className="text-slate-500 w-7 shrink-0">Rate</span>
-            <input title="USD Base Rate" type="number" step="0.01" className="w-full h-4 px-0.5 text-right border rounded font-mono bg-white text-[9px]" value={usdRate || 0} onChange={(e) => setUsdRate(Number(e.target.value))} disabled={isLocked} />
-          </div>
-          <div className="flex items-center gap-1 text-[9px] mb-0.5">
-            <span className="text-slate-500 w-7 shrink-0">Buf.</span>
-            <input title="USD Buffer" type="number" step="0.01" className="w-full h-4 px-0.5 text-right border rounded font-mono bg-white text-[9px]" value={usdMargin || 0} onChange={(e) => setUsdMargin(Number(e.target.value))} disabled={isLocked} />
-          </div>
-          <div className="border-t border-green-200 pt-0.5 flex justify-between text-[9px] font-bold text-green-900 font-mono">
-            <span>Final</span><span>{finalUsd.toFixed(2)}</span>
-          </div>
-        </div>
-
-        {/* CAD */}
-        <div className="rounded-md border border-orange-200 bg-orange-50/60 p-1.5">
-          <p className="text-[10px] font-bold text-orange-700 text-center mb-1">CAD</p>
-          <div className="flex items-center gap-1 text-[9px] mb-0.5">
-            <span className="text-slate-500 w-7 shrink-0">Rate</span>
-            <input title="CAD Base Rate" type="number" step="0.01" className="w-full h-4 px-0.5 text-right border rounded font-mono bg-white text-[9px]" value={cadRate || 0} onChange={(e) => setCadRate(Number(e.target.value))} disabled={isLocked} />
-          </div>
-          <div className="flex items-center gap-1 text-[9px] mb-0.5">
-            <span className="text-slate-500 w-7 shrink-0">Buf.</span>
-            <input title="CAD Buffer" type="number" step="0.01" className="w-full h-4 px-0.5 text-right border rounded font-mono bg-white text-[9px]" value={cadMargin || 0} onChange={(e) => setCadMargin(Number(e.target.value))} disabled={isLocked} />
-          </div>
-          <div className="border-t border-orange-200 pt-0.5 flex justify-between text-[9px] font-bold text-orange-900 font-mono">
-            <span>Final</span><span>{finalCad.toFixed(2)}</span>
-          </div>
-        </div>
-
-        {/* AUD */}
-        <div className="rounded-md border border-purple-200 bg-purple-50/60 p-1.5">
-          <p className="text-[10px] font-bold text-purple-700 text-center mb-1">AUD</p>
-          <div className="flex items-center gap-1 text-[9px] mb-0.5">
-            <span className="text-slate-500 w-7 shrink-0">Rate</span>
-            <input title="AUD Base Rate" type="number" step="0.01" className="w-full h-4 px-0.5 text-right border rounded font-mono bg-white text-[9px]" value={audRate || 0} onChange={(e) => setAudRate(Number(e.target.value))} disabled={isLocked} />
-          </div>
-          <div className="flex items-center gap-1 text-[9px] mb-0.5">
-            <span className="text-slate-500 w-7 shrink-0">Buf.</span>
-            <input title="AUD Buffer" type="number" step="0.01" className="w-full h-4 px-0.5 text-right border rounded font-mono bg-white text-[9px]" value={audMargin || 0} onChange={(e) => setAudMargin(Number(e.target.value))} disabled={isLocked} />
-          </div>
-          <div className="border-t border-purple-200 pt-0.5 flex justify-between text-[9px] font-bold text-purple-900 font-mono">
-            <span>Final</span><span>{finalAud.toFixed(2)}</span>
-          </div>
-        </div>
-
-        {/* EURO */}
-        <div className="rounded-md border border-red-200 bg-red-50/60 p-1.5">
-          <p className="text-[10px] font-bold text-red-700 text-center mb-1">EURO</p>
-          <div className="flex items-center gap-1 text-[9px] mb-0.5">
-            <span className="text-slate-500 w-7 shrink-0">Rate</span>
-            <input title="EURO Base Rate" type="number" step="0.01" className="w-full h-4 px-0.5 text-right border rounded font-mono bg-white text-[9px]" value={euroRate || 0} onChange={(e) => setEuroRate(Number(e.target.value))} disabled={isLocked} />
-          </div>
-          <div className="flex items-center gap-1 text-[9px] mb-0.5">
-            <span className="text-slate-500 w-7 shrink-0">Buf.</span>
-            <input title="EURO Buffer" type="number" step="0.01" className="w-full h-4 px-0.5 text-right border rounded font-mono bg-white text-[9px]" value={euroMargin || 0} onChange={(e) => setEuroMargin(Number(e.target.value))} disabled={isLocked} />
-          </div>
-          <div className="border-t border-red-200 pt-0.5 flex justify-between text-[9px] font-bold text-red-900 font-mono">
-            <span>Final</span><span>{finalEuro.toFixed(2)}</span>
-          </div>
-        </div>
+      <div className="grid grid-cols-3 gap-2">
+        {/* Active Currency - only show the one used in this enquiry */}
+        {(() => {
+          const cur = (analysisData.currency || globalTargetCurrency || 'USD').toUpperCase();
+          const currencyConfig: Record<string, { border: string; bg: string; text: string; darkText: string; rate: number; setRate: (v: number) => void; margin: number; setMargin: (v: number) => void; final: number }> = {
+            GBP: { border: 'border-blue-200', bg: 'bg-blue-50/60', text: 'text-blue-700', darkText: 'text-blue-900', rate: gbpRate, setRate: setGbpRate, margin: gbpMargin, setMargin: setGbpMargin, final: finalGbp },
+            USD: { border: 'border-green-200', bg: 'bg-green-50/60', text: 'text-green-700', darkText: 'text-green-900', rate: usdRate, setRate: setUsdRate, margin: usdMargin, setMargin: setUsdMargin, final: finalUsd },
+            CAD: { border: 'border-orange-200', bg: 'bg-orange-50/60', text: 'text-orange-700', darkText: 'text-orange-900', rate: cadRate, setRate: setCadRate, margin: cadMargin, setMargin: setCadMargin, final: finalCad },
+            AUD: { border: 'border-purple-200', bg: 'bg-purple-50/60', text: 'text-purple-700', darkText: 'text-purple-900', rate: audRate, setRate: setAudRate, margin: audMargin, setMargin: setAudMargin, final: finalAud },
+            EUR: { border: 'border-red-200', bg: 'bg-red-50/60', text: 'text-red-700', darkText: 'text-red-900', rate: euroRate, setRate: setEuroRate, margin: euroMargin, setMargin: setEuroMargin, final: finalEuro },
+            EURO: { border: 'border-red-200', bg: 'bg-red-50/60', text: 'text-red-700', darkText: 'text-red-900', rate: euroRate, setRate: setEuroRate, margin: euroMargin, setMargin: setEuroMargin, final: finalEuro },
+          };
+          const c = currencyConfig[cur] || currencyConfig['USD'];
+          const label = cur === 'EURO' ? 'EUR' : cur;
+          return (
+            <div className={`rounded-md border ${c.border} ${c.bg} p-2`}>
+              <p className={`text-xs font-bold ${c.text} text-center mb-1.5`}>{label}</p>
+              <div className="flex items-center gap-1.5 text-[10px] mb-1">
+                <span className="text-slate-500 w-8 shrink-0">Rate</span>
+                <input title={`${label} Base Rate`} type="number" step="0.01" className="w-full h-5 px-1 text-right border rounded font-mono bg-white text-[10px]" value={c.rate || 0} onChange={(e) => c.setRate(Number(e.target.value))} disabled={isLocked} />
+              </div>
+              <div className="flex items-center gap-1.5 text-[10px] mb-1">
+                <span className="text-slate-500 w-8 shrink-0">Buf.</span>
+                <input title={`${label} Buffer`} type="number" step="0.01" className="w-full h-5 px-1 text-right border rounded font-mono bg-white text-[10px]" value={c.margin || 0} onChange={(e) => c.setMargin(Number(e.target.value))} disabled={isLocked} />
+              </div>
+              <div className={`border-t ${c.border} pt-1 flex justify-between text-[10px] font-bold ${c.darkText} font-mono`}>
+                <span>Final</span><span>{c.final.toFixed(2)}</span>
+              </div>
+            </div>
+          );
+        })()}
 
         {/* Haulage */}
-        <div className="rounded-md border border-yellow-200 bg-yellow-50/60 p-1.5">
-          <p className="text-[10px] font-bold text-yellow-700 text-center mb-1">HAULAGE</p>
-          <div className="text-[9px] mb-0.5">
-            <select title="Haulage Location" aria-label="Haulage Location" className="w-full h-4 border rounded font-mono bg-white text-[9px]" value={haulageLocation} onChange={(e) => setHaulageLocation(e.target.value)} disabled={isLocked}>
+        <div className="rounded-md border border-yellow-200 bg-yellow-50/60 p-2">
+          <p className="text-xs font-bold text-yellow-700 text-center mb-1.5">HAULAGE</p>
+          <div className="text-[10px] mb-1">
+            <select title="Haulage Location" aria-label="Haulage Location" className="w-full h-5 border rounded font-mono bg-white text-[10px]" value={haulageLocation} onChange={(e) => setHaulageLocation(e.target.value)} disabled={isLocked}>
               <option value="DELHI">Delhi</option>
               <option value="MUMBAI">Mumbai</option>
             </select>
           </div>
-          <div className="flex items-center gap-1 text-[9px] mb-0.5">
-            <span className="text-slate-500 w-7 shrink-0">₹</span>
-            <input title="Haulage Rate INR" type="number" className="w-full h-4 px-0.5 text-right border rounded font-mono bg-white text-[9px]" value={totalHaulage || 0} onChange={(e) => setTotalHaulage(Number(e.target.value))} disabled={isLocked} />
+          <div className="flex items-center gap-1.5 text-[10px] mb-1">
+            <span className="text-slate-500 w-8 shrink-0">₹</span>
+            <input title="Haulage Rate INR" type="number" className="w-full h-5 px-1 text-right border rounded font-mono bg-white text-[10px]" value={totalHaulage || 0} onChange={(e) => setTotalHaulage(Number(e.target.value))} disabled={isLocked} />
           </div>
-          <div className="border-t border-yellow-200 pt-0.5 text-[9px] font-bold text-yellow-800 font-mono text-right">
+          <div className="border-t border-yellow-200 pt-1 text-[10px] font-bold text-yellow-800 font-mono text-right">
             ₹{(totalHaulage || 0).toLocaleString()}
           </div>
         </div>
 
         {/* Freight */}
-        <div className="rounded-md border border-amber-200 bg-amber-50/60 p-1.5">
-          <p className="text-[10px] font-bold text-amber-700 text-center mb-1">FREIGHT</p>
-          <div className="text-[9px] mb-0.5">
-            <span className="text-slate-500 text-[8px]">{analysisData.paymentTerms || 'CIF'} • {analysisData.country || 'Dest.'}</span>
+        <div className="rounded-md border border-amber-200 bg-amber-50/60 p-2">
+          <p className="text-xs font-bold text-amber-700 text-center mb-1.5">FREIGHT</p>
+          <div className="text-[10px] mb-1">
+            <span className="text-slate-500 text-[9px]">{analysisData.paymentTerms || 'CIF'} • {analysisData.country || 'Dest.'}</span>
           </div>
-          <div className="flex items-center gap-1 text-[9px] mb-0.5">
-            <span className="text-slate-500 w-7 shrink-0">$</span>
-            <input title="Freight USD" type="number" className="w-full h-4 px-0.5 text-right border rounded font-mono bg-white text-[9px]" value={freightUSD || 100} onChange={(e) => setFreightUSD(Number(e.target.value))} disabled={isLocked} />
+          <div className="flex items-center gap-1.5 text-[10px] mb-1">
+            <span className="text-slate-500 w-8 shrink-0">$</span>
+            <input title="Freight USD" type="number" className="w-full h-5 px-1 text-right border rounded font-mono bg-white text-[10px]" value={freightUSD || 100} onChange={(e) => setFreightUSD(Number(e.target.value))} disabled={isLocked} />
           </div>
-          <div className="border-t border-amber-200 pt-0.5 text-[9px] font-bold text-amber-800 font-mono text-right">
+          <div className="border-t border-amber-200 pt-1 text-[10px] font-bold text-amber-800 font-mono text-right">
             ${freightUSD || 100}
           </div>
         </div>
       </div>
 
-      {/* Global Target Currency selector (when Apply All Currency is ON) */}
-      {applyAllCurrency && (
-        <div className="flex items-center gap-2 mt-1 p-1.5 bg-blue-50 border border-blue-200 rounded-md">
-          <span className="text-[10px] font-semibold text-blue-700">Target Currency for All Products:</span>
-          <select
-            className="h-5 text-[10px] border border-blue-300 rounded px-1 bg-white font-mono font-bold text-blue-800 outline-none cursor-pointer"
-            value={globalTargetCurrency}
-            onChange={(e) => setGlobalTargetCurrency(e.target.value)}
-            disabled={isLocked}
-          >
-            {['USD', 'GBP', 'EUR', 'CAD', 'AUD'].map(c => (
-              <option key={c} value={c}>{c}</option>
-            ))}
-          </select>
-          <span className="text-[9px] text-blue-500 italic">All product rows will use this currency</span>
-        </div>
-      )}
+      {/* Currency info - shows which currency this enquiry uses */}
+      <div className="flex items-center gap-2 mt-1 p-1.5 bg-blue-50 border border-blue-200 rounded-md">
+        <span className="text-[10px] font-semibold text-blue-700">Enquiry Currency:</span>
+        <span className="text-[10px] font-mono font-bold text-blue-800">{(analysisData.currency || 'USD').toUpperCase()}</span>
+        <span className="text-[9px] text-blue-500 italic">All product rows use this currency</span>
+      </div>
 
       {/* Main Rate Calculation Grid */}
       <div className="space-y-4">

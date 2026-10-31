@@ -98,13 +98,54 @@ export class ReceivingPlanController {
   ) {
     return this.receivingPlanService.getPlannerData(
       {
-        userId: user?.sub,
+        userId: user?.userId,
         companyId: user?.companyId,
         warehouseId: user?.warehouseId,
         name: user?.name,
       },
       { search, page: page ? Number(page) : 1, limit: limit ? Number(limit) : 100 },
     );
+  }
+
+  @Get('workflow-tracker')
+  @Permissions('RECEIVING_PLAN_VIEW')
+  @ApiOperation({ summary: 'Get workflow tracker data: plan → PO → GRN → production pipeline' })
+  @ApiQuery({ name: 'search', required: false, type: String })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  getWorkflowTracker(
+    @Query('search') search?: string,
+    @Query('page') page?: number,
+    @Query('limit') limit?: number,
+    @CurrentUser() user?: any,
+  ) {
+    return this.receivingPlanService.getWorkflowTracker(
+      user?.companyId,
+      { search, page: page ? Number(page) : 1, limit: limit ? Number(limit) : 50 },
+    );
+  }
+
+  @Get('grn-list')
+  @Permissions('RECEIVING_PLAN_VIEW')
+  @ApiOperation({ summary: 'List all GRNs with search/filter/pagination' })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiQuery({ name: 'search', required: false, type: String })
+  @ApiQuery({ name: 'warehouseId', required: false, type: String })
+  listAllGrns(
+    @Query('page') page?: number,
+    @Query('limit') limit?: number,
+    @Query('search') search?: string,
+    @Query('warehouseId') warehouseId?: string,
+    @CurrentUser() user?: any,
+  ) {
+    return this.receivingPlanService.listAllGrns({
+      companyId: user?.companyId,
+      search,
+      warehouseId,
+      page: page ? Number(page) : 1,
+      limit: limit ? Number(limit) : 20,
+    });
   }
 
   @Get('grn/:grnId')
@@ -216,8 +257,8 @@ export class ReceivingPlanController {
   allocateToWarehouses(@Body() dto: AllocateToWarehousesDto, @CurrentUser() user: any) {
     return this.receivingPlanService.allocateToWarehouses(
       dto,
-      user?.sub,
-      user?.name || user?.email || user?.sub,
+      user?.userId,
+      user?.name || user?.email || user?.userId,
       user?.companyId,
     );
   }
@@ -228,8 +269,8 @@ export class ReceivingPlanController {
   bulkAllocate(@Body() dto: BulkAllocateDto, @CurrentUser() user: any) {
     return this.receivingPlanService.bulkAllocate(
       dto,
-      user?.sub,
-      user?.name || user?.email || user?.sub,
+      user?.userId,
+      user?.name || user?.email || user?.userId,
       user?.companyId,
     );
   }

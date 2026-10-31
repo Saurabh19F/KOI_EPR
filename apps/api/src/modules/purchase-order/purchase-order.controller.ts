@@ -68,7 +68,7 @@ export class PurchaseOrderController {
     @Query('myOrders') myOrders?: string,
     @CurrentUser() user?: any,
   ) {
-    const userId = user?.sub || user?.userId;
+    const userId = user?.userId;
     const userRoles: string[] = (user?.roles || []).map((r: string) => r.toUpperCase());
     const isPurchaseUser = userRoles.includes('PURCHASE_USER');
     const canViewAll = user?.isSuperAdmin || userRoles.includes('ADMIN') || userRoles.includes('PURCHASE_MANAGER') || userRoles.includes('MANAGEMENT');
@@ -152,11 +152,68 @@ export class PurchaseOrderController {
 
   // ============ DEBIT NOTES ============
 
+  @Get('debit-notes')
+  @Permissions('PURCHASE_VIEW', 'ACCOUNTS_VIEW')
+  @ApiOperation({ summary: 'List all debit notes' })
+  findAllDebitNotes(
+    @Query('page') page?: number,
+    @Query('limit') limit?: number,
+    @Query('search') search?: string,
+    @Query('status') status?: string,
+    @CurrentUser() user?: any,
+  ) {
+    return this.purchaseOrderService.findAllDebitNotes(
+      { page: page || 1, limit: limit || 25, search, status },
+      user?.companyId,
+    );
+  }
+
   @Post('debit-notes')
   @Permissions('PURCHASE_EDIT')
   @ApiOperation({ summary: 'Create a debit note' })
   createDebitNote(@Body() dto: CreateDebitNoteDto, @CurrentUser() user: any) {
     return this.purchaseOrderService.createDebitNote(dto, user?.userId, user?.companyId);
+  }
+
+  // ============ RETURN MATERIAL NOTES ============
+
+  @Get('return-material-notes')
+  @Permissions('PURCHASE_VIEW')
+  @ApiOperation({ summary: 'List all return material notes' })
+  findAllReturnMaterialNotes(
+    @Query('page') page?: number,
+    @Query('limit') limit?: number,
+    @Query('search') search?: string,
+    @Query('status') status?: string,
+    @CurrentUser() user?: any,
+  ) {
+    return this.purchaseOrderService.findAllReturnMaterialNotes(
+      { page: page || 1, limit: limit || 25, search, status },
+      user?.companyId,
+    );
+  }
+
+  @Get('return-material-notes/:id')
+  @Permissions('PURCHASE_VIEW')
+  @ApiOperation({ summary: 'Get a return material note by ID' })
+  findReturnMaterialNoteById(
+    @Param('id') id: string,
+    @CurrentUser() user?: any,
+  ) {
+    return this.purchaseOrderService.findReturnMaterialNoteById(id, user?.companyId);
+  }
+
+  @Patch('return-material-notes/:id/status')
+  @Permissions('PURCHASE_CREATE')
+  @ApiOperation({ summary: 'Update return material note status' })
+  updateReturnMaterialNoteStatus(
+    @Param('id') id: string,
+    @Body() body: { status: string; remarks?: string },
+    @CurrentUser() user?: any,
+  ) {
+    return this.purchaseOrderService.updateReturnMaterialNoteStatus(
+      id, body.status, body.remarks, user?.companyId,
+    );
   }
 
   // ============ VENDOR MASTER ============

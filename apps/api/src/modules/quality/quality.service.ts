@@ -1,7 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource, ILike } from 'typeorm';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { OnEvent } from '@nestjs/event-emitter';
 import {
   QualityLog,
   QualityLogStatus,
@@ -20,6 +21,8 @@ import { PaginatedResult } from '../../common/types';
 
 @Injectable()
 export class QualityService {
+  private readonly logger = new Logger(QualityService.name);
+
   constructor(
     @InjectRepository(QualityLog)
     private qcRepo: Repository<QualityLog>,
@@ -218,6 +221,94 @@ export class QualityService {
       });
     }
 
+    if (saved.grnId) {
+      this.eventEmitter.emit('quality.grn.decided', {
+        qualityLogId: saved.qcId,
+        qcNumber: saved.qcNumber,
+        grnId: saved.grnId,
+        grnNumber: saved.grnNumber,
+        grnItemId: saved.grnItemId,
+        orderId: saved.orderId,
+        productId: saved.productId,
+        productName: saved.productName,
+        sku: saved.sku,
+        warehouseId: saved.warehouseId,
+        warehouseName: saved.warehouseName,
+        qtyApproved: approved,
+        qtyRejected: rejected,
+        unitPrice: saved.unitPrice,
+        batchNumber: saved.batchNumber,
+        expiryDate: saved.expiryDate,
+        decision: saved.decision,
+        companyId: saved.companyId,
+        userId,
+      });
+    }
+
+    if (rejected > 0) {
+      try {
+        let vendorId = null;
+        let vendorName = null;
+
+        if (saved.orderId) {
+          const po = await this.dataSource.query(
+            `SELECT vendor_id, vendor_name FROM purchase_orders WHERE order_id::text = $1 LIMIT 1`,
+            [saved.orderId],
+          );
+          vendorId = po?.[0]?.vendor_id || null;
+          vendorName = po?.[0]?.vendor_name || null;
+        }
+
+        if (!vendorName && saved.grnId) {
+          const grn = await this.dataSource.query(
+            `SELECT vendor_id, vendor_name FROM goods_receipt_notes WHERE grn_id::text = $1 LIMIT 1`,
+            [saved.grnId],
+          );
+          vendorId = grn?.[0]?.vendor_id || null;
+          vendorName = grn?.[0]?.vendor_name || null;
+        }
+
+        const actionNumber = this.generateRejectNumber();
+        const rejectAction = this.rejectRepo.create({
+          actionNumber,
+          receiptId: saved.grnId || null,
+          purchaseOrderId: saved.orderId || null,
+          poNumber: null,
+          productId: saved.productId,
+          productName: saved.productName,
+          vendorId,
+          vendorName,
+          rejectedQty: rejected,
+          actionType: RejectActionType.PACKING_ISSUE,
+          actionDate: new Date(),
+          referenceNo: saved.grnNumber || saved.qcNumber,
+          companyId: saved.companyId,
+          status: RejectActionStatus.PENDING,
+          qualityRemarks: saved.remarks || `Rejected from QC ${saved.qcNumber}`,
+          createdBy: userId,
+        });
+        const savedAction = await this.rejectRepo.save(rejectAction);
+        this.logger.log(`Auto-created reject action ${actionNumber} for QC ${saved.qcNumber}, rejected qty: ${rejected}`);
+
+        if (saved.grnId) {
+          this.eventEmitter.emit('grn.items.rejected', {
+            actionId: savedAction.actionId,
+            actionNumber: savedAction.actionNumber,
+            grnId: saved.grnId,
+            grnNumber: saved.grnNumber,
+            orderId: saved.orderId,
+            productId: saved.productId,
+            productName: saved.productName,
+            rejectedQty: rejected,
+            companyId: saved.companyId,
+            userId,
+          });
+        }
+      } catch (err) {
+        this.logger.error(`Failed to auto-create reject action for QC ${saved.qcNumber}: ${err.message}`, err.stack);
+      }
+    }
+
     return saved;
   }
 
@@ -257,7 +348,7 @@ export class QualityService {
 
     const saved = await this.rejectRepo.save(action);
 
-    if (saved.actionType === RejectActionType.REPLACEMENT) {
+    if ((saved as any).actionType === 'replacement') {
       this.eventEmitter.emit('quality.reject.replacement', {
         actionId: saved.actionId,
         actionNumber: saved.actionNumber,
@@ -312,6 +403,25 @@ export class QualityService {
 
     const [data, total] = await qb.getManyAndCount();
 
+    const needsVendor = data.filter(d => !d.vendorName);
+    if (needsVendor.length > 0) {
+      const poIds = [...new Set(needsVendor.map(d => d.purchaseOrderId).filter(Boolean))];
+      if (poIds.length > 0) {
+        const pos = await this.dataSource.query(
+          `SELECT order_id, vendor_id, vendor_name FROM purchase_orders WHERE order_id::text = ANY($1)`,
+          [poIds],
+        );
+        const poMap = new Map(pos.map((p: any) => [p.order_id, p]));
+        for (const item of needsVendor) {
+          const po = poMap.get(item.purchaseOrderId);
+          if (po && po.vendor_name) {
+            item.vendorId = po.vendor_id;
+            item.vendorName = po.vendor_name;
+          }
+        }
+      }
+    }
+
     return {
       data,
       total,
@@ -348,7 +458,44 @@ export class QualityService {
     action.updatedBy = dto.updatedBy || userId;
     action.updatedByUserId = userId;
 
-    return this.rejectRepo.save(action);
+    const saved = await this.rejectRepo.save(action);
+
+    if (saved.isReplacementExpected && saved.replacementEta && saved.purchaseOrderId) {
+      this.eventEmitter.emit('reject.resolution.replacement', {
+        actionId: saved.actionId,
+        purchaseOrderId: saved.purchaseOrderId,
+        replacementEta: saved.replacementEta,
+        companyId: saved.companyId,
+        userId,
+      });
+    }
+
+    if (saved.isReplacementExpected === false && saved.resolutionPath && saved.purchaseOrderId) {
+      this.eventEmitter.emit('reject.resolution.no-replacement', {
+        actionId: saved.actionId,
+        purchaseOrderId: saved.purchaseOrderId,
+        productId: saved.productId,
+        companyId: saved.companyId,
+        userId,
+      });
+    }
+
+    if (saved.documentNoteType) {
+      this.eventEmitter.emit('reject.document-note-routing', {
+        actionId: saved.actionId,
+        actionNumber: saved.actionNumber,
+        purchaseOrderId: saved.purchaseOrderId,
+        poNumber: saved.poNumber,
+        productId: saved.productId,
+        productName: saved.productName,
+        rejectedQty: Number(saved.rejectedQty),
+        documentNoteType: saved.documentNoteType,
+        companyId: saved.companyId,
+        userId,
+      });
+    }
+
+    return saved;
   }
 
   async markReplacementReceived(id: string, userId: string): Promise<RejectActionLog> {
@@ -367,5 +514,56 @@ export class QualityService {
     action.updatedByUserId = userId;
 
     return this.rejectRepo.save(action);
+  }
+
+  @OnEvent('grn.created')
+  async handleGrnCreated(payload: {
+    grnId: string;
+    grnNumber: string;
+    grnItemId: string;
+    productId: string;
+    productName: string;
+    warehouseId: string;
+    warehouseName: string;
+    receivedQty: number;
+    sku?: string;
+    unitPrice?: number;
+    batchNumber?: string;
+    expiryDate?: string;
+    orderId?: string;
+    companyId: string;
+    userId: string;
+  }) {
+    try {
+      const qcNumber = this.generateQcNumber();
+
+      const qcLog = this.qcRepo.create({
+        qcNumber,
+        grnId: payload.grnId,
+        grnNumber: payload.grnNumber,
+        grnItemId: payload.grnItemId,
+        orderId: payload.orderId,
+        dateRequested: new Date(),
+        warehouseId: payload.warehouseId,
+        warehouseName: payload.warehouseName || '',
+        productId: payload.productId,
+        productName: payload.productName || '',
+        sku: payload.sku,
+        unitPrice: payload.unitPrice,
+        batchNumber: payload.batchNumber,
+        expiryDate: payload.expiryDate ? new Date(payload.expiryDate) : undefined,
+        qtyToInspect: payload.receivedQty,
+        companyId: payload.companyId,
+        status: QualityLogStatus.PENDING,
+        remarks: `Auto-created from GRN ${payload.grnNumber}`,
+        createdBy: payload.userId,
+        updatedBy: payload.userId,
+      });
+
+      await this.qcRepo.save(qcLog);
+      this.logger.log(`QC inspection ${qcNumber} auto-created for GRN ${payload.grnNumber}`);
+    } catch (err) {
+      this.logger.error(`Failed to auto-create QC for GRN ${payload.grnNumber}: ${err.message}`, err.stack);
+    }
   }
 }

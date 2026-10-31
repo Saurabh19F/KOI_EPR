@@ -323,7 +323,7 @@ export class SalesService {
     if (customerId) baseFilters.customerId = customerId;
     if (createdBy) baseFilters.createdBy = createdBy;
 
-    const currentUserId = currentUser?.sub || currentUser?.userId;
+    const currentUserId = currentUser?.userId;
 
     if (unassigned) {
       const unassignedItems = await this.dataSource.query(`
@@ -866,7 +866,7 @@ export class SalesService {
       const isSalesOrAdmin = roles.includes('ADMIN') || roles.includes('MANAGEMENT') || roles.includes('SALES_MANAGER') || roles.includes('SALES_USER') || roles.includes('MIS') || roles.includes('MIS_USER');
 
       if (isPurchaseUser && !isSalesOrAdmin) {
-        const currentUserId = currentUser.sub || currentUser.userId;
+        const currentUserId = currentUser.userId;
         where.assignedPurchaseUserId = currentUserId;
       }
     }

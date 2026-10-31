@@ -66,7 +66,7 @@ export class PurchaseService {
     if (!this.isRestrictedPurchaseUser(currentUser)) {
       return;
     }
-    const currentUserId = currentUser?.sub || currentUser?.userId;
+    const currentUserId = currentUser?.userId;
     if (productIds.length > 0) {
       // 1. Check if products are explicitly assigned to this user in the sales enquiry items (if enquiryOrderId is provided)
       let allowedProductIds: string[] = [];
@@ -134,7 +134,7 @@ export class PurchaseService {
     const quoteNo = await this.numberSeriesService.generateNumber('PURCHASE_QUOTE', 'PUR');
 
     const purchasePersonId = this.isRestrictedPurchaseUser(currentUser)
-      ? (currentUser.sub || currentUser.userId)
+      ? (currentUser.userId)
       : dto.purchasePersonId;
 
     const quote = this.quoteRepo.create({
@@ -167,7 +167,7 @@ export class PurchaseService {
     const quoteNo = await this.numberSeriesService.generateNumber('PURCHASE_QUOTE', 'PUR');
 
     const purchasePersonId = this.isRestrictedPurchaseUser(currentUser)
-      ? (currentUser.sub || currentUser.userId)
+      ? (currentUser.userId)
       : dto.purchasePersonId;
 
     const quote = this.quoteRepo.create({
@@ -213,7 +213,7 @@ export class PurchaseService {
     }
 
     if (this.isRestrictedPurchaseUser(currentUser)) {
-      const currentUserId = currentUser.sub || currentUser.userId;
+      const currentUserId = currentUser.userId;
       where.purchasePersonId = currentUserId;
     }
 
@@ -549,7 +549,7 @@ export class PurchaseService {
     if (!item) throw new NotFoundException('Quote Item not found');
 
     if (this.isRestrictedPurchaseUser(currentUser)) {
-      const currentUserId = currentUser.sub || currentUser.userId;
+      const currentUserId = currentUser.userId;
       const quote = await this.quoteRepo.findOne({ where: { quoteId: item.quoteId } });
       if (quote && quote.purchasePersonId && quote.purchasePersonId !== currentUserId) {
         throw new ForbiddenException('Access Denied: You cannot modify this item.');
@@ -591,7 +591,7 @@ export class PurchaseService {
     if (!item) throw new NotFoundException('Quote Item not found');
 
     if (this.isRestrictedPurchaseUser(currentUser)) {
-      const currentUserId = currentUser.sub || currentUser.userId;
+      const currentUserId = currentUser.userId;
       const quote = await this.quoteRepo.findOne({ where: { quoteId: item.quoteId } });
       if (quote && quote.purchasePersonId && quote.purchasePersonId !== currentUserId) {
         throw new ForbiddenException('Access Denied: You cannot delete this item.');

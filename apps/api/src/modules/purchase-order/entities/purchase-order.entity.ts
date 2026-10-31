@@ -709,6 +709,9 @@ export class GoodsReceiptNote {
   @Column({ nullable: true })
   notes: string;
 
+  @Column({ default: 'SINGLE' })
+  grnType: string;
+
   @Column({ default: 'pending' })
   status: string;
 
@@ -1112,6 +1115,70 @@ export class DebitNote {
 
   @Column({ nullable: true })
   irn: string;
+
+  @Column({ default: 'draft' })
+  status: string;
+
+  @Column({ default: true })
+  isActive: boolean;
+
+  @Column({ nullable: true })
+  createdBy: string;
+
+  @CreateDateColumn()
+  createdAt: Date;
+}
+
+@Entity('return_material_notes')
+@Index(['rmnNumber'], { unique: true })
+export class ReturnMaterialNote {
+  @PrimaryGeneratedColumn('uuid')
+  rmnId: string;
+
+  @Column({ nullable: true })
+  companyId: string;
+
+  @Column({ unique: true })
+  rmnNumber: string;
+
+  @Column()
+  vendorId: string;
+
+  @Column()
+  vendorName: string;
+
+  @Column({ nullable: true })
+  vendorGstin: string;
+
+  @Column({ nullable: true })
+  purchaseOrderId: string;
+
+  @Column({ nullable: true })
+  poNumber: string;
+
+  @Column({ nullable: true })
+  productId: string;
+
+  @Column({ nullable: true })
+  productName: string;
+
+  @Column({ type: 'decimal', precision: 18, scale: 3, default: 0 })
+  returnQty: number;
+
+  @Column({ type: 'decimal', precision: 18, scale: 2, default: 0 })
+  unitPrice: number;
+
+  @Column({ type: 'decimal', precision: 18, scale: 2, default: 0 })
+  totalAmount: number;
+
+  @Column()
+  rmnDate: Date;
+
+  @Column({ nullable: true })
+  reason: string;
+
+  @Column({ type: 'text', nullable: true })
+  notes: string;
 
   @Column({ default: 'draft' })
   status: string;
