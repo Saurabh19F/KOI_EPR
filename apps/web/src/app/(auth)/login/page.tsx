@@ -10,7 +10,6 @@ import {
   ArrowRight,
   BarChart3,
   Boxes,
-  CheckCircle2,
   Eye,
   EyeOff,
   FileSpreadsheet,
@@ -31,18 +30,6 @@ const loginSchema = z.object({
 });
 
 type LoginFormData = z.infer<typeof loginSchema>;
-
-const quickUsers = [
-  { email: 'jatin@erp.com', name: 'Jatin', role: 'Admin', tone: 'bg-amber-500' },
-  { email: 'admin@erp.com', name: 'Admin', role: 'Admin', tone: 'bg-emerald-600' },
-  { email: 'neha@erp.com', name: 'Neha', role: 'Sales', tone: 'bg-sky-600' },
-  { email: 'hitesh@erp.com', name: 'Hitesh', role: 'Sales', tone: 'bg-sky-500' },
-  { email: 'amit@erp.com', name: 'Amit', role: 'Purchase', tone: 'bg-orange-500' },
-  { email: 'sunil@erp.com', name: 'Sunil', role: 'Purchase', tone: 'bg-orange-400' },
-  { email: 'nipur@erp.com', name: 'Nipur', role: 'Costing', tone: 'bg-violet-500' },
-  { email: 'kapil@erp.com', name: 'Kapil', role: 'Purchase', tone: 'bg-lime-600' },
-  { email: 'mis@erp.com', name: 'MIS User', role: 'MIS', tone: 'bg-teal-500' },
-];
 
 const workflowCards = [
   {
@@ -94,17 +81,10 @@ export default function LoginPage() {
   const {
     register,
     handleSubmit,
-    setValue,
     formState: { errors },
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
   });
-
-  const quickLogin = (email: string) => {
-    clearError();
-    setValue('email', email, { shouldValidate: true });
-    setValue('password', 'admin123', { shouldValidate: true });
-  };
 
   const onSubmit = async (data: LoginFormData) => {
     try {
@@ -348,28 +328,6 @@ export default function LoginPage() {
                 </button>
               </form>
 
-              <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 p-2.5">
-                <div className="mb-3 flex items-center justify-between gap-3">
-                  <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">Quick access</p>
-                  <CheckCircle2 className="h-4 w-4 text-emerald-700" />
-                </div>
-                <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
-                  {quickUsers.map((user) => (
-                    <button
-                      key={user.email}
-                      type="button"
-                      onClick={() => quickLogin(user.email)}
-                      className="min-w-0 rounded-lg border border-transparent bg-white px-2 py-2 text-left shadow-sm transition hover:border-[#d2a66c] hover:bg-[#fffaf2] sm:px-2.5 sm:py-1.5"
-                    >
-                      <div className="mb-1 flex items-center gap-1.5">
-                        <span className={`h-2 w-2 rounded-full ${user.tone}`} />
-                        <span className="truncate text-xs font-bold text-slate-950">{user.name}</span>
-                      </div>
-                      <p className="truncate text-[10px] font-semibold uppercase tracking-wide text-slate-400">{user.role}</p>
-                    </button>
-                  ))}
-                </div>
-              </div>
             </div>
 
             <p className="mt-5 text-center text-xs font-medium text-slate-500">
