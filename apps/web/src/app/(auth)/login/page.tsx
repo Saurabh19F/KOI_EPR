@@ -99,16 +99,21 @@ export default function LoginPage() {
     <main className="min-h-screen bg-[#f6f7f2] text-slate-950">
       <div className="grid min-h-screen lg:h-screen lg:grid-cols-[minmax(0,1.08fr)_minmax(420px,0.92fr)] lg:overflow-hidden">
         <section className="relative hidden h-full overflow-hidden border-r border-black/10 bg-[#f7f3ea] lg:flex lg:flex-col">
+          {/* Animated gradient orbs */}
+          <div className="login-orb" style={{ width: '300px', height: '300px', top: '10%', right: '-5%', background: 'rgba(154, 107, 54, 0.06)' }} />
+          <div className="login-orb" style={{ width: '250px', height: '250px', bottom: '15%', left: '-8%', background: 'rgba(15, 47, 41, 0.05)', animationDelay: '-4s' }} />
+          <div className="login-orb" style={{ width: '180px', height: '180px', top: '50%', right: '30%', background: 'rgba(16, 185, 129, 0.04)', animationDelay: '-8s' }} />
+
           <div
-            className="absolute inset-0 opacity-[0.18]"
+            className="absolute inset-0 opacity-[0.14]"
             style={{
               backgroundImage:
-                'linear-gradient(rgba(15,23,42,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(15,23,42,0.08) 1px, transparent 1px)',
+                'linear-gradient(rgba(15,23,42,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(15,23,42,0.06) 1px, transparent 1px)',
               backgroundSize: '36px 36px',
             }}
           />
 
-          <div className="relative z-10 flex items-center justify-between px-10 py-6">
+          <div className={`relative z-10 flex items-center justify-between px-10 py-6 ${mounted ? 'login-fade-up' : 'opacity-0'}`}>
             <div className="flex items-center gap-4">
               <KoiLogo variant="icon" className="h-12 w-12 rounded-xl border-black/10" />
               <div>
@@ -118,7 +123,7 @@ export default function LoginPage() {
                 <h1 className="text-2xl font-bold tracking-tight text-slate-950">KOI ERP</h1>
               </div>
             </div>
-            <div className="flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-800">
+            <div className="flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-800 animate-glow">
               <ShieldCheck className="h-3.5 w-3.5" />
               Secure workspace
             </div>
@@ -126,8 +131,8 @@ export default function LoginPage() {
 
           <div className="relative z-10 flex flex-1 flex-col justify-center px-10 pb-7">
             <div className={`max-w-3xl ${mounted ? 'login-fade-up' : 'opacity-0'}`}>
-              <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#d2a66c]/40 bg-white/70 px-3 py-1 text-xs font-semibold text-[#8a5b25] shadow-sm">
-                <Sparkles className="h-3.5 w-3.5" />
+              <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#d2a66c]/40 bg-white/70 px-3 py-1 text-xs font-semibold text-[#8a5b25] shadow-sm backdrop-blur-sm animate-border-glow">
+                <Sparkles className="h-3.5 w-3.5 animate-pulse-ring" />
                 Operations command center
               </p>
               <h2 className="max-w-2xl text-4xl font-bold leading-[1.04] tracking-tight text-slate-950 2xl:text-5xl">
@@ -138,12 +143,12 @@ export default function LoginPage() {
               </p>
             </div>
 
-            <div className={`mt-5 grid max-w-3xl grid-cols-4 gap-3 ${mounted ? 'login-fade-up login-delay-2' : 'opacity-0'}`}>
+            <div className={`mt-5 grid max-w-3xl grid-cols-4 gap-3 stagger-children ${mounted ? '' : 'opacity-0'}`} style={{ opacity: mounted ? 1 : 0, transition: 'opacity 0.3s' }}>
               {workflowCards.map((item) => {
                 const Icon = item.icon;
                 return (
-                  <div key={item.label} className="rounded-xl border border-black/10 bg-white/80 p-2.5 shadow-sm backdrop-blur">
-                    <div className={`mb-2 flex h-8 w-8 items-center justify-center rounded-lg ${item.bg} ${item.color}`}>
+                  <div key={item.label} className="workflow-card-hover rounded-xl border border-black/10 bg-white/80 p-2.5 shadow-sm backdrop-blur-sm cursor-default">
+                    <div className={`workflow-icon mb-2 flex h-8 w-8 items-center justify-center rounded-lg ${item.bg} ${item.color} transition-transform`}>
                       <Icon className="h-4 w-4" />
                     </div>
                     <p className="text-sm font-bold text-slate-950">{item.label}</p>
@@ -154,25 +159,25 @@ export default function LoginPage() {
             </div>
 
             <div className={`mt-4 grid max-w-3xl grid-cols-[1.05fr_0.95fr] gap-4 ${mounted ? 'login-fade-up login-delay-3' : 'opacity-0'}`}>
-              <div className="overflow-hidden rounded-xl border border-black/10 bg-white shadow-xl shadow-slate-900/10">
+              <div className="group overflow-hidden rounded-xl border border-black/10 bg-white shadow-xl shadow-slate-900/10 transition-all duration-500 hover:shadow-2xl hover:-translate-y-1">
                 <img
                   src="/feature_sales_dashboard.png"
                   alt="KOI ERP sales dashboard"
-                  className="h-36 w-full object-cover object-left-top"
+                  className="h-36 w-full object-cover object-left-top transition-transform duration-700 group-hover:scale-105"
                 />
               </div>
               <div className="flex flex-col gap-3">
-                <div className="rounded-xl border border-black/10 bg-[#10231f] p-3 text-white shadow-lg">
+                <div className={`rounded-xl border border-black/10 bg-[#10231f] p-3 text-white shadow-lg hover-glow-card ${mounted ? 'login-fade-up login-delay-4' : 'opacity-0'}`}>
                   <div className="flex items-center gap-3">
-                    <PackageCheck className="h-5 w-5 text-emerald-300" />
+                    <PackageCheck className="h-5 w-5 text-emerald-300 animate-pulse-ring" />
                     <span className="text-sm font-semibold">Live operations</span>
                   </div>
-                  <p className="mt-2 text-2xl font-bold">56+</p>
+                  <p className="mt-2 text-2xl font-bold number-pop" style={{ animationDelay: '0.6s' }}>56+</p>
                   <p className="mt-1 text-sm text-emerald-50/70">ERP panels connected to real workflows</p>
                 </div>
-                <div className="rounded-xl border border-black/10 bg-white p-3 shadow-sm">
+                <div className={`rounded-xl border border-black/10 bg-white p-3 shadow-sm hover-glow-card ${mounted ? 'login-fade-up login-delay-5' : 'opacity-0'}`}>
                   <div className="flex items-center gap-3">
-                    <FileSpreadsheet className="h-5 w-5 text-[#9a6b36]" />
+                    <FileSpreadsheet className="h-5 w-5 text-[#9a6b36] icon-hover" />
                     <span className="text-sm font-semibold text-slate-950">Data ready</span>
                   </div>
                   <p className="mt-2 text-xs leading-5 text-slate-600">
@@ -237,16 +242,16 @@ export default function LoginPage() {
               </div>
             </div>
 
-            <div className="rounded-xl border border-black/10 bg-white p-4 shadow-2xl shadow-slate-900/10 sm:p-5">
+            <div className="login-card-glow rounded-xl border border-black/10 bg-white/95 p-4 shadow-2xl shadow-slate-900/10 backdrop-blur-sm sm:p-5">
               <div className="mb-4 sm:mb-5">
                 <div className="mb-4 hidden items-center gap-3 lg:flex">
                   <KoiLogo variant="wordmark" />
                 </div>
-                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#9a6b36]">
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#9a6b36] animate-fade-in-left" style={{ animationDelay: '0.2s' }}>
                   Sign in
                 </p>
-                <h2 className="mt-2 text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">Welcome back</h2>
-                <p className="mt-1.5 text-sm leading-6 text-slate-500 sm:mt-2">
+                <h2 className="mt-2 text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl animate-fade-in-up" style={{ animationDelay: '0.3s' }}>Welcome back</h2>
+                <p className="mt-1.5 text-sm leading-6 text-slate-500 sm:mt-2 animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
                   Enter your workspace credentials to continue.
                 </p>
               </div>
@@ -259,18 +264,18 @@ export default function LoginPage() {
               )}
 
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                <div>
+                <div className="login-input-animated" style={{ animationDelay: '0.45s' }}>
                   <label htmlFor="email" className="mb-2 block text-sm font-semibold text-slate-800">
                     Email address
                   </label>
-                  <div className="relative">
-                    <Mail className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                  <div className="relative group">
+                    <Mail className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 transition-colors group-focus-within:text-[#9a6b36]" />
                     <input
                       id="email"
                       type="email"
                       autoComplete="email"
                       placeholder="name@company.com"
-                      className="h-11 w-full rounded-lg border border-slate-200 bg-slate-50 pl-10 pr-4 text-sm font-medium text-slate-950 outline-none transition focus:border-emerald-600 focus:bg-white focus:ring-4 focus:ring-emerald-100 sm:h-10"
+                      className="h-11 w-full rounded-lg border border-slate-200 bg-slate-50 pl-10 pr-4 text-sm font-medium text-slate-950 outline-none transition-all duration-300 focus:border-[#9a6b36] focus:bg-white focus:ring-4 focus:ring-[#9a6b36]/10 focus:shadow-lg focus:shadow-[#9a6b36]/5 sm:h-10"
                       {...register('email', { onChange: clearError })}
                     />
                   </div>
@@ -282,23 +287,23 @@ export default function LoginPage() {
                   )}
                 </div>
 
-                <div>
+                <div className="login-input-animated" style={{ animationDelay: '0.55s' }}>
                   <div className="mb-2 flex items-center justify-between gap-3">
                     <label htmlFor="password" className="block text-sm font-semibold text-slate-800">
                       Password
                     </label>
-                    <button type="button" className="text-xs font-bold text-[#9a6b36] transition hover:text-[#6e481d]">
+                    <button type="button" className="text-xs font-bold text-[#9a6b36] transition-all hover:text-[#6e481d] hover:underline underline-offset-2">
                       Forgot password
                     </button>
                   </div>
-                  <div className="relative">
-                    <Lock className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                  <div className="relative group">
+                    <Lock className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 transition-colors group-focus-within:text-[#9a6b36]" />
                     <input
                       id="password"
                       type={showPassword ? 'text' : 'password'}
                       autoComplete="current-password"
                       placeholder="Enter password"
-                      className="h-11 w-full rounded-lg border border-slate-200 bg-slate-50 pl-10 pr-11 text-sm font-medium text-slate-950 outline-none transition focus:border-emerald-600 focus:bg-white focus:ring-4 focus:ring-emerald-100 sm:h-10"
+                      className="h-11 w-full rounded-lg border border-slate-200 bg-slate-50 pl-10 pr-11 text-sm font-medium text-slate-950 outline-none transition-all duration-300 focus:border-[#9a6b36] focus:bg-white focus:ring-4 focus:ring-[#9a6b36]/10 focus:shadow-lg focus:shadow-[#9a6b36]/5 sm:h-10"
                       {...register('password', { onChange: clearError })}
                     />
                     <button
@@ -318,14 +323,25 @@ export default function LoginPage() {
                   )}
                 </div>
 
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="group flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-[#10231f] px-4 text-sm font-bold text-white shadow-lg shadow-emerald-950/20 transition hover:bg-[#17352f] disabled:cursor-not-allowed disabled:opacity-60 sm:h-10"
-                >
-                  {isLoading ? 'Signing in...' : 'Open dashboard'}
-                  {!isLoading && <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />}
-                </button>
+                <div className="login-input-animated" style={{ animationDelay: '0.65s' }}>
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className="login-btn-shine group flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-[#10231f] to-[#0f2f29] px-4 text-sm font-bold text-white shadow-lg shadow-emerald-950/20 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 sm:h-10"
+                  >
+                    {isLoading ? (
+                      <span className="flex items-center gap-2">
+                        <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" /></svg>
+                        Signing in...
+                      </span>
+                    ) : (
+                      <>
+                        Open dashboard
+                        <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1.5" />
+                      </>
+                    )}
+                  </button>
+                </div>
               </form>
 
             </div>

@@ -448,12 +448,13 @@ export function Sidebar() {
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       className={cn(
-        'sticky top-0 flex h-screen flex-shrink-0 flex-col overflow-hidden bg-[#0d211d] text-white shadow-sidebar transition-all duration-300 ease-in-out',
+        'sticky top-0 flex h-screen flex-shrink-0 flex-col overflow-hidden text-white shadow-sidebar transition-all duration-300 ease-in-out',
         expanded ? 'w-64' : 'w-[68px]'
       )}
+      style={{ background: 'linear-gradient(180deg, #0d211d 0%, #091a16 40%, #060f0d 100%)' }}
     >
       {/* Logo */}
-      <div className={cn('flex h-[72px] items-center justify-center border-b border-white/10', expanded ? 'px-3' : 'px-2')}>
+      <div className={cn('flex h-[72px] items-center justify-center border-b border-white/[0.06]', expanded ? 'px-3' : 'px-2')}>
         <Link href="/dashboard" className="block">
           {expanded ? (
             <KoiLogo variant="wordmark" className="h-12 w-44 rounded-xl border-white/10" />
@@ -464,7 +465,7 @@ export function Sidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto overflow-x-hidden px-2 py-3">
+      <nav className="flex-1 overflow-y-auto overflow-x-hidden px-2 py-3 scrollbar-thin">
         {navItems.map((item) => (
           <NavItemView
             key={item.title}
@@ -482,7 +483,7 @@ export function Sidebar() {
       </nav>
 
       {/* User */}
-      <div className="border-t border-white/10 p-2">
+      <div className="border-t border-white/[0.06] p-2">
         {expanded ? (
           <>
             <div className="flex items-center gap-3 rounded-lg px-2 py-2">
@@ -580,8 +581,8 @@ function NavItemView({
       <Link
         href={item.href}
         className={cn(
-          'my-1 flex items-center justify-center rounded-lg py-3 text-[#bdd0c8] transition-colors hover:bg-white/10 hover:text-white',
-          (itemActive || hasActiveChild(item)) && 'bg-[#f7f3ea] text-[#0f2f29]'
+          'my-1 flex items-center justify-center rounded-xl py-3 text-[#bdd0c8] transition-all duration-200 hover:bg-white/[0.07] hover:text-white',
+          (itemActive || hasActiveChild(item)) && 'bg-gradient-to-r from-[#f7f3ea] to-[#efe8dc] text-[#0f2f29] shadow-sm'
         )}
         title={item.title}
       >
@@ -600,9 +601,9 @@ function NavItemView({
           onClick={() => toggleMenu(item.title)}
           style={{ paddingLeft }}
           className={cn(
-            'flex w-full items-center justify-between rounded-lg pr-4 text-sm font-semibold text-[#bdd0c8] transition-colors hover:bg-white/10 hover:text-white whitespace-nowrap',
+            'flex w-full items-center justify-between rounded-xl pr-4 text-sm font-semibold text-[#bdd0c8] transition-all duration-200 hover:bg-white/[0.07] hover:text-white whitespace-nowrap',
             level === 0 ? 'my-1 py-2.5' : 'my-0.5 py-2',
-            (isOpen || itemActive) && 'bg-white/10 text-white'
+            (isOpen || itemActive) && 'bg-white/[0.08] text-white'
           )}
         >
           <div className="flex items-center gap-3">
@@ -617,7 +618,7 @@ function NavItemView({
           />
         </button>
         {isOpen && (
-          <div className="ml-4 border-l border-white/10 pl-1">
+          <div className="ml-4 border-l border-white/[0.06] pl-1">
             {visibleChildren.map((child) => (
               <NavItemView
                 key={`${child.title}-${child.href}`}
@@ -643,9 +644,9 @@ function NavItemView({
       href={item.href}
       style={{ paddingLeft }}
       className={cn(
-        'my-0.5 flex items-center gap-3 rounded-lg pr-4 py-2 text-sm font-semibold text-[#bdd0c8] transition-colors hover:bg-white/10 hover:text-white whitespace-nowrap',
+        'my-0.5 flex items-center gap-3 rounded-xl pr-4 py-2 text-sm font-semibold text-[#bdd0c8] transition-all duration-200 hover:bg-white/[0.07] hover:text-white whitespace-nowrap',
         level === 0 && 'my-1 py-2.5',
-        itemActive && 'bg-[#f7f3ea] text-[#0f2f29] shadow-sm'
+        itemActive && 'bg-gradient-to-r from-[#f7f3ea] to-[#efe8dc] text-[#0f2f29] shadow-sm'
       )}
     >
       {Icon && <Icon className="h-5 w-5 flex-shrink-0" />}

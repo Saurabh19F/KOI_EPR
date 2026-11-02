@@ -41,17 +41,17 @@ export function Header() {
 
   return (
     <>
-      <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-[#e5dfd4] bg-[#fbfaf6]/90 px-4 backdrop-blur-sm sm:px-6">
+      <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-[#e5dfd4]/60 px-4 sm:px-6" style={{ background: 'rgba(251, 250, 246, 0.75)', backdropFilter: 'blur(16px) saturate(1.8)', WebkitBackdropFilter: 'blur(16px) saturate(1.8)' }}>
         {/* Left side - Search & Title */}
         <div className="flex items-center gap-6">
           {/* Search Bar */}
           <button
             onClick={() => setIsSearchOpen(true)}
-            className="flex w-56 items-center gap-3 rounded-lg border border-[#ded4c6] bg-white px-3 py-2 transition-all hover:border-[#c7b79f] hover:bg-[#fbfaf6] sm:w-72"
+            className="group flex w-56 items-center gap-3 rounded-xl border border-[#e5dfd4]/80 bg-white/80 px-3.5 py-2.5 transition-all duration-200 hover:border-[#c7b79f] hover:bg-white hover:shadow-sm sm:w-72"
           >
-            <Search className="h-4 w-4 text-[#9a6b36]" />
-            <span className="flex-1 text-left text-sm font-medium text-slate-500">Quick search...</span>
-            <kbd className="flex items-center gap-1 rounded bg-[#efe8dc] px-2 py-0.5 font-mono text-xs text-slate-500">
+            <Search className="h-4 w-4 text-[#9a6b36] transition-transform group-hover:scale-110" />
+            <span className="flex-1 text-left text-sm font-medium text-slate-400">Quick search...</span>
+            <kbd className="flex items-center gap-1 rounded-lg bg-[#efe8dc]/80 px-2 py-0.5 font-mono text-xs text-slate-400">
               <Command className="h-3 w-3" />K
             </kbd>
           </button>

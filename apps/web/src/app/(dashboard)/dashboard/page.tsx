@@ -415,7 +415,7 @@ export default function DashboardPage() {
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between animate-fade-in-up">
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#9a6b36]">
             {(() => {
@@ -447,33 +447,34 @@ export default function DashboardPage() {
           </div>
           <button
             onClick={handleRefresh}
-            className="rounded-lg border border-[#ded4c6] bg-white p-2 transition-colors hover:bg-[#fbfaf6]"
+            className="ripple-effect rounded-lg border border-[#ded4c6] bg-white p-2 transition-all duration-300 hover:bg-[#fbfaf6] hover:shadow-md hover:scale-105 active:scale-95"
             title="Refresh data"
           >
-            <RefreshCw className="h-4 w-4 text-slate-500" />
+            <RefreshCw className="h-4 w-4 text-slate-500 transition-transform duration-500 hover:rotate-180" />
           </button>
         </div>
       </div>
 
       {/* KPI Cards */}
       {kpis.length > 0 && (
-        <div className={`grid grid-cols-2 gap-3 ${kpis.length >= 4 ? 'lg:grid-cols-4' : kpis.length === 3 ? 'lg:grid-cols-3' : 'lg:grid-cols-2'}`}>
-          {kpis.map((kpi) => {
+        <div className={`stagger-children grid grid-cols-2 gap-3 ${kpis.length >= 4 ? 'lg:grid-cols-4' : kpis.length === 3 ? 'lg:grid-cols-3' : 'lg:grid-cols-2'}`}>
+          {kpis.map((kpi, index) => {
             const Icon = kpi.icon;
             return (
-              <Link key={kpi.title} href={kpi.href}>
-                <Card className="group overflow-hidden transition-all duration-200 hover:-translate-y-0.5 hover:shadow-card-hover">
-                  <CardContent className="p-4">
+              <Link key={kpi.title} href={kpi.href} className="animate-fade-in-up" style={{ animationDelay: `${index * 80}ms`, animationFillMode: 'both' }}>
+                <Card className="hover-glow-card group overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-card-hover">
+                  <CardContent className="p-4 relative">
+                    <div className="card-shine" />
                     <div className="mb-3 flex items-start justify-between">
-                      <div className={`rounded-lg border p-2 transition-transform group-hover:scale-105 ${kpi.tone}`}>
+                      <div className={`icon-hover rounded-lg border p-2 ${kpi.tone}`}>
                         <Icon className="h-5 w-5" />
                       </div>
-                      <div className={`flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-bold ${kpi.trendUp ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-600'}`}>
+                      <div className={`flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-bold transition-all duration-300 group-hover:scale-105 ${kpi.trendUp ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-600'}`}>
                         {kpi.trendUp ? <ArrowUp className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
                         {kpi.trend}
                       </div>
                     </div>
-                    <p className="text-2xl font-extrabold tracking-tight text-slate-950">{kpi.value}</p>
+                    <p className="number-pop text-2xl font-extrabold tracking-tight text-slate-950">{kpi.value}</p>
                     <p className="mt-0.5 text-sm font-medium text-slate-500">{kpi.title}</p>
                   </CardContent>
                 </Card>
@@ -485,11 +486,12 @@ export default function DashboardPage() {
 
       {/* Currency Rates Banner - only for admin/management/costing roles */}
       {hasRateAccess && (
-        <Card className="border-[#173f37] bg-[#0f2f29]">
-          <CardContent className="py-4">
-            <div className="flex items-center justify-between flex-wrap gap-4">
+        <Card className="animate-fade-in-up animate-glow border-[#173f37] bg-gradient-to-r from-[#0f2f29] via-[#132f2a] to-[#0d2520] overflow-hidden">
+          <CardContent className="py-4 relative">
+            <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMSIgZmlsbD0icmdiYSgyNTUsMjU1LDI1NSwwLjAzKSIvPjwvc3ZnPg==')] opacity-50"></div>
+            <div className="relative flex items-center justify-between flex-wrap gap-4">
               <div className="flex items-center gap-3">
-                <div className="rounded-lg bg-white/10 p-2">
+                <div className="rounded-lg bg-white/10 p-2 animate-float">
                   <DollarSign className="h-5 w-5 text-[#f0d7ae]" />
                 </div>
                 <div>
@@ -526,10 +528,10 @@ export default function DashboardPage() {
       <div className={`grid grid-cols-1 gap-4 ${(hasFmsAccess && hasSalesAccess) || (hasProductionAccess && hasQualityAccess && !hasSalesAccess) ? 'lg:grid-cols-3' : ''}`}>
         {/* Recent Enquiries */}
         {hasSalesAccess && (isSalesRole || isAdmin || isManagement || isMIS) && (
-          <div className={`overflow-hidden rounded-lg border border-[#e5dfd4] bg-white shadow-card ${hasFmsAccess ? 'lg:col-span-2' : ''}`}>
+          <div className={`animate-fade-in-up hover-glow-card overflow-hidden rounded-xl border border-[#e5dfd4] bg-white shadow-card transition-all duration-300 ${hasFmsAccess ? 'lg:col-span-2' : ''}`}>
             <div className="flex items-center justify-between border-b border-[#eee8de] px-4 py-3">
               <div className="flex items-center gap-3">
-                <div className="rounded-lg bg-sky-50 p-2 text-sky-700">
+                <div className="icon-hover rounded-xl bg-sky-50 p-2 text-sky-700">
                   <ShoppingCart className="h-5 w-5" />
                 </div>
                 <h2 className="font-bold text-slate-950">Recent Enquiries</h2>
@@ -601,10 +603,10 @@ export default function DashboardPage() {
 
         {/* My Tasks - only for FMS/Sales/Admin roles */}
         {hasFmsAccess && (isSalesRole || isFmsRole || isAdmin || isManagement || isMIS) && (
-          <div className="overflow-hidden rounded-lg border border-[#e5dfd4] bg-white shadow-card">
+          <div className="animate-fade-in-up hover-glow-card overflow-hidden rounded-xl border border-[#e5dfd4] bg-white shadow-card transition-all duration-300">
             <div className="flex items-center justify-between border-b border-[#eee8de] px-4 py-3">
               <div className="flex items-center gap-3">
-                <div className="rounded-lg bg-violet-50 p-2 text-violet-700">
+                <div className="icon-hover rounded-xl bg-violet-50 p-2 text-violet-700">
                   <ClipboardList className="h-5 w-5" />
                 </div>
                 <h2 className="font-bold text-slate-950">My Tasks</h2>
@@ -677,10 +679,10 @@ export default function DashboardPage() {
 
         {/* Purchase section for purchase-only roles */}
         {hasPurchaseAccess && (isPurchaseRole || isAdmin || isManagement) && !isSalesRole && !isCostingRole && (
-          <div className="overflow-hidden rounded-lg border border-[#e5dfd4] bg-white shadow-card">
+          <div className="animate-fade-in-up hover-glow-card overflow-hidden rounded-xl border border-[#e5dfd4] bg-white shadow-card transition-all duration-300">
             <div className="flex items-center justify-between border-b border-[#eee8de] px-4 py-3">
               <div className="flex items-center gap-3">
-                <div className="rounded-lg bg-blue-50 p-2 text-blue-700">
+                <div className="icon-hover rounded-xl bg-blue-50 p-2 text-blue-700">
                   <Truck className="h-5 w-5" />
                 </div>
                 <h2 className="font-bold text-slate-950">Recent Purchase Quotes</h2>
@@ -730,10 +732,10 @@ export default function DashboardPage() {
 
         {/* Production Jobs */}
         {hasProductionAccess && !hasSalesAccess && (
-          <div className={`overflow-hidden rounded-lg border border-[#e5dfd4] bg-white shadow-card ${hasQualityAccess ? 'lg:col-span-2' : ''}`}>
+          <div className={`animate-fade-in-up hover-glow-card overflow-hidden rounded-xl border border-[#e5dfd4] bg-white shadow-card transition-all duration-300 ${hasQualityAccess ? 'lg:col-span-2' : ''}`}>
             <div className="flex items-center justify-between border-b border-[#eee8de] px-4 py-3">
               <div className="flex items-center gap-3">
-                <div className="rounded-lg bg-orange-50 p-2 text-orange-700">
+                <div className="icon-hover rounded-xl bg-orange-50 p-2 text-orange-700">
                   <Factory className="h-5 w-5" />
                 </div>
                 <h2 className="font-bold text-slate-950">Production Jobs</h2>
@@ -784,10 +786,10 @@ export default function DashboardPage() {
 
         {/* QC Inspections */}
         {hasQualityAccess && !hasSalesAccess && (
-          <div className="overflow-hidden rounded-lg border border-[#e5dfd4] bg-white shadow-card">
+          <div className="animate-fade-in-up hover-glow-card overflow-hidden rounded-xl border border-[#e5dfd4] bg-white shadow-card transition-all duration-300">
             <div className="flex items-center justify-between border-b border-[#eee8de] px-4 py-3">
               <div className="flex items-center gap-3">
-                <div className="rounded-lg bg-teal-50 p-2 text-teal-700">
+                <div className="icon-hover rounded-xl bg-teal-50 p-2 text-teal-700">
                   <ShieldCheck className="h-5 w-5" />
                 </div>
                 <h2 className="font-bold text-slate-950">QC Inspections</h2>
@@ -844,10 +846,10 @@ export default function DashboardPage() {
 
         {/* Warehouse Stock Overview */}
         {isWarehouseRole && !hasSalesAccess && !hasProductionAccess && (
-          <div className="overflow-hidden rounded-lg border border-[#e5dfd4] bg-white shadow-card lg:col-span-2">
+          <div className="animate-fade-in-up hover-glow-card overflow-hidden rounded-xl border border-[#e5dfd4] bg-white shadow-card transition-all duration-300 lg:col-span-2">
             <div className="flex items-center justify-between border-b border-[#eee8de] px-4 py-3">
               <div className="flex items-center gap-3">
-                <div className="rounded-lg bg-cyan-50 p-2 text-cyan-700">
+                <div className="rounded-xl bg-cyan-50 p-2 text-cyan-700">
                   <Boxes className="h-5 w-5" />
                 </div>
                 <h2 className="font-bold text-slate-950">Stock Overview</h2>
@@ -893,10 +895,10 @@ export default function DashboardPage() {
 
         {/* Inventory Movements */}
         {isInventoryRole && !hasSalesAccess && !hasWarehouseAccess && (
-          <div className="overflow-hidden rounded-lg border border-[#e5dfd4] bg-white shadow-card lg:col-span-2">
+          <div className="animate-fade-in-up hover-glow-card overflow-hidden rounded-xl border border-[#e5dfd4] bg-white shadow-card transition-all duration-300 lg:col-span-2">
             <div className="flex items-center justify-between border-b border-[#eee8de] px-4 py-3">
               <div className="flex items-center gap-3">
-                <div className="rounded-lg bg-emerald-50 p-2 text-emerald-700">
+                <div className="rounded-xl bg-emerald-50 p-2 text-emerald-700">
                   <ArrowLeftRight className="h-5 w-5" />
                 </div>
                 <h2 className="font-bold text-slate-950">Recent Stock Movements</h2>
@@ -944,10 +946,10 @@ export default function DashboardPage() {
 
         {/* Accounts - Pending POs */}
         {hasAccountsAccess && !hasSalesAccess && !hasPurchaseAccess && (
-          <div className="overflow-hidden rounded-lg border border-[#e5dfd4] bg-white shadow-card lg:col-span-2">
+          <div className="animate-fade-in-up hover-glow-card overflow-hidden rounded-xl border border-[#e5dfd4] bg-white shadow-card transition-all duration-300 lg:col-span-2">
             <div className="flex items-center justify-between border-b border-[#eee8de] px-4 py-3">
               <div className="flex items-center gap-3">
-                <div className="rounded-lg bg-lime-50 p-2 text-lime-700">
+                <div className="rounded-xl bg-lime-50 p-2 text-lime-700">
                   <CheckCircle className="h-5 w-5" />
                 </div>
                 <h2 className="font-bold text-slate-950">Pending PO Approvals</h2>
@@ -989,10 +991,10 @@ export default function DashboardPage() {
 
         {/* Finance Panel */}
         {hasFinanceAccess && !hasSalesAccess && !hasAccountsAccess && (
-          <div className="overflow-hidden rounded-lg border border-[#e5dfd4] bg-white shadow-card lg:col-span-2">
+          <div className="animate-fade-in-up hover-glow-card overflow-hidden rounded-xl border border-[#e5dfd4] bg-white shadow-card transition-all duration-300 lg:col-span-2">
             <div className="flex items-center justify-between border-b border-[#eee8de] px-4 py-3">
               <div className="flex items-center gap-3">
-                <div className="rounded-lg bg-green-50 p-2 text-green-700">
+                <div className="rounded-xl bg-green-50 p-2 text-green-700">
                   <Calculator className="h-5 w-5" />
                 </div>
                 <h2 className="font-bold text-slate-950">Finance Overview</h2>
@@ -1016,10 +1018,10 @@ export default function DashboardPage() {
 
         {/* Costing / Rate Analysis Panel */}
         {isCostingRole && !isSalesRole && !isPurchaseRole && (
-          <div className="overflow-hidden rounded-lg border border-[#e5dfd4] bg-white shadow-card lg:col-span-2">
+          <div className="animate-fade-in-up hover-glow-card overflow-hidden rounded-xl border border-[#e5dfd4] bg-white shadow-card transition-all duration-300 lg:col-span-2">
             <div className="flex items-center justify-between border-b border-[#eee8de] px-4 py-3">
               <div className="flex items-center gap-3">
-                <div className="rounded-lg bg-violet-50 p-2 text-violet-700">
+                <div className="rounded-xl bg-violet-50 p-2 text-violet-700">
                   <TrendingUp className="h-5 w-5" />
                 </div>
                 <h2 className="font-bold text-slate-950">Rate Analysis</h2>
@@ -1072,10 +1074,10 @@ export default function DashboardPage() {
 
         {/* Planner Panel */}
         {isPlannerRole && !hasSalesAccess && (
-          <div className="overflow-hidden rounded-lg border border-[#e5dfd4] bg-white shadow-card lg:col-span-2">
+          <div className="animate-fade-in-up hover-glow-card overflow-hidden rounded-xl border border-[#e5dfd4] bg-white shadow-card transition-all duration-300 lg:col-span-2">
             <div className="flex items-center justify-between border-b border-[#eee8de] px-4 py-3">
               <div className="flex items-center gap-3">
-                <div className="rounded-lg bg-indigo-50 p-2 text-indigo-700">
+                <div className="rounded-xl bg-indigo-50 p-2 text-indigo-700">
                   <LayoutDashboard className="h-5 w-5" />
                 </div>
                 <h2 className="font-bold text-slate-950">Inventory Planner</h2>
@@ -1099,10 +1101,10 @@ export default function DashboardPage() {
 
         {/* MIS Panel */}
         {isMIS && !hasSalesAccess && (
-          <div className="overflow-hidden rounded-lg border border-[#e5dfd4] bg-white shadow-card lg:col-span-2">
+          <div className="animate-fade-in-up hover-glow-card overflow-hidden rounded-xl border border-[#e5dfd4] bg-white shadow-card transition-all duration-300 lg:col-span-2">
             <div className="flex items-center justify-between border-b border-[#eee8de] px-4 py-3">
               <div className="flex items-center gap-3">
-                <div className="rounded-lg bg-slate-100 p-2 text-slate-700">
+                <div className="rounded-xl bg-slate-100 p-2 text-slate-700">
                   <BarChart3 className="h-5 w-5" />
                 </div>
                 <h2 className="font-bold text-slate-950">MIS Reports</h2>
@@ -1126,18 +1128,18 @@ export default function DashboardPage() {
       </div>
 
       {/* Quick Actions */}
-      <div className="rounded-lg border border-[#e5dfd4] bg-white p-4 shadow-card">
+      <div className="animate-fade-in-up hover-glow-card rounded-xl border border-[#e5dfd4] bg-white p-4 shadow-card">
         <h2 className="mb-3 font-bold text-slate-950">Quick Actions</h2>
-        <div className={`grid grid-cols-2 gap-3 sm:grid-cols-3 ${quickActions.length >= 6 ? 'lg:grid-cols-6' : quickActions.length >= 4 ? 'lg:grid-cols-4' : 'lg:grid-cols-3'}`}>
+        <div className={`stagger-children grid grid-cols-2 gap-3 sm:grid-cols-3 ${quickActions.length >= 6 ? 'lg:grid-cols-6' : quickActions.length >= 4 ? 'lg:grid-cols-4' : 'lg:grid-cols-3'}`}>
           {quickActions.map((action) => {
             const Icon = action.icon;
             return (
               <Link
                 key={action.title}
                 href={action.href}
-                className={`flex min-h-[76px] flex-col items-center justify-center gap-1.5 rounded-lg border border-dashed border-[#dcd4c8] p-3 text-slate-600 transition-all ${action.color}`}
+                className={`ripple-effect group flex min-h-[76px] flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-[#dcd4c8] p-3 text-slate-600 transition-all duration-300 hover:-translate-y-1 hover:shadow-md ${action.color}`}
               >
-                <Icon className="h-6 w-6" />
+                <Icon className="h-6 w-6 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3" />
                 <span className="text-center text-sm font-bold">{action.title}</span>
               </Link>
             );

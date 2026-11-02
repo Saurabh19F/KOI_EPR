@@ -70,6 +70,34 @@ async function seed() {
     }
     console.log('✅ Roles seeded\n');
 
+    // ========== 1b. MAP ROLES TO DEPARTMENTS ==========
+    console.log('📦 Mapping roles to departments...');
+
+    const roleDeptMapping: Record<string, string[]> = {
+      'SALES': ['SALES_MANAGER', 'SALES_USER'],
+      'PURCHASE': ['PURCHASE_MANAGER', 'PURCHASE_USER'],
+      'COSTING': ['COSTING_MANAGER', 'COSTING_USER'],
+      'PRODUCTION': ['PRODUCTION_MANAGER', 'PRODUCTION_USER'],
+      'INVENTORY': ['INVENTORY_MANAGER', 'INVENTORY_USER'],
+      'FINANCE': ['FINANCE_MANAGER', 'FINANCE_USER', 'CHIEF_ACCOUNTANT', 'ACCOUNTANT'],
+      'MIS': ['MIS_USER'],
+      'QUALITY': ['QUALITY_MANAGER', 'QUALITY_USER'],
+      'LOGISTICS': ['LOGISTICS_MANAGER', 'LOGISTICS_USER'],
+      'HR': ['HR_MANAGER'],
+      'PLANNING': ['PLANNER_MANAGER', 'PLANNER_USER'],
+    };
+
+    for (const [deptCode, roleCodes] of Object.entries(roleDeptMapping)) {
+      const placeholders = roleCodes.map((_, i) => `$${i + 2}`).join(', ');
+      await queryRunner.query(`
+        UPDATE roles SET department_id = (
+          SELECT department_id FROM departments WHERE department_code = $1 LIMIT 1
+        )
+        WHERE role_code IN (${placeholders})
+      `, [deptCode, ...roleCodes]);
+    }
+    console.log('✅ Roles mapped to departments\n');
+
     // ========== 2. SEED PERMISSIONS ==========
     console.log('📦 Seeding permissions...');
 

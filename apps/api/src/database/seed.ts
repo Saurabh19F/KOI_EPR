@@ -105,6 +105,33 @@ async function seed() {
   }
   console.log('Roles:', roles.map(r => r.name).join(', '));
 
+  // ===== MAP ROLES TO DEPARTMENTS =====
+  const roleDeptMapping: Record<string, string[]> = {
+    'SALES': ['SALES_MANAGER', 'SALES_USER'],
+    'PURCHASE': ['PURCHASE_MANAGER', 'PURCHASE_USER'],
+    'COSTING': ['COSTING_MANAGER', 'COSTING_USER'],
+    'PRODUCTION': ['PRODUCTION_MANAGER', 'PRODUCTION_USER'],
+    'INVENTORY': ['INVENTORY_MANAGER', 'INVENTORY_USER'],
+    'FINANCE': ['FINANCE_MANAGER', 'CHIEF_ACCOUNTANT', 'ACCOUNTANT'],
+    'MIS': ['MIS'],
+    'QUALITY': ['QUALITY_MANAGER', 'QUALITY_USER'],
+    'LOGISTICS': ['LOGISTICS_MANAGER', 'LOGISTICS_USER'],
+    'HR': ['HR_MANAGER'],
+    'PLANNING': ['PLANNER_MANAGER', 'PLANNER_USER'],
+  };
+
+  for (const [deptCode, roleCodes] of Object.entries(roleDeptMapping)) {
+    if (deptIds[deptCode]) {
+      for (const roleCode of roleCodes) {
+        await dataSource.query(
+          `UPDATE roles SET department_id = $1 WHERE role_code = $2`,
+          [deptIds[deptCode], roleCode],
+        );
+      }
+    }
+  }
+  console.log('Roles mapped to departments');
+
   // ===== USERS =====
   const users = [
     { email: 'admin@koi-erp.com', name: 'System Administrator', dept: null, role: 'ADMIN', isSuper: true },
