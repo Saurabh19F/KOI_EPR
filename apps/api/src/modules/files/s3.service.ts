@@ -67,13 +67,15 @@ export class S3Service {
   private endpoint: string | null;
   private forcePathStyle: boolean;
   private useLocalStorage: boolean;
+  private publicUrl: string | null;
 
   constructor(private configService: ConfigService) {
-    this.region = this.configService.get('AWS_REGION', 'us-east-1');
+    this.region = this.configService.get('AWS_REGION', 'auto');
     this.bucket = this.configService.get('AWS_S3_BUCKET', 'erp-files');
     this.endpoint = this.configService.get('AWS_S3_ENDPOINT', null);
-    this.forcePathStyle = this.configService.get('AWS_S3_FORCE_PATH_STYLE', 'false') === 'true';
+    this.forcePathStyle = this.configService.get('AWS_S3_FORCE_PATH_STYLE', 'true') === 'true';
     this.useLocalStorage = !this.configService.get('AWS_ACCESS_KEY_ID', null);
+    this.publicUrl = this.configService.get('R2_PUBLIC_URL', null);
 
     if (!this.useLocalStorage) {
       this.s3Client = new S3Client({
@@ -140,9 +142,7 @@ export class S3Service {
     });
 
     const uploadUrl = await getSignedUrl(this.s3Client, command, { expiresIn });
-    const publicUrl = this.endpoint
-      ? `${this.endpoint}/${this.bucket}/${key}`
-      : `https://${this.bucket}.s3.${this.region}.amazonaws.com/${key}`;
+    const publicUrl = this.getPublicUrl(key);
 
     return {
       uploadUrl,
@@ -216,6 +216,10 @@ export class S3Service {
     if (this.useLocalStorage) {
       const baseUrl = this.configService.get('API_URL', 'http://localhost:3001');
       return `${baseUrl}/api/v1/files/local/${encodeURIComponent(key)}`;
+    }
+
+    if (this.publicUrl) {
+      return `${this.publicUrl}/${key}`;
     }
 
     return this.endpoint
