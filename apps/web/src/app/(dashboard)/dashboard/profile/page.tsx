@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { User, Mail, Phone, MapPin, Building2, Shield, Key, Bell, Globe, Camera, Save, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -16,6 +16,68 @@ export default function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const defaultNotifPrefs = {
+    emailNotifications: true,
+    desktopNotifications: true,
+    smsAlerts: false,
+    weeklyDigest: true,
+  };
+
+  const defaultDisplayPrefs = {
+    compactMode: false,
+    showWelcomeBanner: true,
+    autoRefreshData: true,
+    rtlLayout: false,
+  };
+
+  const [notificationPrefs, setNotificationPrefs] = useState(defaultNotifPrefs);
+  const [displayPrefs, setDisplayPrefs] = useState(defaultDisplayPrefs);
+
+  useEffect(() => {
+    if (user?.preferences) {
+      const p = user.preferences;
+      setNotificationPrefs(prev => ({
+        emailNotifications: p.emailNotifications ?? prev.emailNotifications,
+        desktopNotifications: p.desktopNotifications ?? prev.desktopNotifications,
+        smsAlerts: p.smsAlerts ?? prev.smsAlerts,
+        weeklyDigest: p.weeklyDigest ?? prev.weeklyDigest,
+      }));
+      setDisplayPrefs(prev => ({
+        compactMode: p.compactMode ?? prev.compactMode,
+        showWelcomeBanner: p.showWelcomeBanner ?? prev.showWelcomeBanner,
+        autoRefreshData: p.autoRefreshData ?? prev.autoRefreshData,
+        rtlLayout: p.rtlLayout ?? prev.rtlLayout,
+      }));
+    }
+  }, [user?.preferences]);
+
+  const savePreferences = useCallback(async (allPrefs: Record<string, any>) => {
+    if (!user?.userId) return;
+    try {
+      await authApi.updateProfile(user.userId, { preferences: allPrefs });
+      setUser({ ...user, preferences: allPrefs });
+      toast.success('Preference saved');
+    } catch {
+      toast.error('Failed to save preference');
+    }
+  }, [user, setUser]);
+
+  const handleNotifToggle = useCallback((key: keyof typeof defaultNotifPrefs) => {
+    setNotificationPrefs(prev => {
+      const updated = { ...prev, [key]: !prev[key] };
+      savePreferences({ ...displayPrefs, ...updated });
+      return updated;
+    });
+  }, [displayPrefs, savePreferences]);
+
+  const handleDisplayToggle = useCallback((key: keyof typeof defaultDisplayPrefs) => {
+    setDisplayPrefs(prev => {
+      const updated = { ...prev, [key]: !prev[key] };
+      savePreferences({ ...notificationPrefs, ...updated });
+      return updated;
+    });
+  }, [notificationPrefs, savePreferences]);
 
   const tabs = [
     { id: 'profile', label: 'Profile', icon: User },
@@ -355,27 +417,29 @@ export default function ProfilePage() {
                 <CardDescription>Manage how you receive notifications</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {[
-                  { label: 'Email notifications', description: 'Receive updates via email', enabled: true },
-                  { label: 'Desktop notifications', description: 'Browser push notifications', enabled: true },
-                  { label: 'SMS alerts', description: 'Critical alerts via SMS', enabled: false },
-                  { label: 'Weekly digest', description: 'Summary of weekly activity', enabled: true },
-                ].map((pref, i) => (
-                  <div key={i} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                {([
+                  { key: 'emailNotifications' as const, label: 'Email notifications', description: 'Receive updates via email' },
+                  { key: 'desktopNotifications' as const, label: 'Desktop notifications', description: 'Browser push notifications' },
+                  { key: 'smsAlerts' as const, label: 'SMS alerts', description: 'Critical alerts via SMS' },
+                  { key: 'weeklyDigest' as const, label: 'Weekly digest', description: 'Summary of weekly activity' },
+                ]).map((pref) => (
+                  <div key={pref.key} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
                     <div>
                       <p className="text-sm font-medium text-slate-700">{pref.label}</p>
                       <p className="text-xs text-slate-400">{pref.description}</p>
                     </div>
                     <button
+                      type="button"
                       title={pref.label}
                       aria-label={pref.label}
+                      onClick={() => handleNotifToggle(pref.key)}
                       className={`relative w-11 h-6 rounded-full transition-colors ${
-                        pref.enabled ? 'bg-amber-500' : 'bg-slate-300'
+                        notificationPrefs[pref.key] ? 'bg-amber-500' : 'bg-slate-300'
                       }`}
                     >
                       <span
                         className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${
-                          pref.enabled ? 'translate-x-6' : 'translate-x-1'
+                          notificationPrefs[pref.key] ? 'translate-x-6' : 'translate-x-1'
                         }`}
                       />
                     </button>
@@ -390,27 +454,29 @@ export default function ProfilePage() {
                 <CardDescription>Customize your interface</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {[
-                  { label: 'Compact mode', description: 'Use denser layout', enabled: false },
-                  { label: 'Show welcome banner', description: 'Display welcome message on dashboard', enabled: true },
-                  { label: 'Auto-refresh data', description: 'Automatically refresh dashboard data', enabled: true },
-                  { label: 'RTL layout', description: 'Right-to-left layout for Arabic/Hebrew', enabled: false },
-                ].map((pref, i) => (
-                  <div key={i} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                {([
+                  { key: 'compactMode' as const, label: 'Compact mode', description: 'Use denser layout' },
+                  { key: 'showWelcomeBanner' as const, label: 'Show welcome banner', description: 'Display welcome message on dashboard' },
+                  { key: 'autoRefreshData' as const, label: 'Auto-refresh data', description: 'Automatically refresh dashboard data' },
+                  { key: 'rtlLayout' as const, label: 'RTL layout', description: 'Right-to-left layout for Arabic/Hebrew' },
+                ]).map((pref) => (
+                  <div key={pref.key} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
                     <div>
                       <p className="text-sm font-medium text-slate-700">{pref.label}</p>
                       <p className="text-xs text-slate-400">{pref.description}</p>
                     </div>
                     <button
+                      type="button"
                       title={pref.label}
                       aria-label={pref.label}
+                      onClick={() => handleDisplayToggle(pref.key)}
                       className={`relative w-11 h-6 rounded-full transition-colors ${
-                        pref.enabled ? 'bg-amber-500' : 'bg-slate-300'
+                        displayPrefs[pref.key] ? 'bg-amber-500' : 'bg-slate-300'
                       }`}
                     >
                       <span
                         className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${
-                          pref.enabled ? 'translate-x-6' : 'translate-x-1'
+                          displayPrefs[pref.key] ? 'translate-x-6' : 'translate-x-1'
                         }`}
                       />
                     </button>

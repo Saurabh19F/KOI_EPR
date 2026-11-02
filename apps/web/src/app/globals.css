@@ -26,6 +26,7 @@
 /* Base styles */
 html {
   background: var(--surface);
+  font-size: 80%;
 }
 
 body {
@@ -695,3 +696,60 @@ body {
 .ag-theme-alpine .ag-row-selected {
   background-color: rgba(154, 107, 54, 0.06) !important;
 }
+
+/* ===== COMPACT MODE ===== */
+
+.compact .page-header { @apply mb-3; }
+.compact .page-title { @apply text-xl; }
+.compact .page-subtitle { @apply text-xs; }
+
+.compact main { @apply p-2 sm:p-3; }
+
+.compact .card-header { @apply px-3 py-2; }
+.compact .card-body { @apply p-3; }
+
+.compact .stats-card { @apply p-2.5; }
+.compact .stats-icon { @apply h-8 w-8; }
+
+.compact .table th { @apply px-3 py-2 text-[10px]; }
+.compact .table td { @apply px-3 py-2 text-xs; }
+
+.compact .sidebar-item { @apply px-3 py-2 gap-2 text-sm; }
+
+.compact .modal-header { @apply px-4 py-3; }
+.compact .modal-body { @apply p-4; }
+.compact .modal-footer { @apply px-4 py-2; }
+
+.compact .filter-section { @apply p-2 mb-3; }
+
+.compact h1 { @apply text-xl; }
+.compact h2 { @apply text-lg; }
+.compact h3 { @apply text-base; }
+
+.compact [class*="space-y-6"] { gap: 0.75rem; }
+.compact [class*="space-y-4"] { gap: 0.5rem; }
+.compact [class*="gap-6"] { gap: 0.75rem; }
+.compact [class*="gap-4"] { gap: 0.5rem; }
+
+.compact [class*="p-6"] { padding: 0.75rem; }
+.compact [class*="p-5"] { padding: 0.625rem; }
+.compact [class*="p-4"] { padding: 0.5rem; }
+.compact [class*="px-6"] { padding-left: 0.75rem; padding-right: 0.75rem; }
+.compact [class*="py-6"] { padding-top: 0.75rem; padding-bottom: 0.75rem; }
+
+.compact .btn-primary,
+.compact .btn-secondary,
+.compact .btn-ghost { @apply px-3 py-1.5 text-sm; }
+
+.compact .badge { @apply px-2 py-0 text-[10px]; }
+
+.compact .input { @apply px-2.5 py-1.5 text-xs; }
+
+.compact .ag-theme-alpine .ag-header-cell { padding: 4px 8px !important; }
+.compact .ag-theme-alpine .ag-cell { padding: 4px 8px !important; font-size: 12px !important; }
+.compact .ag-theme-alpine .ag-row { height: 32px !important; }
+
+.compact .empty-state { @apply py-6; }
+.compact .empty-state-icon { @apply w-12 h-12 mb-2; }
+
+.compact .dropdown-item { @apply px-3 py-2 text-xs; }

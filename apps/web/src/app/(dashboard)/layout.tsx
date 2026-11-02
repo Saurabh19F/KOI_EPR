@@ -63,9 +63,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return null;
   }
 
+  const isCompact = user?.preferences?.compactMode === true;
+
   return (
     <CommandPaletteWrapper>
-      <div className="flex min-h-screen bg-[#f6f3ec]">
+      <div className={`flex min-h-screen bg-[#f6f3ec] ${isCompact ? 'compact' : ''}`}>
         <Sidebar />
         <div className="flex min-w-0 flex-1 flex-col">
           <Header />

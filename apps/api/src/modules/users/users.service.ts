@@ -337,14 +337,22 @@ export class UsersService {
     const base: any = { isActive: true };
 
     if (currentUser && !currentUser.isSuperAdmin) {
-      base.companyId = currentUser.companyId;
-    }
-
-    if (departmentId) {
-      where.push({ ...base, departmentId });
-      where.push({ ...base, departmentId: IsNull() });
+      if (departmentId) {
+        where.push({ ...base, companyId: currentUser.companyId, departmentId });
+        where.push({ ...base, companyId: IsNull(), departmentId });
+        where.push({ ...base, companyId: currentUser.companyId, departmentId: IsNull() });
+        where.push({ ...base, companyId: IsNull(), departmentId: IsNull() });
+      } else {
+        where.push({ ...base, companyId: currentUser.companyId });
+        where.push({ ...base, companyId: IsNull() });
+      }
     } else {
-      where.push(base);
+      if (departmentId) {
+        where.push({ ...base, departmentId });
+        where.push({ ...base, departmentId: IsNull() });
+      } else {
+        where.push(base);
+      }
     }
 
     return this.roleRepository.find({
