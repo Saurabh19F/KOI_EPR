@@ -152,7 +152,8 @@ export function MastersCrudPage({
       results.forEach((result, index) => {
         if (result.status === 'rejected') {
           failedIds.add(ids[index]);
-          const message = result.reason?.response?.data?.message;
+          const raw = result.reason?.response?.data?.message || result.reason?.message;
+          const message = Array.isArray(raw) ? raw[0] : raw;
           if (typeof message === 'string') reasons.add(message);
         }
       });

@@ -161,7 +161,16 @@ export class MastersService {
     const category = await this.categoryRepo.findOne({ where: { categoryId: id } });
     if (!category) throw new NotFoundException('Category not found');
     this.validateAccess(user, category, 'Category');
-    await this.categoryRepo.remove(category);
+    try {
+      await this.categoryRepo.remove(category);
+    } catch (error: any) {
+      const code = error?.driverError?.code || error?.code;
+      const msg = error?.message || '';
+      if (code === '23503' || msg.includes('violates foreign key constraint')) {
+        throw new ConflictException('This category is in use. Reassign its products before deleting it.');
+      }
+      throw error;
+    }
     return { deleted: true };
   }
 
@@ -218,8 +227,10 @@ export class MastersService {
     this.validateAccess(user, brand, 'Brand');
     try {
       await this.brandRepo.remove(brand);
-    } catch (error) {
-      if (error instanceof QueryFailedError && 'code' in error.driverError && error.driverError.code === '23503') {
+    } catch (error: any) {
+      const code = error?.driverError?.code || error?.code;
+      const msg = error?.message || '';
+      if (code === '23503' || msg.includes('violates foreign key constraint')) {
         throw new ConflictException('This brand is in use. Deactivate it, or reassign its products before deleting it.');
       }
       throw error;
@@ -1202,7 +1213,16 @@ export class MastersService {
     const gstRate = await this.gstRepo.findOne({ where: { gstRateId: id } });
     if (!gstRate) throw new NotFoundException('GST rate not found');
     this.validateAccess(user, gstRate, 'GST rate');
-    await this.gstRepo.remove(gstRate);
+    try {
+      await this.gstRepo.remove(gstRate);
+    } catch (error: any) {
+      const code = error?.driverError?.code || error?.code;
+      const msg = error?.message || '';
+      if (code === '23503' || msg.includes('violates foreign key constraint')) {
+        throw new ConflictException('This GST rate is in use. Reassign its products before deleting it.');
+      }
+      throw error;
+    }
     return { deleted: true };
   }
 
@@ -1269,7 +1289,16 @@ export class MastersService {
     const uom = await this.uomRepo.findOne({ where: { uomId: id } });
     if (!uom) throw new NotFoundException('UOM not found');
     this.validateAccess(user, uom, 'UOM');
-    await this.uomRepo.remove(uom);
+    try {
+      await this.uomRepo.remove(uom);
+    } catch (error: any) {
+      const code = error?.driverError?.code || error?.code;
+      const msg = error?.message || '';
+      if (code === '23503' || msg.includes('violates foreign key constraint')) {
+        throw new ConflictException('This UOM is in use. Reassign its products before deleting it.');
+      }
+      throw error;
+    }
     return { deleted: true };
   }
 
