@@ -1,5 +1,6 @@
 'use client';
 
+import { WorkspacePageHeader } from '@/components/workspace-page-header';
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { salesOrderApi } from '@/lib/api';
@@ -110,20 +111,14 @@ export default function QuotationsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Sales Order List</h1>
-          <p className="text-slate-500 mt-1">
-            Manage and track sales orders
-          </p>
-        </div>
+      <WorkspacePageHeader title="Sales Order List" description="Manage and track sales orders">
         <Link href="/dashboard/sales/orders/new">
           <Button>
             <FileText className="h-4 w-4 mr-2" />
             New Sales Order
           </Button>
         </Link>
-      </div>
+      </WorkspacePageHeader>
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

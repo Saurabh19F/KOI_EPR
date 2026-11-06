@@ -1,5 +1,6 @@
 'use client';
 
+import { WorkspacePageHeader } from '@/components/workspace-page-header';
 import { useState, useRef, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useMutation, useQuery } from '@tanstack/react-query';
@@ -356,14 +357,9 @@ export default function NewPurchaseOrderPage() {
         <Button variant="ghost" size="icon" asChild>
           <Link href="/dashboard/purchase/orders"><ArrowLeft className="h-5 w-5" /></Link>
         </Button>
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">New Purchase Order</h1>
-          <p className="text-gray-500">
-            {fromIds.length > 0
+        <WorkspacePageHeader title="New Purchase Order" description={<>{fromIds.length > 0
               ? `Creating from ${fromIds.length} selected PO(s) — products pre-filled`
-              : 'Create a manual purchase order'}
-          </p>
-        </div>
+              : 'Create a manual purchase order'}</>} />
       </div>
 
       {sourcePoQueries.isLoading && fromIds.length > 0 && (
@@ -682,7 +678,7 @@ export default function NewPurchaseOrderPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-xs border-collapse min-w-[1600px]">
               <thead>
-                <tr className="bg-[#003366] text-white text-[10px]">
+                <tr className="bg-[#2563eb] text-white text-[10px]">
                   <th className="py-2 px-2 border border-gray-500 text-center font-bold w-10">S. No.</th>
                   <th className="py-2 px-2 border border-gray-500 text-center font-bold min-w-[140px]">Unique Code</th>
                   <th className="py-2 px-2 border border-gray-500 text-center font-bold min-w-[180px]">Item Description</th>

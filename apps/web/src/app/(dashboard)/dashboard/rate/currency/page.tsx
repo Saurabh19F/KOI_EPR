@@ -1,5 +1,6 @@
 'use client';
 
+import { WorkspacePageHeader } from '@/components/workspace-page-header';
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { rateApi } from '@/lib/api';
@@ -129,12 +130,7 @@ export default function GlobalRatesPage() {
 
   return (
     <div className="space-y-4">
-      <div>
-        <h1 className="text-2xl font-extrabold tracking-tight text-slate-950">Global Rates</h1>
-        <p className="mt-1 text-sm text-slate-500">
-          Manage currency exchange rates and haulage costs. Changes apply to <strong>new</strong> rate analyses only.
-        </p>
-      </div>
+      <WorkspacePageHeader title="Global Rates" description={<>Manage currency exchange rates and haulage costs. Changes apply to <strong>new</strong> rate analyses only.</>} />
 
       <div className="flex items-center gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg">
         <AlertCircle className="h-4 w-4 text-amber-600 shrink-0" />

@@ -1,5 +1,6 @@
 'use client';
 
+import { WorkspacePageHeader } from '@/components/workspace-page-header';
 import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Hash, Mail, Building2, Settings, ArrowRight } from 'lucide-react';
@@ -31,10 +32,7 @@ const adminModules = [
 export default function AdminPage() {
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900">Admin Settings</h1>
-        <p className="text-slate-500 mt-1">Configure system-wide settings and organizational structure</p>
-      </div>
+      <WorkspacePageHeader title="Admin Settings" description="Configure system-wide settings and organizational structure" />
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {adminModules.map((module) => {

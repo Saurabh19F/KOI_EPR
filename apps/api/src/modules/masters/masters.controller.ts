@@ -125,7 +125,7 @@ export class MastersController {
 
   @Delete('brands/:id')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Delete a brand (soft delete)' })
+  @ApiOperation({ summary: 'Permanently delete an unused brand' })
   deleteBrand(@Param('id') id: string, @CurrentUser() user: any) {
     return this.mastersService.deleteBrand(id, user);
   }

@@ -1,5 +1,6 @@
 'use client';
 
+import { WorkspacePageHeader } from '@/components/workspace-page-header';
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { adminApi } from '@/lib/api';
@@ -142,16 +143,12 @@ export default function DepartmentsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Departments</h1>
-          <p className="text-slate-500 mt-1">Manage company departments and organizational structure</p>
-        </div>
+      <WorkspacePageHeader title="Departments" description="Manage company departments and organizational structure">
         <Button onClick={openNewDialog}>
           <Plus className="h-4 w-4 mr-2" />
           Add Department
         </Button>
-      </div>
+      </WorkspacePageHeader>
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4">
@@ -215,17 +212,7 @@ export default function DepartmentsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {isLoading ? (
-                [...Array(5)].map((_, i) => (
-                  <TableRow key={i}>
-                    {[...Array(6)].map((_, j) => (
-                      <TableCell key={j}>
-                        <div className="h-4 w-16 bg-gray-200 animate-pulse rounded" />
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              ) : departments.length ? (
+              {isLoading ? null : departments.length ? (
                 departments.map((dept: any) => (
                   <TableRow key={dept.id}>
                     <TableCell>

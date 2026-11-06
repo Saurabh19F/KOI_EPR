@@ -1,5 +1,6 @@
 'use client';
 
+import { WorkspacePageHeader } from '@/components/workspace-page-header';
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AxiosResponse } from 'axios';
@@ -141,18 +142,14 @@ export function WorkflowListPage({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
-          <p className="text-gray-500">{subtitle}</p>
-        </div>
+      <WorkspacePageHeader title={title} description={subtitle}>
         <Button asChild variant="outline">
           <Link href={moduleHref}>
             <FileText className="h-4 w-4 mr-2" />
             Source Module
           </Link>
         </Button>
-      </div>
+      </WorkspacePageHeader>
 
       <Card>
         <CardContent className="pt-6">
@@ -210,13 +207,7 @@ export function WorkflowListPage({
           <CardTitle>{title} List</CardTitle>
         </CardHeader>
         <CardContent>
-          {recordsQuery.isLoading ? (
-            <div className="space-y-4">
-              {[1, 2, 3, 4, 5].map((item) => (
-                <div key={item} className="h-16 rounded bg-gray-100 animate-pulse" />
-              ))}
-            </div>
-          ) : rows.length ? (
+          {recordsQuery.isLoading ? null : rows.length ? (
             <>
               <Table>
                 <TableHeader>

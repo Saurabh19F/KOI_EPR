@@ -23,7 +23,7 @@ export function KoiLogo({ variant = 'wordmark', className }: KoiLogoProps) {
         <img
           src={KOI_ICON_LOGO_SRC}
           alt=""
-          className="h-full w-full object-contain"
+          className="h-full w-full object-contain [filter:url(#koi-plum-logo)]"
         />
       </span>
     );
@@ -40,7 +40,7 @@ export function KoiLogo({ variant = 'wordmark', className }: KoiLogoProps) {
       <img
         src={KOI_WORDMARK_LOGO_SRC}
         alt=""
-        className="h-full w-full object-contain"
+        className="h-full w-full object-contain [filter:url(#koi-plum-logo)]"
       />
     </span>
   );

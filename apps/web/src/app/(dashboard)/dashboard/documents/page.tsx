@@ -1,5 +1,6 @@
 'use client';
 
+import { WorkspacePageHeader } from '@/components/workspace-page-header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { FileText, Upload, Folder, Search } from 'lucide-react';
@@ -10,16 +11,12 @@ export default function DocumentsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Documents</h1>
-          <p className="text-gray-500">Manage uploaded files and attachments</p>
-        </div>
+      <WorkspacePageHeader title="Documents" description="Manage uploaded files and attachments">
         <Button>
           <Upload className="h-4 w-4 mr-2" />
           Upload File
         </Button>
-      </div>
+      </WorkspacePageHeader>
 
       {/* Search */}
       <Card>

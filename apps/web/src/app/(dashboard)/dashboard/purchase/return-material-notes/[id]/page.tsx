@@ -181,7 +181,7 @@ export default function ReturnMaterialNoteDetailPage() {
       {!isCancelled && (
         <Card className="border-slate-200">
           <CardContent className="py-4">
-            <div className="flex items-center justify-center gap-0">
+            <div className="flex items-center gap-0 overflow-x-auto py-2 sm:justify-center">
               {STATUS_STEPS.map((step, i) => {
                 const isCompleted = currentStepIdx > i;
                 const isCurrent = currentStepIdx === i;

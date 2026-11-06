@@ -1,5 +1,6 @@
 'use client';
 
+import { WorkspacePageHeader } from '@/components/workspace-page-header';
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { inventoryApi } from '@/lib/api';
@@ -160,11 +161,7 @@ export default function WarehousesPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Warehouses</h1>
-          <p className="text-gray-500">Manage warehouse locations</p>
-        </div>
+      <WorkspacePageHeader title="Warehouses" description="Manage warehouse locations">
         <div className="flex items-center gap-2">
           <Button variant="outline" onClick={() => refetch()}>
             <RefreshCw className="h-4 w-4 mr-2" />
@@ -175,7 +172,7 @@ export default function WarehousesPage() {
             Add Warehouse
           </Button>
         </div>
-      </div>
+      </WorkspacePageHeader>
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -248,13 +245,7 @@ export default function WarehousesPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {isLoading ? (
-            <div className="space-y-4">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="h-16 bg-gray-100 rounded animate-pulse" />
-              ))}
-            </div>
-          ) : filteredWarehouses.length > 0 ? (
+          {isLoading ? null : filteredWarehouses.length > 0 ? (
             <Table>
               <TableHeader>
                 <TableRow>

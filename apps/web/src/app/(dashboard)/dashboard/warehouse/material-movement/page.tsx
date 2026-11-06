@@ -1,5 +1,6 @@
 'use client';
 
+import { WorkspacePageHeader } from '@/components/workspace-page-header';
 import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Package, TruckIcon, RotateCcw } from 'lucide-react';
@@ -12,10 +13,7 @@ export default function MaterialMovementPage() {
 
   return (
     <div className="space-y-4">
-      <div>
-        <h1 className="text-2xl font-extrabold tracking-tight text-slate-950">Material Movement</h1>
-        <p className="mt-1 text-sm text-slate-500">Inbound logistics, transfer requests, and production returns</p>
-      </div>
+      <WorkspacePageHeader title="Material Movement" description="Inbound logistics, transfer requests, and production returns" />
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-3">

@@ -1,5 +1,6 @@
 'use client';
 
+import { WorkspacePageHeader } from '@/components/workspace-page-header';
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { salesApi, usersApi } from '@/lib/api';
@@ -80,18 +81,14 @@ export default function SalesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Sales Enquiries</h1>
-          <p className="text-gray-500">Manage sales enquiry workflow</p>
-        </div>
+      <WorkspacePageHeader title="Sales Enquiries" description="Track enquiries from intake through review and quotation.">
         <Button asChild>
           <Link href="/dashboard/sales/new">
             <Plus className="h-4 w-4 mr-2" />
             New Enquiry
           </Link>
         </Button>
-      </div>
+      </WorkspacePageHeader>
 
       {/* Filters */}
       <Card>
@@ -147,13 +144,7 @@ export default function SalesPage() {
           <CardTitle>Enquiry List</CardTitle>
         </CardHeader>
         <CardContent>
-          {isLoading ? (
-            <div className="space-y-4">
-              {[1, 2, 3, 4, 5].map((i) => (
-                <div key={i} className="h-16 bg-gray-100 rounded animate-pulse" />
-              ))}
-            </div>
-          ) : data?.data?.data?.length ? (
+          {isLoading ? null : data?.data?.data?.length ? (
             <>
               <Table>
                 <TableHeader>

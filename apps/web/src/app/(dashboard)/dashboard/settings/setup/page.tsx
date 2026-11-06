@@ -1,5 +1,6 @@
 'use client';
 
+import { WorkspacePageHeader } from '@/components/workspace-page-header';
 import Link from 'next/link';
 import {
   Anchor,
@@ -136,10 +137,7 @@ const setupModules = [
 export default function SetupPage() {
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900">Setup</h1>
-        <p className="text-slate-500 mt-1">Manage configuration masters used across sales, purchase, rates, and reports</p>
-      </div>
+      <WorkspacePageHeader title="Setup" description="Manage configuration masters used across sales, purchase, rates, and reports" />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {setupModules.map((module) => {

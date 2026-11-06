@@ -1,5 +1,6 @@
 'use client';
 
+import { WorkspacePageHeader } from '@/components/workspace-page-header';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { financialApi } from '@/lib/api';
@@ -49,16 +50,12 @@ export default function JournalEntriesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Journal Entries</h1>
-          <p className="text-muted-foreground">View and manage accounting journal entries</p>
-        </div>
+      <WorkspacePageHeader title="Journal Entries" description="View and manage accounting journal entries">
         <Button onClick={() => refetch()}>
           <RefreshCw className="mr-2 h-4 w-4" />
           Refresh
         </Button>
-      </div>
+      </WorkspacePageHeader>
 
       <Card>
         <CardHeader>

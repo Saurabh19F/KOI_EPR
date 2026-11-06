@@ -45,7 +45,7 @@ export function useNotifications(options: UseNotificationsOptions = {}) {
   const token = typeof window !== 'undefined' ? sessionStorage.getItem('accessToken') : null;
   const queryEnabled = enabled && !!token;
 
-  // Fetch notifications from API
+  // Fetch notifications from API — poll only when WebSocket is disconnected
   const {
     data: notificationsData,
     isLoading,
@@ -58,10 +58,10 @@ export function useNotifications(options: UseNotificationsOptions = {}) {
     },
     enabled: queryEnabled,
     staleTime: 30000,
-    refetchInterval: 60000, // Poll every minute as fallback
+    refetchInterval: isConnected ? false : 60000,
   });
 
-  // Unread count query
+  // Unread count query — poll only when WebSocket is disconnected
   const { data: unreadData } = useQuery({
     queryKey: ['notifications-unread-count'],
     queryFn: async () => {
@@ -69,8 +69,8 @@ export function useNotifications(options: UseNotificationsOptions = {}) {
       return response.data.count;
     },
     enabled: queryEnabled,
-    staleTime: 10000,
-    refetchInterval: 30000,
+    staleTime: 30000,
+    refetchInterval: isConnected ? false : 60000,
   });
 
   // Mark as read mutation
@@ -189,22 +189,4 @@ export function useNotifications(options: UseNotificationsOptions = {}) {
     isMarkingAsRead: markAsReadMutation.isPending,
     isMarkingAllAsRead: markAllAsReadMutation.isPending,
   };
-}
-
-// Simple hook for just unread count
-export function useUnreadNotificationCount() {
-  const token = typeof window !== 'undefined' ? sessionStorage.getItem('accessToken') : null;
-
-  const { data: count } = useQuery({
-    queryKey: ['notifications-unread-count'],
-    queryFn: async () => {
-      const response = await notificationsApi.getUnreadCount();
-      return response.data.count;
-    },
-    enabled: !!token,
-    staleTime: 10000,
-    refetchInterval: 30000,
-  });
-
-  return count || 0;
 }

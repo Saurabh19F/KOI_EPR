@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { moduleAccents } from '@/lib/workspace-colors';
 import { cn } from '@/lib/utils';
 import {
   LayoutDashboard,
@@ -26,7 +27,10 @@ import {
   Building2,
   CalendarRange,
 } from 'lucide-react';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import * as Drawer from '@radix-ui/react-dialog';
+import { Menu, ChevronRight } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth';
 import { KoiLogo } from '@/components/brand/KoiLogo';
 
@@ -404,11 +408,68 @@ function hasAccess(item: NavItem, user: any): boolean {
   return hasRequiredRole && hasRequiredPermission;
 }
 
-export function Sidebar() {
+export function ModuleNavigation() {
+  const pathname = usePathname();
+  const router = useRouter();
+  const user = useAuthStore(state => state.user);
+  const segment = pathname.split('/')[2];
+  if (!segment) return null;
+  const section = navItems.find(item => item.href.split('/')[2] === segment && hasAccess(item, user));
+  const pages = section?.children?.filter(item => hasAccess(item, user)) || [];
+  const title = section?.title ?? segment.replace(/-/g, ' ');
+  const Icon = section?.icon ?? LayoutDashboard;
+  return (
+    <nav aria-label="Module navigation" className="workspace-context">
+      <div className="flex min-w-0 items-center gap-2">
+        <span className="workspace-context-symbol"><Icon size={17} aria-hidden="true" /></span>
+        <Link href="/dashboard" className="hover:underline">Workspace</Link>
+        <ChevronRight size={13} aria-hidden="true" />
+        <span className="truncate font-semibold capitalize text-white">{title}</span>
+      </div>
+      {pages.length > 0 && (
+        <select aria-label={`Browse ${title} pages`} value="" onChange={event => router.push(event.target.value)}>
+          <option value="" disabled>Browse {title}</option>
+          {pages.map(page => <option key={page.href} value={page.href}>{page.title}</option>)}
+        </select>
+      )}
+    </nav>
+  );
+}
+
+export function MobileNavigation() {
+  const [open, setOpen] = useState(false);
+  const pathname = usePathname();
+  useEffect(() => setOpen(false), [pathname]);
+  return (
+    <Drawer.Root open={open} onOpenChange={setOpen}>
+      <Drawer.Trigger className="rounded-lg p-2 text-plum-800 md:hidden" aria-label="Open navigation"><Menu size={20} /></Drawer.Trigger>
+      <Drawer.Portal>
+        <Drawer.Overlay className="fixed inset-0 z-50 bg-plum-950/50" />
+        <Drawer.Content aria-describedby={undefined} className="fixed inset-y-0 left-0 z-50 bg-plum-900">
+          <Drawer.Title className="sr-only">ERP navigation</Drawer.Title>
+          <Sidebar drawer onNavigate={() => setOpen(false)} />
+        </Drawer.Content>
+      </Drawer.Portal>
+    </Drawer.Root>
+  );
+}
+
+export function Sidebar({ drawer = false, onNavigate }: { drawer?: boolean; onNavigate?: () => void } = {}) {
   const pathname = usePathname();
   const { user, logout } = useAuthStore();
   const [openMenus, setOpenMenus] = useState<string[]>([]);
-  const [expanded, setExpanded] = useState(false);
+  const [hovered, setExpanded] = useState(false);
+  const [wide, setWide] = useState(false);
+  useEffect(() => {
+    const media = window.matchMedia('(min-width: 1366px)');
+    const update = () => setWide(media.matches);
+    update();
+    media.addEventListener('change', update);
+    return () => media.removeEventListener('change', update);
+  }, []);
+  const [manualExpansion, setManualExpansion] = useState<boolean | null>(null);
+  const expanded = drawer || (manualExpansion ?? (wide || hovered));
+  const toggleLabel = drawer ? 'Close navigation' : expanded ? 'Collapse sidebar' : 'Expand sidebar';
   const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleMouseEnter = () => {
@@ -445,27 +506,30 @@ export function Sidebar() {
 
   return (
     <aside
-      onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
+      onClick={event => { if ((event.target as Element).closest('a')) onNavigate?.(); }}
       className={cn(
-        'sticky top-0 flex h-screen flex-shrink-0 flex-col overflow-hidden text-white shadow-sidebar transition-all duration-300 ease-in-out',
-        expanded ? 'w-64' : 'w-[68px]'
+        'erp-rail sticky top-0 flex h-screen flex-shrink-0 flex-col overflow-hidden text-white shadow-sidebar transition-all duration-300 ease-in-out',
+        drawer ? 'h-dvh w-64' : expanded ? 'hidden w-64 md:flex' : 'hidden w-[68px] md:flex'
       )}
-      style={{ background: 'linear-gradient(180deg, #0d211d 0%, #091a16 40%, #060f0d 100%)' }}
     >
-      {/* Logo */}
-      <div className={cn('flex h-[72px] items-center justify-center border-b border-white/[0.06]', expanded ? 'px-3' : 'px-2')}>
-        <Link href="/dashboard" className="block">
-          {expanded ? (
-            <KoiLogo variant="wordmark" className="h-12 w-44 rounded-xl border-white/10" />
-          ) : (
-            <KoiLogo variant="icon" className="h-10 w-10" />
-          )}
-        </Link>
+      <div className={cn('flex h-[72px] shrink-0 items-center border-b border-slate-100 px-2', expanded ? 'justify-between gap-1' : 'justify-center')}>
+        {expanded && (
+          <Link href="/dashboard" aria-label="Dashboard" className="min-w-0">
+            <KoiLogo variant="wordmark" className="h-12 w-44 max-w-full rounded-xl border-white/10" />
+          </Link>
+        )}
+        <button type="button" title={toggleLabel} aria-label={toggleLabel} aria-expanded={expanded}
+          aria-controls={drawer ? 'mobile-sidebar-menu' : 'desktop-sidebar-menu'}
+          onClick={() => drawer ? onNavigate?.() : setManualExpansion(!expanded)}
+          className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-blue-600">
+          <Menu size={20} aria-hidden="true" />
+        </button>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto overflow-x-hidden px-2 py-3 scrollbar-thin">
+      <nav id={drawer ? 'mobile-sidebar-menu' : 'desktop-sidebar-menu'} onMouseEnter={handleMouseEnter}
+        className="flex-1 overflow-y-auto overflow-x-hidden px-2 py-3 scrollbar-thin">
         {navItems.map((item) => (
           <NavItemView
             key={item.title}
@@ -504,12 +568,12 @@ export function Sidebar() {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="truncate text-sm font-bold">{user?.name || 'User'}</p>
-                <p className="truncate text-[11px] font-semibold uppercase tracking-[0.08em] text-[#bdd0c8]">{userRoleDisplay}</p>
+                <p className="truncate text-[11px] font-semibold uppercase tracking-[0.08em] text-[#fcfeff]">{userRoleDisplay}</p>
               </div>
             </div>
             <button
               onClick={logout}
-              className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-semibold text-[#bdd0c8] transition-colors hover:bg-white/10 hover:text-white"
+              className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-semibold text-[#fcfeff] transition-colors hover:bg-white/10 hover:text-white"
             >
               <LogOut className="h-4 w-4 flex-shrink-0" />
               <span>Logout</span>
@@ -534,7 +598,7 @@ export function Sidebar() {
             </div>
             <button
               onClick={logout}
-              className="rounded-lg p-2 text-[#bdd0c8] transition-colors hover:bg-white/10 hover:text-white"
+              className="rounded-lg p-2 text-[#fcfeff] transition-colors hover:bg-white/10 hover:text-white"
               title="Logout"
             >
               <LogOut className="h-4 w-4" />
@@ -573,21 +637,26 @@ function NavItemView({
   const isOpen = expanded && (openMenus.includes(item.title) || hasActiveChild(item));
   const itemActive = isActive(item.href);
   const Icon = item.icon;
+  const accent = moduleAccents[item.href.split('/')[2]] ?? 'blue';
 
   // Collapsed: show only top-level icons
   if (!expanded) {
     if (level > 0) return null;
     return (
-      <Link
-        href={item.href}
-        className={cn(
-          'my-1 flex items-center justify-center rounded-xl py-3 text-[#bdd0c8] transition-all duration-200 hover:bg-white/[0.07] hover:text-white',
-          (itemActive || hasActiveChild(item)) && 'bg-gradient-to-r from-[#f7f3ea] to-[#efe8dc] text-[#0f2f29] shadow-sm'
-        )}
-        title={item.title}
-      >
-        {Icon && <Icon className="h-5 w-5" />}
-      </Link>
+        <Link
+          href={item.href}
+          className={cn(
+            'my-1 flex w-full items-center justify-center rounded-xl py-3 text-[#fcfeff] transition-all duration-200 hover:bg-white/[0.07] hover:text-white hover:scale-110',
+            (itemActive || hasActiveChild(item)) && 'bg-gradient-to-r from-[#fcfeff] to-[#fcfeff]/30 text-[#2563eb] shadow-sm'
+          )}
+          title={item.title}
+          aria-label={item.title}
+          data-icon-accent={accent}
+          data-selected={itemActive || hasActiveChild(item)}
+          aria-current={itemActive ? 'page' : undefined}
+        >
+          {Icon && <Icon className="h-5 w-5 transition-transform duration-200" />}
+        </Link>
     );
   }
 
@@ -595,13 +664,17 @@ function NavItemView({
   const paddingLeft = 16 + level * 16;
 
   if (visibleChildren.length > 0) {
+    const groupIsCurrent = itemActive && !visibleChildren.some(child => isActive(child.href) || hasActiveChild(child));
     return (
       <div>
         <button
+          data-icon-accent={accent}
+          aria-current={groupIsCurrent ? 'page' : undefined}
+          aria-expanded={isOpen}
           onClick={() => toggleMenu(item.title)}
           style={{ paddingLeft }}
           className={cn(
-            'flex w-full items-center justify-between rounded-xl pr-4 text-sm font-semibold text-[#bdd0c8] transition-all duration-200 hover:bg-white/[0.07] hover:text-white whitespace-nowrap',
+            'flex w-full items-center justify-between rounded-xl pr-4 text-sm font-semibold text-[#fcfeff] transition-all duration-200 hover:bg-white/[0.07] hover:text-white hover:translate-x-0.5 whitespace-nowrap',
             level === 0 ? 'my-1 py-2.5' : 'my-0.5 py-2',
             (isOpen || itemActive) && 'bg-white/[0.08] text-white'
           )}
@@ -642,11 +715,13 @@ function NavItemView({
   return (
     <Link
       href={item.href}
+      data-icon-accent={accent}
+      aria-current={itemActive ? 'page' : undefined}
       style={{ paddingLeft }}
       className={cn(
-        'my-0.5 flex items-center gap-3 rounded-xl pr-4 py-2 text-sm font-semibold text-[#bdd0c8] transition-all duration-200 hover:bg-white/[0.07] hover:text-white whitespace-nowrap',
+        'my-0.5 flex items-center gap-3 rounded-xl pr-4 py-2 text-sm font-semibold text-[#fcfeff] transition-all duration-200 hover:bg-white/[0.07] hover:text-white hover:translate-x-0.5 whitespace-nowrap',
         level === 0 && 'my-1 py-2.5',
-        itemActive && 'bg-gradient-to-r from-[#f7f3ea] to-[#efe8dc] text-[#0f2f29] shadow-sm'
+        itemActive && 'bg-gradient-to-r from-[#fcfeff] to-[#fcfeff]/30 text-[#2563eb] shadow-sm'
       )}
     >
       {Icon && <Icon className="h-5 w-5 flex-shrink-0" />}

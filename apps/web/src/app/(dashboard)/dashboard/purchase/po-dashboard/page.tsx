@@ -1,5 +1,6 @@
 'use client';
 
+import { WorkspacePageHeader } from '@/components/workspace-page-header';
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -799,10 +800,7 @@ export default function PODashboardPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Purchase Order Management</h1>
-        <p className="text-muted-foreground">Dashboard, orders, approvals, vendors, and tracking</p>
-      </div>
+      <WorkspacePageHeader title="Purchase Order Management" description="Dashboard, orders, approvals, vendors, and tracking" />
 
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as TabType)}>
         <TabsList className="flex-wrap h-auto">

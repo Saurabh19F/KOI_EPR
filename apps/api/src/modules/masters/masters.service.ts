@@ -1,6 +1,6 @@
-import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ConflictException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Like, ILike, IsNull, DataSource, In } from 'typeorm';
+import { Repository, Like, ILike, IsNull, DataSource, In, QueryFailedError } from 'typeorm';
 import { ProductCategory } from './entities/product-category.entity';
 import { Segment } from './entities/segment.entity';
 import { ComponentGroup } from './entities/component-group.entity';
@@ -216,7 +216,14 @@ export class MastersService {
     const brand = await this.brandRepo.findOne({ where: { brandId: id } });
     if (!brand) throw new NotFoundException('Brand not found');
     this.validateAccess(user, brand, 'Brand');
-    await this.brandRepo.remove(brand);
+    try {
+      await this.brandRepo.remove(brand);
+    } catch (error) {
+      if (error instanceof QueryFailedError && 'code' in error.driverError && error.driverError.code === '23503') {
+        throw new ConflictException('This brand is in use. Deactivate it, or reassign its products before deleting it.');
+      }
+      throw error;
+    }
     return { deleted: true };
   }
 

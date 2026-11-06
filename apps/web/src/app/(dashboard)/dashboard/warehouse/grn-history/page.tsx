@@ -108,24 +108,24 @@ export default function GrnHistoryPage() {
     win.document.write(`
       <html><head><title>GRN Slip</title>
       <style>
-        body { font-family: 'Courier New', monospace; margin: 20px; color: #1a1a2e; }
-        .grn-slip { max-width: 800px; margin: 0 auto; border: 2px solid #1a1a2e; padding: 24px; }
-        .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; border-bottom: 2px solid #1a1a2e; padding-bottom: 12px; }
+        body { font-family: 'Courier New', monospace; margin: 20px; color: #2563eb; }
+        .grn-slip { max-width: 800px; margin: 0 auto; border: 2px solid #2563eb; padding: 24px; }
+        .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; border-bottom: 2px solid #2563eb; padding-bottom: 12px; }
         .section-row { display: flex; gap: 16px; margin-bottom: 16px; }
-        .section { flex: 1; border: 1px solid #cbd5e1; padding: 12px; }
-        .section-title { font-size: 11px; font-weight: bold; color: #1e40af; letter-spacing: 1px; margin-bottom: 8px; text-decoration: underline; }
+        .section { flex: 1; border: 1px solid #fcfeff; padding: 12px; }
+        .section-title { font-size: 11px; font-weight: bold; color: #2563eb; letter-spacing: 1px; margin-bottom: 8px; text-decoration: underline; }
         .field { display: flex; margin-bottom: 4px; font-size: 12px; }
-        .field-label { color: #64748b; min-width: 130px; }
+        .field-label { color: #2563eb; min-width: 130px; }
         .field-value { font-weight: bold; }
         table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 12px; }
-        th { background: #1e293b; color: white; padding: 8px; text-align: left; font-size: 11px; }
-        td { padding: 8px; border: 1px solid #e2e8f0; }
-        .qty-accepted { background: #dcfce7; text-align: center; color: #16a34a; font-weight: bold; }
-        .qty-rejected { background: #fee2e2; text-align: center; color: #dc2626; font-weight: bold; }
-        .signatures { display: flex; justify-content: space-between; margin-top: 24px; border-top: 1px solid #cbd5e1; padding-top: 16px; }
+        th { background: #2563eb; color: #fcfeff; padding: 8px; text-align: left; font-size: 11px; }
+        td { padding: 8px; border: 1px solid #fcfeff; }
+        .qty-accepted { background: #fcfeff; text-align: center; color: #2563eb; font-weight: bold; }
+        .qty-rejected { background: #fcfeff; text-align: center; color: #2563eb; font-weight: bold; }
+        .signatures { display: flex; justify-content: space-between; margin-top: 24px; border-top: 1px solid #fcfeff; padding-top: 16px; }
         .sig-block { text-align: center; font-size: 11px; }
-        .sig-line { border-top: 1px solid #1a1a2e; width: 160px; margin: 24px auto 4px; }
-        .footer { text-align: center; margin-top: 16px; font-size: 10px; color: #94a3b8; }
+        .sig-line { border-top: 1px solid #2563eb; width: 160px; margin: 24px auto 4px; }
+        .footer { text-align: center; margin-top: 16px; font-size: 10px; color: #2563eb; }
         @media print { body { margin: 0; } .grn-slip { border: none; } }
       </style>
       </head><body>${printContent}</body></html>
@@ -405,11 +405,11 @@ export default function GrnHistoryPage() {
 
           {printGrn && (
             <div ref={printRef}>
-              <div style={{ border: '2px solid #1a1a2e', padding: '24px', fontFamily: "'Courier New', monospace", maxWidth: '800px', margin: '0 auto' }}>
+              <div style={{ border: '2px solid #2563eb', padding: '24px', fontFamily: "'Courier New', monospace", maxWidth: '800px', margin: '0 auto' }}>
                 {/* Header */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '2px solid #1a1a2e', paddingBottom: '12px', marginBottom: '16px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '2px solid #2563eb', paddingBottom: '12px', marginBottom: '16px' }}>
                   <div>
-                    <div style={{ fontSize: '11px', color: '#6366f1', letterSpacing: '1px' }}>WAREHOUSE MANAGEMENT OPERATIONS</div>
+                    <div style={{ fontSize: '11px', color: '#2563eb', letterSpacing: '1px' }}>WAREHOUSE MANAGEMENT OPERATIONS</div>
                     <h2 style={{ fontSize: '20px', fontWeight: 'bold', margin: '4px 0' }}>GOODS RECEIPT NOTE (ACCEPTED)</h2>
                     <div style={{ fontSize: '12px', textDecoration: 'underline' }}>
                       Ref ID: {printGrn.grnNumber} | Date: {printGrn.createdAt ? new Date(printGrn.createdAt).toLocaleString() : '—'}
@@ -417,46 +417,46 @@ export default function GrnHistoryPage() {
                   </div>
                   <div style={{ textAlign: 'right' }}>
                     <div style={{ fontSize: '28px', fontWeight: 'bold' }}>KOI</div>
-                    <div style={{ fontSize: '10px', color: '#16a34a' }}>SYS.AUTH.VERIFIED</div>
+                    <div style={{ fontSize: '10px', color: '#2563eb' }}>SYS.AUTH.VERIFIED</div>
                   </div>
                 </div>
 
                 {/* Sourcing & Logistics */}
                 <div style={{ display: 'flex', gap: '16px', marginBottom: '16px' }}>
-                  <div style={{ flex: 1, border: '1px solid #cbd5e1', padding: '12px' }}>
-                    <div style={{ fontSize: '11px', fontWeight: 'bold', color: '#1e40af', letterSpacing: '1px', marginBottom: '8px', textDecoration: 'underline' }}>SOURCING PARTICULARS</div>
+                  <div style={{ flex: 1, border: '1px solid #fcfeff', padding: '12px' }}>
+                    <div style={{ fontSize: '11px', fontWeight: 'bold', color: '#2563eb', letterSpacing: '1px', marginBottom: '8px', textDecoration: 'underline' }}>SOURCING PARTICULARS</div>
                     <div style={{ fontSize: '12px' }}>
-                      <div style={{ display: 'flex', marginBottom: '4px' }}><span style={{ color: '#64748b', minWidth: '130px' }}>Sales Order No:</span> <strong style={{ color: '#2563eb' }}>{printGrn.poNumber || '—'}</strong></div>
-                      <div style={{ display: 'flex', marginBottom: '4px' }}><span style={{ color: '#64748b', minWidth: '130px' }}>Buyer Code:</span> <strong>{printGrn.buyerCode || '—'}</strong></div>
-                      <div style={{ display: 'flex', marginBottom: '4px' }}><span style={{ color: '#64748b', minWidth: '130px' }}>Vendor Name:</span> <strong>{printGrn.vendorDetails || '—'}</strong></div>
-                      <div style={{ display: 'flex', marginBottom: '4px' }}><span style={{ color: '#64748b', minWidth: '130px' }}>PO Number:</span> <strong style={{ color: '#2563eb' }}>{printGrn.poNumber || '—'}</strong></div>
+                      <div style={{ display: 'flex', marginBottom: '4px' }}><span style={{ color: '#2563eb', minWidth: '130px' }}>Sales Order No:</span> <strong style={{ color: '#2563eb' }}>{printGrn.poNumber || '—'}</strong></div>
+                      <div style={{ display: 'flex', marginBottom: '4px' }}><span style={{ color: '#2563eb', minWidth: '130px' }}>Buyer Code:</span> <strong>{printGrn.buyerCode || '—'}</strong></div>
+                      <div style={{ display: 'flex', marginBottom: '4px' }}><span style={{ color: '#2563eb', minWidth: '130px' }}>Vendor Name:</span> <strong>{printGrn.vendorDetails || '—'}</strong></div>
+                      <div style={{ display: 'flex', marginBottom: '4px' }}><span style={{ color: '#2563eb', minWidth: '130px' }}>PO Number:</span> <strong style={{ color: '#2563eb' }}>{printGrn.poNumber || '—'}</strong></div>
                     </div>
                   </div>
-                  <div style={{ flex: 1, border: '1px solid #cbd5e1', padding: '12px' }}>
-                    <div style={{ fontSize: '11px', fontWeight: 'bold', color: '#1e40af', letterSpacing: '1px', marginBottom: '8px', textDecoration: 'underline' }}>LOGISTICS &amp; PLANNING</div>
+                  <div style={{ flex: 1, border: '1px solid #fcfeff', padding: '12px' }}>
+                    <div style={{ fontSize: '11px', fontWeight: 'bold', color: '#2563eb', letterSpacing: '1px', marginBottom: '8px', textDecoration: 'underline' }}>LOGISTICS &amp; PLANNING</div>
                     <div style={{ fontSize: '12px' }}>
-                      <div style={{ display: 'flex', marginBottom: '4px' }}><span style={{ color: '#64748b', minWidth: '130px' }}>Warehouse ID:</span> <strong>{printGrn.storageLocation || '—'}</strong></div>
-                      <div style={{ display: 'flex', marginBottom: '4px' }}><span style={{ color: '#64748b', minWidth: '130px' }}>Plan ID:</span> <strong>{printGrn.planId || '—'}</strong></div>
-                      <div style={{ display: 'flex', marginBottom: '4px' }}><span style={{ color: '#64748b', minWidth: '130px' }}>Date Received:</span> <strong>{printGrn.createdAt ? new Date(printGrn.createdAt).toLocaleString() : '—'}</strong></div>
+                      <div style={{ display: 'flex', marginBottom: '4px' }}><span style={{ color: '#2563eb', minWidth: '130px' }}>Warehouse ID:</span> <strong>{printGrn.storageLocation || '—'}</strong></div>
+                      <div style={{ display: 'flex', marginBottom: '4px' }}><span style={{ color: '#2563eb', minWidth: '130px' }}>Plan ID:</span> <strong>{printGrn.planId || '—'}</strong></div>
+                      <div style={{ display: 'flex', marginBottom: '4px' }}><span style={{ color: '#2563eb', minWidth: '130px' }}>Date Received:</span> <strong>{printGrn.createdAt ? new Date(printGrn.createdAt).toLocaleString() : '—'}</strong></div>
                     </div>
                   </div>
                 </div>
 
                 {/* Transit */}
-                <div style={{ border: '1px solid #cbd5e1', padding: '12px', marginBottom: '16px' }}>
-                  <div style={{ fontSize: '11px', fontWeight: 'bold', color: '#1e40af', letterSpacing: '1px', marginBottom: '8px', textDecoration: 'underline' }}>TRANSIT PARAMETERS</div>
+                <div style={{ border: '1px solid #fcfeff', padding: '12px', marginBottom: '16px' }}>
+                  <div style={{ fontSize: '11px', fontWeight: 'bold', color: '#2563eb', letterSpacing: '1px', marginBottom: '8px', textDecoration: 'underline' }}>TRANSIT PARAMETERS</div>
                   <div style={{ display: 'flex', gap: '16px', fontSize: '12px' }}>
                     <div style={{ flex: 1 }}>
-                      <div style={{ display: 'flex', marginBottom: '4px' }}><span style={{ color: '#64748b', minWidth: '130px' }}>Invoice No:</span> <strong>{printGrn.invoiceNumber || '—'}</strong></div>
-                      <div style={{ display: 'flex', marginBottom: '4px' }}><span style={{ color: '#64748b', minWidth: '130px' }}>Truck Vehicle No:</span> <strong>{printGrn.vehicleNumber || '—'}</strong></div>
+                      <div style={{ display: 'flex', marginBottom: '4px' }}><span style={{ color: '#2563eb', minWidth: '130px' }}>Invoice No:</span> <strong>{printGrn.invoiceNumber || '—'}</strong></div>
+                      <div style={{ display: 'flex', marginBottom: '4px' }}><span style={{ color: '#2563eb', minWidth: '130px' }}>Truck Vehicle No:</span> <strong>{printGrn.vehicleNumber || '—'}</strong></div>
                     </div>
                     <div style={{ flex: 1 }}>
-                      <div style={{ display: 'flex', marginBottom: '4px' }}><span style={{ color: '#64748b', minWidth: '130px' }}>GST Invoice No:</span> <strong>{printGrn.gstInvoiceNo || '—'}</strong></div>
-                      <div style={{ display: 'flex', marginBottom: '4px' }}><span style={{ color: '#64748b', minWidth: '130px' }}>Driver Name:</span> <strong>{printGrn.driverName || '—'}</strong></div>
+                      <div style={{ display: 'flex', marginBottom: '4px' }}><span style={{ color: '#2563eb', minWidth: '130px' }}>GST Invoice No:</span> <strong>{printGrn.gstInvoiceNo || '—'}</strong></div>
+                      <div style={{ display: 'flex', marginBottom: '4px' }}><span style={{ color: '#2563eb', minWidth: '130px' }}>Driver Name:</span> <strong>{printGrn.driverName || '—'}</strong></div>
                     </div>
                     <div style={{ flex: 1 }}>
-                      <div style={{ display: 'flex', marginBottom: '4px' }}><span style={{ color: '#64748b', minWidth: '130px' }}>Bilty (LR) No:</span> <strong>{printGrn.lrNumber || '—'}</strong></div>
-                      <div style={{ display: 'flex', marginBottom: '4px' }}><span style={{ color: '#64748b', minWidth: '130px' }}>Driver Phone:</span> <strong>{printGrn.driverNo || '—'}</strong></div>
+                      <div style={{ display: 'flex', marginBottom: '4px' }}><span style={{ color: '#2563eb', minWidth: '130px' }}>Bilty (LR) No:</span> <strong>{printGrn.lrNumber || '—'}</strong></div>
+                      <div style={{ display: 'flex', marginBottom: '4px' }}><span style={{ color: '#2563eb', minWidth: '130px' }}>Driver Phone:</span> <strong>{printGrn.driverNo || '—'}</strong></div>
                     </div>
                   </div>
                 </div>
@@ -465,57 +465,57 @@ export default function GrnHistoryPage() {
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', marginBottom: '16px' }}>
                   <thead>
                     <tr>
-                      <th style={{ background: '#1e293b', color: 'white', padding: '8px', textAlign: 'left', fontSize: '11px' }}>PRODUCT ID</th>
-                      <th style={{ background: '#1e293b', color: 'white', padding: '8px', textAlign: 'left', fontSize: '11px' }}>PRODUCT DESCRIPTION</th>
-                      <th style={{ background: '#1e293b', color: 'white', padding: '8px', textAlign: 'center', fontSize: '11px' }}>TOTAL PLANNED</th>
-                      <th style={{ background: '#1e293b', color: 'white', padding: '8px', textAlign: 'center', fontSize: '11px' }}>ACCEPTED</th>
-                      <th style={{ background: '#1e293b', color: 'white', padding: '8px', textAlign: 'center', fontSize: '11px' }}>REJECTED</th>
-                      <th style={{ background: '#1e293b', color: 'white', padding: '8px', textAlign: 'left', fontSize: '11px' }}>UOM</th>
+                      <th style={{ background: '#2563eb', color: '#fcfeff', padding: '8px', textAlign: 'left', fontSize: '11px' }}>PRODUCT ID</th>
+                      <th style={{ background: '#2563eb', color: '#fcfeff', padding: '8px', textAlign: 'left', fontSize: '11px' }}>PRODUCT DESCRIPTION</th>
+                      <th style={{ background: '#2563eb', color: '#fcfeff', padding: '8px', textAlign: 'center', fontSize: '11px' }}>TOTAL PLANNED</th>
+                      <th style={{ background: '#2563eb', color: '#fcfeff', padding: '8px', textAlign: 'center', fontSize: '11px' }}>ACCEPTED</th>
+                      <th style={{ background: '#2563eb', color: '#fcfeff', padding: '8px', textAlign: 'center', fontSize: '11px' }}>REJECTED</th>
+                      <th style={{ background: '#2563eb', color: '#fcfeff', padding: '8px', textAlign: 'left', fontSize: '11px' }}>UOM</th>
                     </tr>
                   </thead>
                   <tbody>
                     {(printGrn.items || []).map((item: any, idx: number) => (
                       <tr key={idx}>
-                        <td style={{ padding: '8px', border: '1px solid #e2e8f0', fontSize: '11px' }}>{item.sku || item.productId || '—'}</td>
-                        <td style={{ padding: '8px', border: '1px solid #e2e8f0' }}>{item.productName || '—'}</td>
-                        <td style={{ padding: '8px', border: '1px solid #e2e8f0', background: '#dbeafe', textAlign: 'center' }}>{Number(item.orderedQuantity || 0)}</td>
-                        <td style={{ padding: '8px', border: '1px solid #e2e8f0', background: '#dcfce7', textAlign: 'center', color: '#16a34a', fontWeight: 'bold' }}>{Number(item.acceptedQuantity || 0)}</td>
-                        <td style={{ padding: '8px', border: '1px solid #e2e8f0', background: '#fee2e2', textAlign: 'center', color: '#dc2626', fontWeight: 'bold' }}>{Number(item.rejectedQuantity || 0)}</td>
-                        <td style={{ padding: '8px', border: '1px solid #e2e8f0' }}>{item.uomName || '—'}</td>
+                        <td style={{ padding: '8px', border: '1px solid #fcfeff', fontSize: '11px' }}>{item.sku || item.productId || '—'}</td>
+                        <td style={{ padding: '8px', border: '1px solid #fcfeff' }}>{item.productName || '—'}</td>
+                        <td style={{ padding: '8px', border: '1px solid #fcfeff', background: '#fcfeff', textAlign: 'center' }}>{Number(item.orderedQuantity || 0)}</td>
+                        <td style={{ padding: '8px', border: '1px solid #fcfeff', background: '#fcfeff', textAlign: 'center', color: '#2563eb', fontWeight: 'bold' }}>{Number(item.acceptedQuantity || 0)}</td>
+                        <td style={{ padding: '8px', border: '1px solid #fcfeff', background: '#fcfeff', textAlign: 'center', color: '#2563eb', fontWeight: 'bold' }}>{Number(item.rejectedQuantity || 0)}</td>
+                        <td style={{ padding: '8px', border: '1px solid #fcfeff' }}>{item.uomName || '—'}</td>
                       </tr>
                     ))}
                     {(!printGrn.items || printGrn.items.length === 0) && (
                       <tr>
-                        <td colSpan={6} style={{ padding: '8px', border: '1px solid #e2e8f0', textAlign: 'center', color: '#94a3b8' }}>No items</td>
+                        <td colSpan={6} style={{ padding: '8px', border: '1px solid #fcfeff', textAlign: 'center', color: '#2563eb' }}>No items</td>
                       </tr>
                     )}
                   </tbody>
                 </table>
 
                 {/* Remarks */}
-                <div style={{ border: '1px solid #cbd5e1', padding: '12px', marginBottom: '16px' }}>
-                  <div style={{ fontSize: '11px', textDecoration: 'underline', color: '#64748b' }}>Operational Remarks:</div>
+                <div style={{ border: '1px solid #fcfeff', padding: '12px', marginBottom: '16px' }}>
+                  <div style={{ fontSize: '11px', textDecoration: 'underline', color: '#2563eb' }}>Operational Remarks:</div>
                   <div style={{ fontWeight: 'bold', fontSize: '12px' }}>{printGrn.notes || 'OK'}</div>
                 </div>
 
                 {/* Signatures */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #cbd5e1', paddingTop: '16px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #fcfeff', paddingTop: '16px' }}>
                   <div style={{ textAlign: 'center', fontSize: '11px' }}>
-                    <div style={{ borderTop: '1px solid #1a1a2e', width: '160px', margin: '24px auto 4px' }}></div>
+                    <div style={{ borderTop: '1px solid #2563eb', width: '160px', margin: '24px auto 4px' }}></div>
                     <div style={{ textDecoration: 'underline' }}>System Authorized &amp; Checked By:</div>
-                    <div style={{ fontWeight: 'bold', color: '#1e40af' }}>{printGrn.receivedByUsername || '—'}</div>
+                    <div style={{ fontWeight: 'bold', color: '#2563eb' }}>{printGrn.receivedByUsername || '—'}</div>
                   </div>
                   <div style={{ textAlign: 'center', fontSize: '11px' }}>
-                    <div style={{ borderTop: '1px solid #1a1a2e', width: '160px', margin: '24px auto 4px' }}></div>
+                    <div style={{ borderTop: '1px solid #2563eb', width: '160px', margin: '24px auto 4px' }}></div>
                     <div>Auditor Signature</div>
                   </div>
                   <div style={{ textAlign: 'center', fontSize: '11px' }}>
-                    <div style={{ borderTop: '1px solid #1a1a2e', width: '160px', margin: '24px auto 4px' }}></div>
+                    <div style={{ borderTop: '1px solid #2563eb', width: '160px', margin: '24px auto 4px' }}></div>
                     <div>Receiver / Driver</div>
                   </div>
                 </div>
 
-                <div style={{ textAlign: 'center', marginTop: '16px', fontSize: '10px', color: '#94a3b8' }}>
+                <div style={{ textAlign: 'center', marginTop: '16px', fontSize: '10px', color: '#2563eb' }}>
                   SYS-GEN-{printGrn.grnNumber}
                 </div>
               </div>

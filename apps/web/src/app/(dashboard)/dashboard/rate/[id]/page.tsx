@@ -584,10 +584,10 @@ export default function RateDetailPage() {
         {(() => {
           const cur = (analysisData.currency || globalTargetCurrency || 'USD').toUpperCase();
           const currencyConfig: Record<string, { border: string; bg: string; text: string; darkText: string; rate: number; setRate: (v: number) => void; margin: number; setMargin: (v: number) => void; final: number }> = {
-            GBP: { border: 'border-blue-200', bg: 'bg-blue-50/60', text: 'text-blue-700', darkText: 'text-blue-900', rate: gbpRate, setRate: setGbpRate, margin: gbpMargin, setMargin: setGbpMargin, final: finalGbp },
-            USD: { border: 'border-green-200', bg: 'bg-green-50/60', text: 'text-green-700', darkText: 'text-green-900', rate: usdRate, setRate: setUsdRate, margin: usdMargin, setMargin: setUsdMargin, final: finalUsd },
+            GBP: { border: 'border-blue-200', bg: 'bg-blue-50', text: 'text-blue-700', darkText: 'text-blue-900', rate: gbpRate, setRate: setGbpRate, margin: gbpMargin, setMargin: setGbpMargin, final: finalGbp },
+            USD: { border: 'border-green-200', bg: 'bg-green-50', text: 'text-green-700', darkText: 'text-green-900', rate: usdRate, setRate: setUsdRate, margin: usdMargin, setMargin: setUsdMargin, final: finalUsd },
             CAD: { border: 'border-orange-200', bg: 'bg-orange-50/60', text: 'text-orange-700', darkText: 'text-orange-900', rate: cadRate, setRate: setCadRate, margin: cadMargin, setMargin: setCadMargin, final: finalCad },
-            AUD: { border: 'border-purple-200', bg: 'bg-purple-50/60', text: 'text-purple-700', darkText: 'text-purple-900', rate: audRate, setRate: setAudRate, margin: audMargin, setMargin: setAudMargin, final: finalAud },
+            AUD: { border: 'border-purple-200', bg: 'bg-purple-50', text: 'text-purple-700', darkText: 'text-purple-900', rate: audRate, setRate: setAudRate, margin: audMargin, setMargin: setAudMargin, final: finalAud },
             EUR: { border: 'border-red-200', bg: 'bg-red-50/60', text: 'text-red-700', darkText: 'text-red-900', rate: euroRate, setRate: setEuroRate, margin: euroMargin, setMargin: setEuroMargin, final: finalEuro },
             EURO: { border: 'border-red-200', bg: 'bg-red-50/60', text: 'text-red-700', darkText: 'text-red-900', rate: euroRate, setRate: setEuroRate, margin: euroMargin, setMargin: setEuroMargin, final: finalEuro },
           };
@@ -612,7 +612,7 @@ export default function RateDetailPage() {
         })()}
 
         {/* Haulage */}
-        <div className="rounded-md border border-yellow-200 bg-yellow-50/60 p-2">
+        <div className="rounded-md border border-yellow-200 bg-yellow-50 p-2">
           <p className="text-xs font-bold text-yellow-700 text-center mb-1.5">HAULAGE</p>
           <div className="text-[10px] mb-1">
             <select title="Haulage Location" aria-label="Haulage Location" className="w-full h-5 border rounded font-mono bg-white text-[10px]" value={haulageLocation} onChange={(e) => setHaulageLocation(e.target.value)} disabled={isLocked}>
@@ -630,7 +630,7 @@ export default function RateDetailPage() {
         </div>
 
         {/* Freight */}
-        <div className="rounded-md border border-amber-200 bg-amber-50/60 p-2">
+        <div className="rounded-md border border-amber-200 bg-amber-50 p-2">
           <p className="text-xs font-bold text-amber-700 text-center mb-1.5">FREIGHT</p>
           <div className="text-[10px] mb-1">
             <span className="text-slate-500 text-[9px]">{analysisData.paymentTerms || 'CIF'} • {analysisData.country || 'Dest.'}</span>
@@ -649,7 +649,7 @@ export default function RateDetailPage() {
       <div className="flex items-center gap-2 mt-1 p-1.5 bg-blue-50 border border-blue-200 rounded-md">
         <span className="text-[10px] font-semibold text-blue-700">Enquiry Currency:</span>
         <span className="text-[10px] font-mono font-bold text-blue-800">{(analysisData.currency || 'USD').toUpperCase()}</span>
-        <span className="text-[9px] text-blue-500 italic">All product rows use this currency</span>
+        <span className="text-[11px] text-blue-800 italic">All product rows use this currency</span>
       </div>
 
       {/* Main Rate Calculation Grid */}

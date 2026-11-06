@@ -1,5 +1,6 @@
 'use client';
 
+import { WorkspacePageHeader } from '@/components/workspace-page-header';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { accountsApi } from '@/lib/api';
@@ -60,18 +61,12 @@ export default function POInvoiceStatusPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Accounts PO / Invoice Status</h1>
-          <p className="text-muted-foreground">
-            Track purchase orders from indent through to invoice and ledger entry
-          </p>
-        </div>
+      <WorkspacePageHeader title="Accounts PO / Invoice Status" description="Track purchase orders from indent through to invoice and ledger entry">
         <Button variant="outline" onClick={() => { refetchIndent(); refetchPending(); }}>
           <RefreshCw className="mr-2 h-4 w-4" />
           Refresh
         </Button>
-      </div>
+      </WorkspacePageHeader>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
         <Card>

@@ -1,5 +1,6 @@
 'use client';
 
+import { WorkspacePageHeader } from '@/components/workspace-page-header';
 import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { receivingPlanApi, inventoryApi } from '@/lib/api';
@@ -141,18 +142,12 @@ export default function OffloadingPlanPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Offloading Location Planning</h1>
-          <p className="text-muted-foreground">
-            Assign dock, bay, and offloading areas to incoming shipments
-          </p>
-        </div>
+      <WorkspacePageHeader title="Offloading Location Planning" description="Assign dock, bay, and offloading areas to incoming shipments">
         <Button variant="outline" onClick={() => refetch()}>
           <RefreshCw className="mr-2 h-4 w-4" />
           Refresh
         </Button>
-      </div>
+      </WorkspacePageHeader>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <Card>

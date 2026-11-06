@@ -1,5 +1,6 @@
 'use client';
 
+import { WorkspacePageHeader } from '@/components/workspace-page-header';
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { qualityApi, purchaseOrderApi, mastersApi } from '@/lib/api';
@@ -156,18 +157,14 @@ export default function PurchaseRejectActionsPage() {
 
   return (
     <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Rejections Requiring Sourcing Action</h1>
-          <p className="text-sm text-slate-500 mt-1">Resolve rejected GRN items — assign replacement or return action</p>
-        </div>
+      <WorkspacePageHeader title="Rejections Requiring Sourcing Action" description="Resolve rejected GRN items — assign replacement or return action">
         <div className="flex items-center gap-2">
           <Badge variant="destructive" className="text-sm px-3 py-1">Immediate Attention</Badge>
           <Button variant="outline" size="sm" onClick={() => refetch()}>
             <RefreshCw className="h-4 w-4 mr-2" /> Refresh
           </Button>
         </div>
-      </div>
+      </WorkspacePageHeader>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>

@@ -1,5 +1,6 @@
 'use client';
 
+import { WorkspacePageHeader } from '@/components/workspace-page-header';
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { usersApi, inventoryApi } from '@/lib/api';
@@ -221,16 +222,12 @@ export default function AdminUsersPage() {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">User Management</h1>
-          <p className="text-slate-500 mt-1">Manage users, departments, and roles access</p>
-        </div>
+      <WorkspacePageHeader title="User Management" description="Manage users, departments, and roles access">
         <Button onClick={handleOpenAddDialog}>
           <UserPlus className="h-4 w-4 mr-2" />
           Add User
         </Button>
-      </div>
+      </WorkspacePageHeader>
 
       {/* Navigation */}
       <div className="flex items-center gap-2">
@@ -300,13 +297,7 @@ export default function AdminUsersPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {usersLoading ? (
-            <div className="space-y-4">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="h-20 bg-slate-50 animate-pulse rounded-lg" />
-              ))}
-            </div>
-          ) : usersList.length === 0 ? (
+          {usersLoading ? null : usersList.length === 0 ? (
             <div className="text-center py-12 text-slate-500">
               <Users className="h-12 w-12 mx-auto mb-4 text-slate-300" />
               <p>No users found matching the filter criteria.</p>

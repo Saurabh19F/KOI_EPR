@@ -5,7 +5,7 @@
   overflow-y: auto;
   overflow-x: auto;
   position: relative;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--line);
   border-radius: 8px;
 }
 
@@ -16,41 +16,41 @@
 }
 
 .sales-grid-table th {
-  background-color: #1e293b;
-  color: #ffffff;
+  background-color: var(--work-active);
+  color: #fcfeff;
   font-weight: 600;
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   padding: 8px 12px;
-  border: 1px solid #334155;
+  border: 1px solid var(--line);
   text-align: left;
 }
 
 .sales-grid-table td {
   padding: 0;
-  border: 1px solid #cbd5e1;
-  background-color: #ffffff;
+  border: 1px solid var(--line);
+  background-color: #fcfeff;
 }
 
-/* Editable yellow cells (Qty, Remarks) */
+/* Tint editable quantity and remarks cells. */
 .sales-grid-table td.sales-cell-editable {
-  background-color: #fef9c3 !important;
+  background-color: var(--work-tint) !important;
 }
 
 .sales-grid-table th.sales-header-editable {
-  background-color: #2563eb !important;
-  color: #ffffff !important;
+  background-color: var(--work-accent) !important;
+  color: #fcfeff !important;
   font-weight: 700 !important;
 }
 
 /* Grid row hover state */
 .sales-grid-row:hover td {
-  background-color: #f8fafc;
+  background-color: var(--work-tint);
 }
 
 .sales-grid-row:hover td.sales-cell-editable {
-  background-color: #fef3c7 !important;
+  background-color: var(--work-tint) !important;
 }
 
 /* Cell inputs style */
@@ -62,19 +62,19 @@
   padding: 4px 8px;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 12px;
-  color: #1e293b;
+  color: #182652;
   outline: none;
   transition: all 0.15s ease;
 }
 
 .sales-grid-input:focus {
-  background-color: #eff6ff;
-  box-shadow: inset 0 0 0 2px #3b82f6;
+  background-color: #fcfeff;
+  box-shadow: inset 0 0 0 2px #2563eb;
 }
 
 .sales-grid-input:disabled {
-  background-color: #f1f5f9;
-  color: #64748b;
+  background-color: #fcfeff;
+  color: #182652;
   cursor: not-allowed;
 }
 
@@ -82,11 +82,11 @@
 .sales-sticky-col-num {
   position: sticky;
   left: 0;
-  background-color: #f8fafc !important;
+  background-color: #fcfeff !important;
   z-index: 10;
   text-align: center !important;
   font-weight: 600;
-  color: #64748b;
+  color: #182652;
   width: 40px;
   min-width: 40px;
 }
@@ -95,14 +95,14 @@
 .sales-sticky-col-sku {
   position: sticky;
   left: 40px;
-  background-color: #ffffff;
+  background-color: #fcfeff;
   z-index: 10;
   min-width: 200px;
-  box-shadow: 4px 0 6px -2px rgba(0, 0, 0, 0.05);
+  box-shadow: 4px 0 6px -2px rgba(37, 99, 235, 0.05);
 }
 
 .sales-grid-row:hover .sales-sticky-col-sku {
-  background-color: #f8fafc;
+  background-color: #fcfeff;
 }
 
 /* Headers for sticky columns */
@@ -110,13 +110,13 @@
   position: sticky;
   left: 0;
   z-index: 20;
-  background-color: #0f172a !important;
+  background-color: var(--work-active) !important;
 }
 
 .sales-sticky-col-sku-hdr {
   position: sticky;
   left: 40px;
   z-index: 20;
-  background-color: #1e293b !important;
-  box-shadow: 4px 0 6px -2px rgba(0, 0, 0, 0.15);
+  background-color: var(--work-active) !important;
+  box-shadow: 4px 0 6px -2px rgba(37, 99, 235, 0.15);
 }

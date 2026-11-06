@@ -1,5 +1,6 @@
 'use client';
 
+import { WorkspacePageHeader } from '@/components/workspace-page-header';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { purchaseOrderApi } from '@/lib/api';
@@ -44,16 +45,12 @@ export default function GoodsReceiptNotePage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Goods Receipt Notes</h1>
-          <p className="text-muted-foreground">Track goods received against purchase orders</p>
-        </div>
+      <WorkspacePageHeader title="Goods Receipt Notes" description="Track goods received against purchase orders">
         <Button onClick={() => refetch()}>
           <RefreshCw className="mr-2 h-4 w-4" />
           Refresh
         </Button>
-      </div>
+      </WorkspacePageHeader>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <Card>

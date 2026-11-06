@@ -1,5 +1,6 @@
 'use client';
 
+import { WorkspacePageHeader } from '@/components/workspace-page-header';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { inventoryApi } from '@/lib/api';
@@ -114,16 +115,12 @@ export default function MovementsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Stock Movements</h1>
-          <p className="text-gray-500">Track inventory changes and transfers</p>
-        </div>
+      <WorkspacePageHeader title="Stock Movements" description="Track inventory changes and transfers">
         <Button variant="outline" onClick={() => refetch()}>
           <RefreshCw className="h-4 w-4 mr-2" />
           Refresh
         </Button>
-      </div>
+      </WorkspacePageHeader>
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
@@ -252,13 +249,7 @@ export default function MovementsPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {isLoading ? (
-            <div className="space-y-4">
-              {[1, 2, 3, 4, 5].map((i) => (
-                <div key={i} className="h-16 bg-gray-100 rounded animate-pulse" />
-              ))}
-            </div>
-          ) : movements.length > 0 ? (
+          {isLoading ? null : movements.length > 0 ? (
             <>
               <Table>
                 <TableHeader>

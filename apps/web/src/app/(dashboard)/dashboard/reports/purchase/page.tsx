@@ -1,5 +1,6 @@
 'use client';
 
+import { WorkspacePageHeader } from '@/components/workspace-page-header';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { purchaseApi, reportsApi } from '@/lib/api';
@@ -85,10 +86,10 @@ interface PurchaseStats {
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; bgColor: string }> = {
   draft: { label: 'Draft', color: 'text-slate-600', bgColor: 'bg-slate-100' },
-  submitted: { label: 'Submitted', color: 'text-blue-600', bgColor: 'bg-blue-100' },
-  approved: { label: 'Approved', color: 'text-green-600', bgColor: 'bg-green-100' },
-  rejected: { label: 'Rejected', color: 'text-red-600', bgColor: 'bg-red-100' },
-  cancelled: { label: 'Cancelled', color: 'text-orange-600', bgColor: 'bg-orange-100' },
+  submitted: { label: 'Submitted', color: 'text-blue-800', bgColor: 'bg-blue-100' },
+  approved: { label: 'Approved', color: 'text-green-800', bgColor: 'bg-green-100' },
+  rejected: { label: 'Rejected', color: 'text-red-800', bgColor: 'bg-red-100' },
+  cancelled: { label: 'Cancelled', color: 'text-orange-800', bgColor: 'bg-orange-100' },
 };
 
 export default function PurchaseReportPage() {
@@ -209,11 +210,7 @@ export default function PurchaseReportPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Purchase Report</h1>
-          <p className="text-slate-500 mt-1">Purchase quote analytics and party performance</p>
-        </div>
+      <WorkspacePageHeader title="Purchase Report" description="Purchase quote analytics and party performance">
         <div className="flex items-center gap-3">
           <Select value={dateRange} onValueChange={(v) => setDateRange(v as DateRange)}>
             <SelectTrigger className="w-40">
@@ -235,7 +232,7 @@ export default function PurchaseReportPage() {
             Export PDF
           </Button>
         </div>
-      </div>
+      </WorkspacePageHeader>
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -244,9 +241,7 @@ export default function PurchaseReportPage() {
             <div className="flex items-center justify-between min-w-0">
               <div className="min-w-0 flex-1 pr-2">
                 <p className="text-sm text-slate-500 truncate">Total Quotes</p>
-                {isLoading ? (
-                  <div className="h-8 w-16 bg-slate-200 animate-pulse rounded mt-1" />
-                ) : (
+                {isLoading ? null : (
                   <p className="text-2xl font-bold text-slate-900 mt-1 truncate">{stats.total}</p>
                 )}
                 <div className="flex items-center gap-1 mt-1 truncate">
@@ -255,13 +250,13 @@ export default function PurchaseReportPage() {
                   ) : (
                     <ArrowDownRight className="h-3 w-3 text-red-500 flex-shrink-0" />
                   )}
-                  <span className={`text-xs truncate ${percentChange.total >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  <span className={`text-xs truncate ${percentChange.total >= 0 ? 'text-green-800' : 'text-red-800'}`}>
                     {Math.abs(percentChange.total)}% vs last period
                   </span>
                 </div>
               </div>
               <div className="p-3 bg-orange-100 rounded-xl flex-shrink-0">
-                <Truck className="h-6 w-6 text-orange-600" />
+                <Truck className="h-6 w-6 text-orange-800" />
               </div>
             </div>
           </CardContent>
@@ -281,13 +276,13 @@ export default function PurchaseReportPage() {
                   ) : (
                     <ArrowDownRight className="h-3 w-3 text-red-500 flex-shrink-0" />
                   )}
-                  <span className={`text-xs truncate ${percentChange.value >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  <span className={`text-xs truncate ${percentChange.value >= 0 ? 'text-green-800' : 'text-red-800'}`}>
                     {Math.abs(percentChange.value)}% vs last period
                   </span>
                 </div>
               </div>
               <div className="p-3 bg-green-100 rounded-xl flex-shrink-0">
-                <DollarSign className="h-6 w-6 text-green-600" />
+                <DollarSign className="h-6 w-6 text-green-800" />
               </div>
             </div>
           </CardContent>
@@ -298,14 +293,14 @@ export default function PurchaseReportPage() {
             <div className="flex items-center justify-between min-w-0">
               <div className="min-w-0 flex-1 pr-2">
                 <p className="text-sm text-slate-500 truncate">Approved</p>
-                <p className="text-2xl font-bold text-green-600 mt-1 truncate">{stats.approved}</p>
+                <p className="text-2xl font-bold text-green-800 mt-1 truncate">{stats.approved}</p>
                 <div className="flex items-center gap-1 mt-1 truncate">
                   <TrendingUp className="h-3 w-3 text-green-500 flex-shrink-0" />
-                  <span className="text-xs text-green-600 truncate">+{percentChange.approved}%</span>
+                  <span className="text-xs text-green-800 truncate">+{percentChange.approved}%</span>
                 </div>
               </div>
               <div className="p-3 bg-green-100 rounded-xl flex-shrink-0">
-                <CheckCircle className="h-6 w-6 text-green-600" />
+                <CheckCircle className="h-6 w-6 text-green-800" />
               </div>
             </div>
           </CardContent>
@@ -316,14 +311,14 @@ export default function PurchaseReportPage() {
             <div className="flex items-center justify-between min-w-0">
               <div className="min-w-0 flex-1 pr-2">
                 <p className="text-sm text-slate-500 truncate">Pending Approval</p>
-                <p className="text-2xl font-bold text-yellow-600 mt-1 truncate">{stats.pending}</p>
+                <p className="text-2xl font-bold text-yellow-800 mt-1 truncate">{stats.pending}</p>
                 <div className="flex items-center gap-1 mt-1 truncate">
                   <Clock className="h-3 w-3 text-yellow-500 flex-shrink-0" />
-                  <span className="text-xs text-yellow-600 truncate">Awaiting review</span>
+                  <span className="text-xs text-yellow-800 truncate">Awaiting review</span>
                 </div>
               </div>
               <div className="p-3 bg-yellow-100 rounded-xl flex-shrink-0">
-                <Clock className="h-6 w-6 text-yellow-600" />
+                <Clock className="h-6 w-6 text-yellow-800" />
               </div>
             </div>
           </CardContent>
@@ -372,10 +367,10 @@ export default function PurchaseReportPage() {
             <div className="h-44 w-full mb-4">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={topParties} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
-                  <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#64748b' }} tickLine={false} axisLine={false} />
-                  <YAxis tick={{ fontSize: 10, fill: '#64748b' }} tickLine={false} axisLine={false} />
-                  <Tooltip contentStyle={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0', borderRadius: '8px', fontSize: '11px' }} />
-                  <Bar dataKey="value" fill="#f97316" radius={[4, 4, 0, 0]} />
+                  <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#154fa6' }} tickLine={false} axisLine={false} />
+                  <YAxis tick={{ fontSize: 10, fill: '#154fa6' }} tickLine={false} axisLine={false} />
+                  <Tooltip contentStyle={{ backgroundColor: '#fcfeff', borderColor: '#fcfeff', borderRadius: '8px', fontSize: '11px' }} />
+                  <Bar dataKey="value" fill="#853d09" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -430,7 +425,7 @@ export default function PurchaseReportPage() {
             </div>
             <div className="p-4 bg-slate-50 rounded-lg">
               <p className="text-sm text-slate-500">Top Party</p>
-              <p className="text-lg font-bold text-orange-600 mt-1 truncate">{stats.topParty}</p>
+              <p className="text-lg font-bold text-orange-800 mt-1 truncate">{stats.topParty}</p>
             </div>
             <div className="p-4 bg-slate-50 rounded-lg">
               <p className="text-sm text-slate-500">Draft Quotes</p>
@@ -485,17 +480,7 @@ export default function PurchaseReportPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {isLoading ? (
-                [...Array(5)].map((_, i) => (
-                  <TableRow key={i}>
-                    {[...Array(5)].map((_, j) => (
-                      <TableCell key={j}>
-                        <div className="h-4 w-20 bg-slate-200 animate-pulse rounded" />
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              ) : quotes.length ? (
+              {isLoading ? null : quotes.length ? (
                 quotes.map((quote: any, index: number) => {
                   const statusConfig = STATUS_CONFIG[quote.status] || STATUS_CONFIG.draft;
                   const quoteId = quote.quoteId || quote.id || String(index);

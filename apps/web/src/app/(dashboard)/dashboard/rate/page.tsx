@@ -1,5 +1,6 @@
 'use client';
 
+import { WorkspacePageHeader } from '@/components/workspace-page-header';
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { rateApi } from '@/lib/api';
@@ -390,11 +391,7 @@ export default function RateCalculationListPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Price Analysis / Rate Calculation</h1>
-          <p className="text-gray-500">Calculate and manage product rates with currency and haulage</p>
-        </div>
+      <WorkspacePageHeader title="Price Analysis / Rate Calculation" description="Calculate and manage product rates with currency and haulage">
         <div className="flex items-center gap-2">
           <Button variant="outline" onClick={handleOpenCurrencySettings}>
             <DollarSign className="h-4 w-4 mr-2" />
@@ -405,7 +402,7 @@ export default function RateCalculationListPage() {
             New from Enquiry
           </Button>
         </div>
-      </div>
+      </WorkspacePageHeader>
 
       {/* Currency & Haulage Summary - Compact */}
       <div className="flex items-center gap-3 flex-wrap">

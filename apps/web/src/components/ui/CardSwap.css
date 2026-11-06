@@ -15,9 +15,9 @@
   top: 50%;
   left: 50%;
   border-radius: 14px;
-  border: 1px solid rgba(226, 232, 240, 0.8);
-  background: #ffffff;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(252, 254, 255, 0.8);
+  background: #fcfeff;
+  box-shadow: 0 20px 25px -5px rgba(37, 99, 235, 0.1), 0 8px 10px -6px rgba(37, 99, 235, 0.05);
 
   transform-style: preserve-3d;
   will-change: transform;

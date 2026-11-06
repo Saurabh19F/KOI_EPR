@@ -1,5 +1,6 @@
 'use client';
 
+import { WorkspacePageHeader } from '@/components/workspace-page-header';
 import { useState, useMemo, Suspense } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { salesApi, mastersApi } from '@/lib/api';
@@ -368,15 +369,7 @@ function MISContent() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">
-            MIS Review Panel
-          </h1>
-          <p className="text-slate-500 mt-1">
-            Verify procurement costs and approve enquiries for rate calculation. Review &amp; approve new products.
-          </p>
-        </div>
+      <WorkspacePageHeader title="MIS Review Panel" description={<>Verify procurement costs and approve enquiries for rate calculation. Review &amp; approve new products.</>}>
         <button
           onClick={() => { refetchEnquiries(); refetchProducts(); refetchCompletedEnquiries(); refetchPreMis(); }}
           className="flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-200 hover:bg-slate-50 text-sm text-slate-600 transition-colors"
@@ -384,7 +377,7 @@ function MISContent() {
           <RefreshCw className="h-4 w-4" />
           Refresh
         </button>
-      </div>
+      </WorkspacePageHeader>
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

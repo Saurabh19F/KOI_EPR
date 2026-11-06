@@ -1,5 +1,6 @@
 'use client';
 
+import { WorkspacePageHeader } from '@/components/workspace-page-header';
 import { useState, useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
@@ -193,11 +194,7 @@ export default function ReportsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Reports</h1>
-          <p className="text-gray-500">Analytics and reporting dashboard</p>
-        </div>
+      <WorkspacePageHeader title="Reports" description="Review activity for the selected period and open a detailed report.">
         <div className="flex items-center gap-3">
           <Select value={dateRange} onValueChange={setDateRange}>
             <SelectTrigger className="w-40">
@@ -215,19 +212,11 @@ export default function ReportsPage() {
             Export All
           </Button>
         </div>
-      </div>
+      </WorkspacePageHeader>
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-        {isLoading ? (
-          [...Array(6)].map((_, i) => (
-            <Card key={i} className="animate-pulse">
-              <CardContent className="pt-6">
-                <div className="h-20 bg-gray-200 rounded" />
-              </CardContent>
-            </Card>
-          ))
-        ) : (
+        {isLoading ? null : (
           kpiCards.map((kpi, index) => (
             <Link key={index} href={kpi.href}>
               <Card className="hover:shadow-lg transition-all cursor-pointer h-full">
@@ -236,9 +225,7 @@ export default function ReportsPage() {
                     <div className="flex-1">
                       <p className="text-sm text-gray-500">{kpi.title}</p>
                       <p className="text-2xl font-bold text-gray-900 mt-1">
-                        {isLoading ? (
-                          <div className="h-8 w-16 bg-gray-200 rounded animate-pulse" />
-                        ) : (
+                        {isLoading ? null : (
                           kpi.value
                         )}
                       </p>
@@ -279,8 +266,8 @@ export default function ReportsPage() {
             <CardDescription className="text-xs">Real-time enquiries vs purchase quotes activity over the last {dateRange} days</CardDescription>
           </div>
           <div className="flex items-center gap-4 text-xs font-semibold">
-            <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-blue-500 inline-block" /> Enquiries</span>
-            <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block" /> Purchase Quotes</span>
+            <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-[#154fa6] inline-block" /> Enquiries</span>
+            <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-[#3e2e9b] inline-block" /> Purchase Quotes</span>
           </div>
         </CardHeader>
         <CardContent className="pt-6">
@@ -289,20 +276,20 @@ export default function ReportsPage() {
               <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorEnquiries" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.4}/>
-                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="#154fa6" stopOpacity={0.4}/>
+                    <stop offset="95%" stopColor="#154fa6" stopOpacity={0}/>
                   </linearGradient>
                   <linearGradient id="colorQuotes" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.4}/>
-                    <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="#3e2e9b" stopOpacity={0.4}/>
+                    <stop offset="95%" stopColor="#3e2e9b" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                <XAxis dataKey="date" tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: '#64748b' }} />
-                <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: '#64748b' }} />
-                <Tooltip contentStyle={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0', borderRadius: '8px', fontSize: '12px' }} />
-                <Area type="monotone" dataKey="Enquiries" stroke="#3b82f6" strokeWidth={2} fillOpacity={1} fill="url(#colorEnquiries)" />
-                <Area type="monotone" dataKey="Quotes" stroke="#10b981" strokeWidth={2} fillOpacity={1} fill="url(#colorQuotes)" />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#fcfeff" />
+                <XAxis dataKey="date" tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: '#154fa6' }} />
+                <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: '#154fa6' }} />
+                <Tooltip contentStyle={{ backgroundColor: '#fcfeff', borderColor: '#fcfeff', borderRadius: '8px', fontSize: '12px' }} />
+                <Area type="monotone" dataKey="Enquiries" stroke="#154fa6" strokeWidth={2} fillOpacity={1} fill="url(#colorEnquiries)" />
+                <Area type="monotone" dataKey="Quotes" stroke="#3e2e9b" strokeWidth={2} fillOpacity={1} fill="url(#colorQuotes)" />
               </AreaChart>
             </ResponsiveContainer>
           </div>

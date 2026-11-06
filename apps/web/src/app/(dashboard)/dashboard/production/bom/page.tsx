@@ -1,5 +1,6 @@
 'use client';
 
+import { WorkspacePageHeader } from '@/components/workspace-page-header';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { productionApi } from '@/lib/api';
@@ -52,16 +53,12 @@ export default function BomPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Bill of Materials</h1>
-          <p className="text-muted-foreground">Manage product recipes and material requirements</p>
-        </div>
+      <WorkspacePageHeader title="Bill of Materials" description="Manage product recipes and material requirements">
         <Button onClick={() => refetch()}>
           <RefreshCw className="mr-2 h-4 w-4" />
           Refresh
         </Button>
-      </div>
+      </WorkspacePageHeader>
 
       <Card>
         <CardHeader>

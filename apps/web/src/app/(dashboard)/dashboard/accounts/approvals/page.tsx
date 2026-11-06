@@ -1,5 +1,6 @@
 'use client';
 
+import { WorkspacePageHeader } from '@/components/workspace-page-header';
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { accountsApi } from '@/lib/api';
@@ -191,12 +192,7 @@ export default function AccountsApprovalsPage() {
 
   return (
     <div className="p-4 space-y-4">
-      <div>
-        <h1 className="text-2xl font-bold flex items-center gap-2">
-          <ShieldCheck className="h-6 w-6" /> Ledger Approvals
-        </h1>
-        <p className="text-sm text-muted-foreground">Chief Accountant — Review and approve/reject ledger entries</p>
-      </div>
+      <WorkspacePageHeader title={<><ShieldCheck className="h-6 w-6" /> Ledger Approvals</>} description="Chief Accountant — Review and approve/reject ledger entries" />
 
       <div className="flex flex-col sm:flex-row sm:items-center gap-4">
         <Tabs value={statusFilter} onValueChange={(v) => { setStatusFilter(v as StatusFilter); setPage(1); }}>
@@ -218,13 +214,13 @@ export default function AccountsApprovalsPage() {
         <table className="w-full text-xs border-collapse" style={{ minWidth: '1400px' }}>
           <thead>
             <tr>
-              <th colSpan={5} className="text-white text-center py-2 px-2 text-sm font-bold border border-gray-300" style={{ backgroundColor: '#2d5016' }}>
+              <th colSpan={5} className="text-white text-center py-2 px-2 text-sm font-bold border border-gray-300" style={{ backgroundColor: '#2563eb' }}>
                 Purchase Order Details
               </th>
-              <th colSpan={5} className="text-white text-center py-2 px-2 text-sm font-bold border border-gray-300" style={{ backgroundColor: '#7b68ae' }}>
+              <th colSpan={5} className="text-white text-center py-2 px-2 text-sm font-bold border border-gray-300" style={{ backgroundColor: '#2563eb' }}>
                 Ledger Entry (Accountant)
               </th>
-              <th colSpan={3} className="text-white text-center py-2 px-2 text-sm font-bold border border-gray-300" style={{ backgroundColor: '#4285f4' }}>
+              <th colSpan={3} className="text-white text-center py-2 px-2 text-sm font-bold border border-gray-300" style={{ backgroundColor: '#2563eb' }}>
                 Chief Accountant Approval
               </th>
               <th className="text-white text-center py-2 px-2 text-sm font-bold border border-gray-300 bg-gray-700">

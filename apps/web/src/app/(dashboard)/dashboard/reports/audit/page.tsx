@@ -1,5 +1,6 @@
 'use client';
 
+import { WorkspacePageHeader } from '@/components/workspace-page-header';
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -133,12 +134,7 @@ export default function AuditLogsPage() {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900">Audit Logs</h1>
-        <p className="text-slate-500 mt-1">
-          Track all changes and activities across the system
-        </p>
-      </div>
+      <WorkspacePageHeader title="Audit Logs" description="Track all changes and activities across the system" />
 
       {/* Filters */}
       <div className="bg-white rounded-xl shadow-card p-4">

@@ -1,5 +1,6 @@
 'use client';
 
+import { WorkspacePageHeader } from '@/components/workspace-page-header';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { rateApi, reportsApi } from '@/lib/api';
@@ -211,11 +212,7 @@ export default function RateAnalysisReportPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Rate Analysis Report</h1>
-          <p className="text-slate-500 mt-1">Product costing and margin analysis</p>
-        </div>
+      <WorkspacePageHeader title="Rate Analysis Report" description="Product costing and margin analysis">
         <div className="flex items-center gap-3">
           <Select value={dateRange} onValueChange={(v) => setDateRange(v as DateRange)}>
             <SelectTrigger className="w-40">
@@ -237,7 +234,7 @@ export default function RateAnalysisReportPage() {
             Export PDF
           </Button>
         </div>
-      </div>
+      </WorkspacePageHeader>
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -246,9 +243,7 @@ export default function RateAnalysisReportPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-slate-500">Total Analyses</p>
-                {isLoading ? (
-                  <div className="h-8 w-16 bg-slate-200 animate-pulse rounded mt-1" />
-                ) : (
+                {isLoading ? null : (
                   <p className="text-3xl font-bold text-slate-900 mt-1">{stats.total}</p>
                 )}
                 <div className="flex items-center gap-1 mt-1">
@@ -465,17 +460,7 @@ export default function RateAnalysisReportPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {isLoading ? (
-                [...Array(5)].map((_, i) => (
-                  <TableRow key={i}>
-                    {[...Array(7)].map((_, j) => (
-                      <TableCell key={j}>
-                        <div className="h-4 w-20 bg-slate-200 animate-pulse rounded" />
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              ) : analyses.length ? (
+              {isLoading ? null : analyses.length ? (
                 analyses.map((analysis: any) => {
                   const statusConfig = STATUS_CONFIG[analysis.status] || STATUS_CONFIG.draft;
                   const margin = Number(analysis.marginPercentage ?? analysis.margin ?? 0);

@@ -3,24 +3,17 @@
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuthStore } from '@/store/auth';
-import { Sidebar } from '@/components/sidebar';
+import { Sidebar, ModuleNavigation } from '@/components/sidebar';
+import { WorkspaceDataView } from '@/components/workspace-data-view';
 import { Header } from '@/components/header';
+import { getPageAccent, moduleAccents } from '@/lib/workspace-colors';
 import { CommandPalette, useCommandPalette } from '@/components/global-search/command-palette';
 
 const publicPaths = ['/login', '/'];
 
-function CommandPaletteWrapper({ children }: { children: React.ReactNode }) {
-  const { isOpen, setIsOpen } = useCommandPalette();
-  return (
-    <>
-      {children}
-      <CommandPalette open={isOpen} onOpenChange={setIsOpen} />
-    </>
-  );
-}
-
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
+  const { isOpen, setIsOpen } = useCommandPalette();
   const pathname = usePathname();
 
   // Get user from auth store
@@ -49,12 +42,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   // Show loading while checking auth
   if (!hasCheckedAuth || isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#f6f3ec]">
-        <div className="text-center">
-          <div className="mx-auto h-12 w-12 animate-spin rounded-full border-4 border-[#0f2f29] border-t-transparent" />
-          <p className="mt-4 text-sm font-semibold text-slate-600">Loading workspace...</p>
-        </div>
-      </div>
+      <div className="erp-entry" role="status">Loading workspace…</div>
     );
   }
 
@@ -66,16 +54,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const isCompact = user?.preferences?.compactMode === true;
 
   return (
-    <CommandPaletteWrapper>
-      <div className={`flex min-h-screen bg-[#f6f3ec] ${isCompact ? 'compact' : ''}`}>
+    <>
+      <div data-icon-accent={moduleAccents[pathname.split('/')[2]] ?? 'plum'} className={`erp-shell flex min-h-screen ${isCompact ? 'compact' : ''}`}>
         <Sidebar />
         <div className="flex min-w-0 flex-1 flex-col">
-          <Header />
-          <main className="flex-1 p-4 sm:p-6">
-            {children}
+          <Header onSearch={() => setIsOpen(true)} />
+          <main data-icon-accent={getPageAccent(pathname)} className="workspace-main min-w-0 flex-1 p-3 sm:p-5 lg:p-6">
+            <ModuleNavigation />
+            <WorkspaceDataView key={pathname}>{children}</WorkspaceDataView>
           </main>
         </div>
       </div>
-    </CommandPaletteWrapper>
+      <CommandPalette open={isOpen} onOpenChange={setIsOpen} />
+    </>
   );
 }

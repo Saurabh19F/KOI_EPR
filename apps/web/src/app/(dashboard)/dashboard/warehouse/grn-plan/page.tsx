@@ -1,5 +1,7 @@
 'use client';
 
+import { GstVerificationField } from '@/components/gst-verification-field';
+import { WorkspacePageHeader } from '@/components/workspace-page-header';
 import { useState, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { receivingPlanApi, filesApi } from '@/lib/api';
@@ -305,13 +307,7 @@ export default function WarehouseGrnPlanPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Inbound GRN Plan</h1>
-          <p className="text-muted-foreground">
-            Receiving plans assigned to your warehouse — receive goods against planned quantities
-          </p>
-        </div>
+      <WorkspacePageHeader title="Inbound GRN Plan" description="Receiving plans assigned to your warehouse — receive goods against planned quantities">
         <div className="flex gap-2">
           {selectedPlans.size > 0 && (
             <Button className="bg-green-600 hover:bg-green-700 text-white" onClick={handleOpenBulkGrn}>
@@ -324,7 +320,7 @@ export default function WarehouseGrnPlanPage() {
             Refresh
           </Button>
         </div>
-      </div>
+      </WorkspacePageHeader>
 
       {!warehouseId && (
         <Card className="border-yellow-500 bg-yellow-50">
@@ -591,11 +587,8 @@ export default function WarehouseGrnPlanPage() {
                     <Input id="grn-invoiceNo" placeholder="Enter Invoice No" value={grnForm.invoiceNo} onChange={(e) => setGrnForm(f => ({ ...f, invoiceNo: e.target.value }))} />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="grn-gstInvoiceNo" className="font-semibold">GST Invoice No. / GSTIN *</Label>
-                    <div className="flex gap-2">
-                      <Input id="grn-gstInvoiceNo" placeholder="E.G.  07AAAAA0000A1Z5" value={grnForm.gstInvoiceNo} onChange={(e) => setGrnForm(f => ({ ...f, gstInvoiceNo: e.target.value }))} />
-                      <Button type="button" size="sm" className="bg-green-600 hover:bg-green-700 text-white shrink-0">✓ Verify GST</Button>
-                    </div>
+                    <Label htmlFor="grn-gstInvoiceNo" className="font-semibold">Supplier GSTIN</Label>
+                    <GstVerificationField id="grn-gstInvoiceNo" value={grnForm.gstInvoiceNo} onChange={(value) => setGrnForm(f => ({ ...f, gstInvoiceNo: value }))} />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
@@ -777,11 +770,8 @@ export default function WarehouseGrnPlanPage() {
                   <Input placeholder="Enter Invoice No" value={bulkGrnForm.invoiceNo} onChange={(e) => setBulkGrnForm(f => ({ ...f, invoiceNo: e.target.value }))} />
                 </div>
                 <div className="space-y-2">
-                  <Label className="font-semibold">GST Invoice No. / GSTIN *</Label>
-                  <div className="flex gap-2">
-                    <Input placeholder="E.G. 07AAAAA0000A1Z5" value={bulkGrnForm.gstInvoiceNo} onChange={(e) => setBulkGrnForm(f => ({ ...f, gstInvoiceNo: e.target.value }))} />
-                    <Button type="button" size="sm" className="bg-green-600 hover:bg-green-700 text-white shrink-0">✓ Verify GST</Button>
-                  </div>
+                  <Label htmlFor="bulk-grn-gstin" className="font-semibold">Supplier GSTIN</Label>
+                  <GstVerificationField id="bulk-grn-gstin" value={bulkGrnForm.gstInvoiceNo} onChange={(value) => setBulkGrnForm(f => ({ ...f, gstInvoiceNo: value }))} />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">

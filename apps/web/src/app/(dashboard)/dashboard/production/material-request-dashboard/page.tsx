@@ -1,5 +1,6 @@
 'use client';
 
+import { WorkspacePageHeader } from '@/components/workspace-page-header';
 import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { inventoryTrackingApi } from '@/lib/api';
@@ -204,7 +205,7 @@ export default function MaterialRequestDashboardPage() {
           <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
             Pending
           </p>
-          <p className="text-2xl font-bold text-orange-500">{stats.pending}</p>
+          <p className="text-2xl font-bold text-orange-700">{stats.pending}</p>
         </div>
         <div className="rounded-lg border bg-white p-3 shadow-sm">
           <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
@@ -229,12 +230,7 @@ export default function MaterialRequestDashboardPage() {
       </div>
 
       {/* Header */}
-      <div>
-        <h1 className="text-xl font-bold">Material Request Dashboard</h1>
-        <p className="text-sm text-muted-foreground">
-          Request no, material, quantity, date aur current status.
-        </p>
-      </div>
+      <WorkspacePageHeader title="Material Request Dashboard" description="Request no, material, quantity, date aur current status." />
 
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-3">

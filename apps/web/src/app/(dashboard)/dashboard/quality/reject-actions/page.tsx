@@ -1,5 +1,6 @@
 'use client';
 
+import { WorkspacePageHeader } from '@/components/workspace-page-header';
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { qualityApi } from '@/lib/api';
@@ -111,16 +112,12 @@ export default function RejectActionsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Reject Actions</h1>
-          <p className="text-muted-foreground">Track rejected material actions and resolutions</p>
-        </div>
+      <WorkspacePageHeader title="Reject Actions" description="Track rejected material actions and resolutions">
         <Button onClick={() => refetch()}>
           <RefreshCw className="mr-2 h-4 w-4" />
           Refresh
         </Button>
-      </div>
+      </WorkspacePageHeader>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <Card>
@@ -291,7 +288,7 @@ export default function RejectActionsPage() {
               <div>
                 <label className="text-sm font-medium mb-1 block">Action Type</label>
                 <Select value={actionType} onValueChange={setActionType} disabled={selectedAction.status === 'completed'}>
-                  <SelectTrigger style={{ backgroundColor: selectedAction.status !== 'completed' ? '#fefce8' : undefined }}>
+                  <SelectTrigger style={{ backgroundColor: selectedAction.status !== 'completed' ? '#fcfeff' : undefined }}>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -320,7 +317,7 @@ export default function RejectActionsPage() {
                       onChange={(e) => setReplacementVendor(e.target.value)}
                       placeholder="Vendor name"
                       disabled={selectedAction.status === 'completed'}
-                      style={{ backgroundColor: '#fefce8' }}
+                      style={{ backgroundColor: '#fcfeff' }}
                     />
                   </div>
                   <div>
@@ -330,7 +327,7 @@ export default function RejectActionsPage() {
                       value={replacementEta}
                       onChange={(e) => setReplacementEta(e.target.value)}
                       disabled={selectedAction.status === 'completed'}
-                      style={{ backgroundColor: '#fefce8' }}
+                      style={{ backgroundColor: '#fcfeff' }}
                     />
                   </div>
                 </div>
@@ -344,7 +341,7 @@ export default function RejectActionsPage() {
                   placeholder="Add remarks for this reject action..."
                   rows={3}
                   disabled={selectedAction.status === 'completed'}
-                  style={{ backgroundColor: '#fefce8' }}
+                  style={{ backgroundColor: '#fcfeff' }}
                 />
               </div>
             </div>

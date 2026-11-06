@@ -1,5 +1,6 @@
 'use client';
 
+import { WorkspacePageHeader } from '@/components/workspace-page-header';
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { purchaseApi, salesApi } from '@/lib/api';
@@ -307,18 +308,14 @@ export default function PurchasePage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Purchase Quotes</h1>
-          <p className="text-gray-500">Manage purchase quotes generated from Sales Enquiries</p>
-        </div>
+      <WorkspacePageHeader title="Purchase Quotes" description="Review supplier quotes and follow the enquiries they came from.">
         <Button asChild>
           <Link href="/dashboard/purchase/new">
             <Plus className="h-4 w-4 mr-2" />
             New Quote
           </Link>
         </Button>
-      </div>
+      </WorkspacePageHeader>
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -478,13 +475,7 @@ export default function PurchasePage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-4">
-            {isRequotesLoading ? (
-              <div className="space-y-4">
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <div key={i} className="h-16 bg-gray-100 rounded animate-pulse" />
-                ))}
-              </div>
-            ) : requotesData?.data?.data?.length ? (
+            {isRequotesLoading ? null : requotesData?.data?.data?.length ? (
               <>
                 <Table>
                   <TableHeader>
@@ -614,13 +605,7 @@ export default function PurchasePage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-4">
-            {isUnassignedLoading ? (
-              <div className="space-y-4">
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <div key={i} className="h-16 bg-gray-100 rounded animate-pulse" />
-                ))}
-              </div>
-            ) : unassignedData?.data?.data?.length ? (
+            {isUnassignedLoading ? null : unassignedData?.data?.data?.length ? (
               <>
                 <Table>
                   <TableHeader>
@@ -758,13 +743,7 @@ export default function PurchasePage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {isEnquiriesLoading ? (
-              <div className="space-y-4">
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <div key={i} className="h-16 bg-gray-100 rounded animate-pulse" />
-                ))}
-              </div>
-            ) : enquiriesData?.data?.data?.length ? (
+            {isEnquiriesLoading ? null : enquiriesData?.data?.data?.length ? (
               <>
                 <Table>
                   <TableHeader>
@@ -892,13 +871,7 @@ export default function PurchasePage() {
             <CardTitle>Quote List</CardTitle>
           </CardHeader>
           <CardContent>
-            {isLoading ? (
-              <div className="space-y-4">
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <div key={i} className="h-16 bg-gray-100 rounded animate-pulse" />
-                ))}
-              </div>
-            ) : data?.data?.data?.length ? (
+            {isLoading ? null : data?.data?.data?.length ? (
               <>
                 <Table>
                   <TableHeader>

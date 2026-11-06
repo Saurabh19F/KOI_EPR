@@ -334,9 +334,9 @@ export default function ProductionDashboardPage() {
 
       {/* Section 1: Incoming Transferred Material */}
       <div className="bg-white border rounded-lg">
-        <div className="flex items-center justify-between p-4 border-b">
+        <div className="flex flex-wrap items-center justify-between gap-2 p-4 border-b">
           <h2 className="text-lg font-bold text-slate-900">Incoming Transferred Material (Receive Material)</h2>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Button size="sm" variant="outline" className="font-semibold" onClick={toggleIncomingSelectAll}>
               <CheckSquare className="h-4 w-4 mr-1" /> Select All
             </Button>
@@ -407,9 +407,9 @@ export default function ProductionDashboardPage() {
 
       {/* Section 2: My Stock Location Quantities */}
       <div className="bg-white border rounded-lg">
-        <div className="flex items-center justify-between p-4 border-b">
+        <div className="flex flex-wrap items-center justify-between gap-2 p-4 border-b">
           <h2 className="text-lg font-bold text-slate-900">My Stock Location Quantities</h2>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Button size="sm" variant="outline" className="font-semibold" onClick={toggleStockSelectAll}>
               <CheckSquare className="h-4 w-4 mr-1" /> Select All
             </Button>

@@ -381,11 +381,11 @@ export default function PlannerPage() {
       <style>
         body { font-family: Arial, sans-serif; margin: 20px; }
         h1 { font-size: 18px; margin-bottom: 4px; }
-        h2 { font-size: 14px; color: #666; margin-bottom: 16px; }
+        h2 { font-size: 14px; color: #2563eb; margin-bottom: 16px; }
         table { width: 100%; border-collapse: collapse; font-size: 11px; }
-        th { background: #1a56db; color: white; padding: 6px 4px; text-align: left; }
-        td { border-bottom: 1px solid #ddd; padding: 5px 4px; }
-        tr:nth-child(even) { background: #f9f9f9; }
+        th { background: #2563eb; color: #fcfeff; padding: 6px 4px; text-align: left; }
+        td { border-bottom: 1px solid #fcfeff; padding: 5px 4px; }
+        tr:nth-child(even) { background: #fcfeff; }
       </style></head><body>
       <h1>Planner Purchase Orders - ${esc(title)}</h1>
       <h2>Generated: ${esc(generated)}</h2>
@@ -776,7 +776,7 @@ export default function PlannerPage() {
                 <Button size="sm" variant="outline" className="h-7 text-xs" onClick={handleResetFilters}>
                   <RotateCcw className="mr-1 h-3 w-3" /> Reset
                 </Button>
-                <div className="ml-auto flex items-center gap-2">
+                <div className="flex max-w-full flex-wrap items-center gap-2 sm:ml-auto">
                   <div className="relative">
                     <Search className="absolute left-2 top-1/2 h-3 w-3 -translate-y-1/2 text-muted-foreground" />
                     <Input

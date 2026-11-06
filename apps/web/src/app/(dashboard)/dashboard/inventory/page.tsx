@@ -1,5 +1,6 @@
 'use client';
 
+import { WorkspacePageHeader } from '@/components/workspace-page-header';
 import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Package, Warehouse, Boxes, ArrowRight, TrendingUp, AlertTriangle, CheckCircle } from 'lucide-react';
@@ -31,10 +32,7 @@ const inventoryModules = [
 export default function InventoryPage() {
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900">Inventory Management</h1>
-        <p className="text-slate-500 mt-1">Manage stock levels, warehouses, and inventory operations</p>
-      </div>
+      <WorkspacePageHeader title="Inventory Management" description="Manage stock levels, warehouses, and inventory operations" />
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {inventoryModules.map((module) => {

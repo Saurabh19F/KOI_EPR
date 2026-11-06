@@ -1,5 +1,6 @@
 'use client';
 
+import { WorkspacePageHeader } from '@/components/workspace-page-header';
 import { useState, useMemo, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -911,10 +912,7 @@ function NewPurchaseQuoteContent() {
               <ArrowLeft className="h-5 w-5" />
             </Button>
           </Link>
-          <div>
-            <h1 className="text-xl font-bold text-slate-900">Create Purchase Quote</h1>
-            <p className="text-xs text-slate-500">Specify details and quote terms to submit purchase rate quotes</p>
-          </div>
+          <WorkspacePageHeader title="Create Purchase Quote" description="Specify details and quote terms to submit purchase rate quotes" />
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={() => router.push('/dashboard/purchase')} className="h-9 text-xs">
@@ -923,7 +921,7 @@ function NewPurchaseQuoteContent() {
           <Button 
             onClick={handleSubmit} 
             disabled={createMutation.isPending} 
-            className="bg-emerald-600 hover:bg-emerald-700 text-white h-9 text-xs font-semibold px-4"
+            className="bg-emerald-700 hover:bg-emerald-800 text-white h-9 text-xs font-semibold px-4"
           >
             <Save className="h-4 w-4 mr-2" />
             {createMutation.isPending ? 'Saving...' : 'Save Purchase Quote'}
@@ -1027,7 +1025,7 @@ function NewPurchaseQuoteContent() {
                 </tr>
                 
                 {/* Spreadsheet Headers */}
-                <tr className="border-b border-slate-300 bg-[#1e293b] text-white font-semibold text-[11px] text-center">
+                <tr className="border-b border-slate-300 bg-[#2563eb] text-white font-semibold text-[11px] text-center">
                   <td className="border-r border-slate-300 bg-slate-100 text-slate-500 text-center font-medium py-1.5">11</td>
                   <td className="border-r border-slate-600 px-1 py-1">Product Code</td>
                   <td className="border-r border-slate-600 px-1 py-1">Category</td>
@@ -1490,7 +1488,7 @@ function NewPurchaseQuoteContent() {
                     size="sm"
                     onClick={handleAddSelectedProducts}
                     disabled={selectedProducts.length === 0}
-                    className="bg-emerald-600 hover:bg-emerald-700 text-white h-9 text-xs"
+                    className="bg-emerald-700 hover:bg-emerald-800 text-white h-9 text-xs"
                   >
                     Add Selected ({selectedProducts.length})
                   </Button>
@@ -1539,7 +1537,7 @@ function NewPurchaseQuoteContent() {
             </Button>
             <Button
               size="sm"
-              className="bg-emerald-600 hover:bg-emerald-700 text-white"
+              className="bg-emerald-700 hover:bg-emerald-800 text-white"
               onClick={() => {
                 const name = (document.getElementById('manualProductName') as HTMLInputElement)?.value?.trim();
                 if (!name) {
@@ -1798,7 +1796,7 @@ function NewPurchaseQuoteContent() {
               <Button type="button" variant="outline" size="sm" onClick={() => setQuickCreateState({ type: null, initialValue: '', name: '', code: '' })}>
                 Cancel
               </Button>
-              <Button type="submit" size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white h-9 px-4">
+              <Button type="submit" size="sm" className="bg-emerald-700 hover:bg-emerald-800 text-white h-9 px-4">
                 Create & Select
               </Button>
             </div>

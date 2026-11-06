@@ -1,3 +1,4 @@
+import { GstVerificationService } from './gst-verification.service';
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ReceivingPlanController } from './receiving-plan.controller';
@@ -15,7 +16,7 @@ import { InventoryModule } from '../inventory/inventory.module';
     InventoryModule,
   ],
   controllers: [ReceivingPlanController],
-  providers: [ReceivingPlanService, ReceivingPlanPdfService],
+  providers: [GstVerificationService, ReceivingPlanService, ReceivingPlanPdfService],
   exports: [ReceivingPlanService, ReceivingPlanPdfService],
 })
 export class ReceivingPlanModule {}

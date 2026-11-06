@@ -92,17 +92,17 @@ export default function MaterialTransferHistoryPage() {
     win.document.write(`
       <html><head><title>Transfer Slip</title>
       <style>
-        body { font-family: 'Courier New', monospace; margin: 20px; color: #1a1a2e; }
+        body { font-family: 'Courier New', monospace; margin: 20px; color: #2563eb; }
         table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 12px; }
-        th { background: #1e293b; color: white; padding: 8px; text-align: left; font-size: 11px; }
-        td { padding: 8px; border: 1px solid #e2e8f0; }
-        .section { border: 1px solid #cbd5e1; padding: 12px; margin-bottom: 16px; }
-        .section-title { font-size: 11px; font-weight: bold; color: #1e40af; letter-spacing: 1px; margin-bottom: 8px; text-decoration: underline; }
+        th { background: #2563eb; color: #fcfeff; padding: 8px; text-align: left; font-size: 11px; }
+        td { padding: 8px; border: 1px solid #fcfeff; }
+        .section { border: 1px solid #fcfeff; padding: 12px; margin-bottom: 16px; }
+        .section-title { font-size: 11px; font-weight: bold; color: #2563eb; letter-spacing: 1px; margin-bottom: 8px; text-decoration: underline; }
         .field { display: flex; margin-bottom: 4px; font-size: 12px; }
-        .field-label { color: #64748b; min-width: 140px; }
-        .signatures { display: flex; justify-content: space-between; margin-top: 24px; border-top: 1px solid #cbd5e1; padding-top: 16px; }
+        .field-label { color: #2563eb; min-width: 140px; }
+        .signatures { display: flex; justify-content: space-between; margin-top: 24px; border-top: 1px solid #fcfeff; padding-top: 16px; }
         .sig-block { text-align: center; font-size: 11px; }
-        .sig-line { border-top: 1px solid #1a1a2e; width: 160px; margin: 24px auto 4px; }
+        .sig-line { border-top: 1px solid #2563eb; width: 160px; margin: 24px auto 4px; }
         @media print { body { margin: 0; } }
       </style>
       </head><body>${printContent}</body></html>
@@ -363,11 +363,11 @@ export default function MaterialTransferHistoryPage() {
 
           {pdfTransfer && (
             <div ref={printRef}>
-              <div style={{ border: '2px solid #1a1a2e', padding: '24px', fontFamily: "'Courier New', monospace", maxWidth: '800px', margin: '0 auto' }}>
+              <div style={{ border: '2px solid #2563eb', padding: '24px', fontFamily: "'Courier New', monospace", maxWidth: '800px', margin: '0 auto' }}>
                 {/* Header */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '2px solid #1a1a2e', paddingBottom: '12px', marginBottom: '16px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '2px solid #2563eb', paddingBottom: '12px', marginBottom: '16px' }}>
                   <div>
-                    <div style={{ fontSize: '11px', color: '#6366f1', letterSpacing: '1px' }}>INTERNAL LOGISTICS OPERATIONS</div>
+                    <div style={{ fontSize: '11px', color: '#2563eb', letterSpacing: '1px' }}>INTERNAL LOGISTICS OPERATIONS</div>
                     <h2 style={{ fontSize: '20px', fontWeight: 'bold', margin: '4px 0' }}>MATERIAL TRANSFER SLIP</h2>
                     <div style={{ fontSize: '12px', textDecoration: 'underline' }}>
                       Ref: {pdfTransfer.transferNumber} | Date: {pdfTransfer.transferDate ? new Date(pdfTransfer.transferDate).toLocaleString() : pdfTransfer.createdAt ? new Date(pdfTransfer.createdAt).toLocaleString() : '—'}
@@ -375,59 +375,59 @@ export default function MaterialTransferHistoryPage() {
                   </div>
                   <div style={{ textAlign: 'right' }}>
                     <div style={{ fontSize: '28px', fontWeight: 'bold' }}>KOI</div>
-                    <div style={{ fontSize: '10px', color: '#16a34a' }}>SYS.AUTH.VERIFIED</div>
+                    <div style={{ fontSize: '10px', color: '#2563eb' }}>SYS.AUTH.VERIFIED</div>
                   </div>
                 </div>
 
                 {/* Transfer Details */}
                 <div style={{ display: 'flex', gap: '16px', marginBottom: '16px' }}>
-                  <div style={{ flex: 1, border: '1px solid #cbd5e1', padding: '12px' }}>
-                    <div style={{ fontSize: '11px', fontWeight: 'bold', color: '#1e40af', letterSpacing: '1px', marginBottom: '8px', textDecoration: 'underline' }}>TRANSFER DETAILS</div>
+                  <div style={{ flex: 1, border: '1px solid #fcfeff', padding: '12px' }}>
+                    <div style={{ fontSize: '11px', fontWeight: 'bold', color: '#2563eb', letterSpacing: '1px', marginBottom: '8px', textDecoration: 'underline' }}>TRANSFER DETAILS</div>
                     <div style={{ fontSize: '12px' }}>
-                      <div style={{ display: 'flex', marginBottom: '4px' }}><span style={{ color: '#64748b', minWidth: '140px' }}>Transfer No:</span> <strong style={{ color: '#2563eb' }}>{pdfTransfer.transferNumber || '—'}</strong></div>
-                      <div style={{ display: 'flex', marginBottom: '4px' }}><span style={{ color: '#64748b', minWidth: '140px' }}>Order No:</span> <strong>{pdfTransfer.orderNo || pdfTransfer.referenceNumber || '—'}</strong></div>
-                      <div style={{ display: 'flex', marginBottom: '4px' }}><span style={{ color: '#64748b', minWidth: '140px' }}>Status:</span> <strong>{STATUS_STYLES[pdfTransfer.status]?.label || pdfTransfer.status || '—'}</strong></div>
-                      <div style={{ display: 'flex', marginBottom: '4px' }}><span style={{ color: '#64748b', minWidth: '140px' }}>Request Type:</span> <strong>{pdfTransfer.requestType || '—'}</strong></div>
+                      <div style={{ display: 'flex', marginBottom: '4px' }}><span style={{ color: '#2563eb', minWidth: '140px' }}>Transfer No:</span> <strong style={{ color: '#2563eb' }}>{pdfTransfer.transferNumber || '—'}</strong></div>
+                      <div style={{ display: 'flex', marginBottom: '4px' }}><span style={{ color: '#2563eb', minWidth: '140px' }}>Order No:</span> <strong>{pdfTransfer.orderNo || pdfTransfer.referenceNumber || '—'}</strong></div>
+                      <div style={{ display: 'flex', marginBottom: '4px' }}><span style={{ color: '#2563eb', minWidth: '140px' }}>Status:</span> <strong>{STATUS_STYLES[pdfTransfer.status]?.label || pdfTransfer.status || '—'}</strong></div>
+                      <div style={{ display: 'flex', marginBottom: '4px' }}><span style={{ color: '#2563eb', minWidth: '140px' }}>Request Type:</span> <strong>{pdfTransfer.requestType || '—'}</strong></div>
                     </div>
                   </div>
-                  <div style={{ flex: 1, border: '1px solid #cbd5e1', padding: '12px' }}>
-                    <div style={{ fontSize: '11px', fontWeight: 'bold', color: '#1e40af', letterSpacing: '1px', marginBottom: '8px', textDecoration: 'underline' }}>WAREHOUSE ROUTING</div>
+                  <div style={{ flex: 1, border: '1px solid #fcfeff', padding: '12px' }}>
+                    <div style={{ fontSize: '11px', fontWeight: 'bold', color: '#2563eb', letterSpacing: '1px', marginBottom: '8px', textDecoration: 'underline' }}>WAREHOUSE ROUTING</div>
                     <div style={{ fontSize: '12px' }}>
-                      <div style={{ display: 'flex', marginBottom: '4px' }}><span style={{ color: '#64748b', minWidth: '140px' }}>Source Warehouse:</span> <strong>{pdfTransfer.sourceWarehouseName || '—'}</strong></div>
-                      <div style={{ display: 'flex', marginBottom: '4px' }}><span style={{ color: '#64748b', minWidth: '140px' }}>Dest Warehouse:</span> <strong>{pdfTransfer.destinationWarehouseName || '—'}</strong></div>
-                      <div style={{ display: 'flex', marginBottom: '4px' }}><span style={{ color: '#64748b', minWidth: '140px' }}>Requested By:</span> <strong>{pdfTransfer.requestedByUsername || '—'}</strong></div>
-                      <div style={{ display: 'flex', marginBottom: '4px' }}><span style={{ color: '#64748b', minWidth: '140px' }}>Date:</span> <strong>{pdfTransfer.createdAt ? new Date(pdfTransfer.createdAt).toLocaleString() : '—'}</strong></div>
+                      <div style={{ display: 'flex', marginBottom: '4px' }}><span style={{ color: '#2563eb', minWidth: '140px' }}>Source Warehouse:</span> <strong>{pdfTransfer.sourceWarehouseName || '—'}</strong></div>
+                      <div style={{ display: 'flex', marginBottom: '4px' }}><span style={{ color: '#2563eb', minWidth: '140px' }}>Dest Warehouse:</span> <strong>{pdfTransfer.destinationWarehouseName || '—'}</strong></div>
+                      <div style={{ display: 'flex', marginBottom: '4px' }}><span style={{ color: '#2563eb', minWidth: '140px' }}>Requested By:</span> <strong>{pdfTransfer.requestedByUsername || '—'}</strong></div>
+                      <div style={{ display: 'flex', marginBottom: '4px' }}><span style={{ color: '#2563eb', minWidth: '140px' }}>Date:</span> <strong>{pdfTransfer.createdAt ? new Date(pdfTransfer.createdAt).toLocaleString() : '—'}</strong></div>
                     </div>
                   </div>
                 </div>
 
                 {/* Items Table */}
                 {loadingPdf ? (
-                  <div style={{ textAlign: 'center', padding: '24px', color: '#94a3b8' }}>Loading items...</div>
+                  <div style={{ textAlign: 'center', padding: '24px', color: '#2563eb' }}>Loading items...</div>
                 ) : (
                   <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', marginBottom: '16px' }}>
                     <thead>
                       <tr>
-                        <th style={{ background: '#1e293b', color: 'white', padding: '8px', textAlign: 'left', fontSize: '11px' }}>PRODUCT ID</th>
-                        <th style={{ background: '#1e293b', color: 'white', padding: '8px', textAlign: 'left', fontSize: '11px' }}>PRODUCT NAME</th>
-                        <th style={{ background: '#1e293b', color: 'white', padding: '8px', textAlign: 'center', fontSize: '11px' }}>REQ QTY</th>
-                        <th style={{ background: '#1e293b', color: 'white', padding: '8px', textAlign: 'center', fontSize: '11px' }}>DISPATCHED</th>
-                        <th style={{ background: '#1e293b', color: 'white', padding: '8px', textAlign: 'center', fontSize: '11px' }}>RECEIVED</th>
+                        <th style={{ background: '#2563eb', color: '#fcfeff', padding: '8px', textAlign: 'left', fontSize: '11px' }}>PRODUCT ID</th>
+                        <th style={{ background: '#2563eb', color: '#fcfeff', padding: '8px', textAlign: 'left', fontSize: '11px' }}>PRODUCT NAME</th>
+                        <th style={{ background: '#2563eb', color: '#fcfeff', padding: '8px', textAlign: 'center', fontSize: '11px' }}>REQ QTY</th>
+                        <th style={{ background: '#2563eb', color: '#fcfeff', padding: '8px', textAlign: 'center', fontSize: '11px' }}>DISPATCHED</th>
+                        <th style={{ background: '#2563eb', color: '#fcfeff', padding: '8px', textAlign: 'center', fontSize: '11px' }}>RECEIVED</th>
                       </tr>
                     </thead>
                     <tbody>
                       {pdfItems.map((item: any, idx: number) => (
                         <tr key={idx}>
-                          <td style={{ padding: '8px', border: '1px solid #e2e8f0', fontSize: '11px' }}>{item.productId || '—'}</td>
-                          <td style={{ padding: '8px', border: '1px solid #e2e8f0' }}>{item.productName || '—'}</td>
-                          <td style={{ padding: '8px', border: '1px solid #e2e8f0', background: '#dbeafe', textAlign: 'center' }}>{Math.round(Number(item.requestedQty || item.quantity || 0))}</td>
-                          <td style={{ padding: '8px', border: '1px solid #e2e8f0', background: '#dcfce7', textAlign: 'center', color: '#16a34a', fontWeight: 'bold' }}>{Math.round(Number(item.dispatchedQty || 0))}</td>
-                          <td style={{ padding: '8px', border: '1px solid #e2e8f0', background: '#fef9c3', textAlign: 'center', fontWeight: 'bold' }}>{Math.round(Number(item.receivedQty || 0))}</td>
+                          <td style={{ padding: '8px', border: '1px solid #fcfeff', fontSize: '11px' }}>{item.productId || '—'}</td>
+                          <td style={{ padding: '8px', border: '1px solid #fcfeff' }}>{item.productName || '—'}</td>
+                          <td style={{ padding: '8px', border: '1px solid #fcfeff', background: '#fcfeff', textAlign: 'center' }}>{Math.round(Number(item.requestedQty || item.quantity || 0))}</td>
+                          <td style={{ padding: '8px', border: '1px solid #fcfeff', background: '#fcfeff', textAlign: 'center', color: '#2563eb', fontWeight: 'bold' }}>{Math.round(Number(item.dispatchedQty || 0))}</td>
+                          <td style={{ padding: '8px', border: '1px solid #fcfeff', background: '#fcfeff', textAlign: 'center', fontWeight: 'bold' }}>{Math.round(Number(item.receivedQty || 0))}</td>
                         </tr>
                       ))}
                       {pdfItems.length === 0 && (
                         <tr>
-                          <td colSpan={5} style={{ padding: '8px', border: '1px solid #e2e8f0', textAlign: 'center', color: '#94a3b8' }}>No items</td>
+                          <td colSpan={5} style={{ padding: '8px', border: '1px solid #fcfeff', textAlign: 'center', color: '#2563eb' }}>No items</td>
                         </tr>
                       )}
                     </tbody>
@@ -435,31 +435,31 @@ export default function MaterialTransferHistoryPage() {
                 )}
 
                 {/* Remarks */}
-                <div style={{ border: '1px solid #cbd5e1', padding: '12px', marginBottom: '16px' }}>
-                  <div style={{ fontSize: '11px', textDecoration: 'underline', color: '#64748b' }}>Operational Remarks:</div>
+                <div style={{ border: '1px solid #fcfeff', padding: '12px', marginBottom: '16px' }}>
+                  <div style={{ fontSize: '11px', textDecoration: 'underline', color: '#2563eb' }}>Operational Remarks:</div>
                   <div style={{ fontWeight: 'bold', fontSize: '12px' }}>{pdfTransfer.requestRemarks || pdfTransfer.notes || 'N/A'}</div>
                 </div>
 
                 {/* Signatures */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #cbd5e1', paddingTop: '16px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #fcfeff', paddingTop: '16px' }}>
                   <div style={{ textAlign: 'center', fontSize: '11px' }}>
-                    <div style={{ borderTop: '1px solid #1a1a2e', width: '160px', margin: '24px auto 4px' }}></div>
+                    <div style={{ borderTop: '1px solid #2563eb', width: '160px', margin: '24px auto 4px' }}></div>
                     <div style={{ textDecoration: 'underline' }}>Requested By:</div>
-                    <div style={{ fontWeight: 'bold', color: '#1e40af' }}>{pdfTransfer.requestedByUsername || '—'}</div>
+                    <div style={{ fontWeight: 'bold', color: '#2563eb' }}>{pdfTransfer.requestedByUsername || '—'}</div>
                   </div>
                   <div style={{ textAlign: 'center', fontSize: '11px' }}>
-                    <div style={{ borderTop: '1px solid #1a1a2e', width: '160px', margin: '24px auto 4px' }}></div>
+                    <div style={{ borderTop: '1px solid #2563eb', width: '160px', margin: '24px auto 4px' }}></div>
                     <div>Sent By</div>
                     <div style={{ fontWeight: 'bold' }}>{pdfTransfer.sentBy || '—'}</div>
                   </div>
                   <div style={{ textAlign: 'center', fontSize: '11px' }}>
-                    <div style={{ borderTop: '1px solid #1a1a2e', width: '160px', margin: '24px auto 4px' }}></div>
+                    <div style={{ borderTop: '1px solid #2563eb', width: '160px', margin: '24px auto 4px' }}></div>
                     <div>Received By</div>
                     <div style={{ fontWeight: 'bold' }}>{pdfTransfer.receivedBy || '—'}</div>
                   </div>
                 </div>
 
-                <div style={{ textAlign: 'center', marginTop: '16px', fontSize: '10px', color: '#94a3b8' }}>
+                <div style={{ textAlign: 'center', marginTop: '16px', fontSize: '10px', color: '#2563eb' }}>
                   SYS-GEN-{pdfTransfer.transferNumber}
                 </div>
               </div>

@@ -1,5 +1,6 @@
 'use client';
 
+import { WorkspacePageHeader } from '@/components/workspace-page-header';
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { mastersApi } from '@/lib/api';
@@ -189,16 +190,12 @@ export default function RolesPage() {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Roles & Permissions</h1>
-          <p className="text-slate-500 mt-1">Manage user roles and their permissions</p>
-        </div>
+      <WorkspacePageHeader title={<>Roles & Permissions</>} description="Manage user roles and their permissions">
         <Button onClick={openCreateDialog}>
           <Plus className="h-4 w-4 mr-2" />
           Add Role
         </Button>
-      </div>
+      </WorkspacePageHeader>
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -230,15 +227,7 @@ export default function RolesPage() {
 
           {/* Roles Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {rolesLoading ? (
-              [...Array(6)].map((_, i) => (
-                <Card key={i}>
-                  <CardContent className="pt-6">
-                    <div className="h-24 bg-slate-100 animate-pulse rounded" />
-                  </CardContent>
-                </Card>
-              ))
-            ) : filteredRoles.length ? (
+            {rolesLoading ? null : filteredRoles.length ? (
               filteredRoles.map((role) => (
                 <Card key={role.roleId} className="hover:shadow-md transition-shadow">
                   <CardHeader className="pb-3">

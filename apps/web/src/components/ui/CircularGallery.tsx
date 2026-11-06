@@ -144,7 +144,7 @@ class Title {
   font: string;
   mesh: any;
 
-  constructor({ gl, plane, renderer, text, textColor = '#545050', font = '30px sans-serif' }: any) {
+  constructor({ gl, plane, renderer, text, textColor = '#2563eb', font = '30px sans-serif' }: any) {
     autoBind(this);
     this.gl = gl;
     this.plane = plane;
@@ -422,7 +422,7 @@ class App {
     {
       items,
       bend,
-      textColor = '#ffffff',
+      textColor = '#fcfeff',
       borderRadius = 0,
       font = 'bold 30px Figtree',
       scrollSpeed = 2,
@@ -616,7 +616,7 @@ class App {
 export default function CircularGallery({
   items,
   bend = 3,
-  textColor = '#ffffff',
+  textColor = '#fcfeff',
   borderRadius = 0.05,
   font = 'bold 30px Figtree',
   fontUrl,

@@ -1,5 +1,6 @@
 'use client';
 
+import { WorkspacePageHeader } from '@/components/workspace-page-header';
 import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { purchaseOrderApi } from '@/lib/api';
@@ -73,18 +74,12 @@ export default function PendingPOReportPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Pending PO Weekly Report</h1>
-          <p className="text-muted-foreground">
-            All pending purchase orders grouped by week of creation
-          </p>
-        </div>
+      <WorkspacePageHeader title="Pending PO Weekly Report" description="All pending purchase orders grouped by week of creation">
         <Button variant="outline" onClick={() => refetch()}>
           <RefreshCw className="mr-2 h-4 w-4" />
           Refresh
         </Button>
-      </div>
+      </WorkspacePageHeader>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <Card>

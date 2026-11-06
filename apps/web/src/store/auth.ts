@@ -41,6 +41,8 @@ function transformUserProfile(apiUser: any): UserProfile {
   };
 }
 
+let pendingAuthCheck: Promise<void> | null = null;
+
 export const useAuthStore = create<AuthState>()((set) => ({
   user: null,
   isAuthenticated: false,
@@ -103,6 +105,8 @@ export const useAuthStore = create<AuthState>()((set) => ({
   checkAuth: async () => {
     if (typeof window === 'undefined') return;
 
+    if (pendingAuthCheck) return pendingAuthCheck;
+
     const token = sessionStorage.getItem('accessToken');
     const refreshToken = sessionStorage.getItem('refreshToken');
     if (!token && !refreshToken) {
@@ -111,36 +115,40 @@ export const useAuthStore = create<AuthState>()((set) => ({
     }
 
     set({ isLoading: true });
-    try {
-      const response = await authApi.getProfile();
-      const userData = transformUserProfile(response.data);
-      console.log('CHECKAUTH SUCCESS:', userData.name, '| Role:', userData.role);
+    pendingAuthCheck = (async () => {
+      try {
+        const response = await authApi.getProfile();
+        const userData = transformUserProfile(response.data);
 
-      set({
-        user: userData,
-        isAuthenticated: true,
-        isLoading: false,
-      });
-    } catch (error: any) {
-      const status = error.response?.status;
-      console.log('CHECKAUTH FAILED:', status || error.message);
-      if (status === 429 && token) {
-        set(() => ({
+        set({
+          user: userData,
           isAuthenticated: true,
           isLoading: false,
-        }));
-        return;
+        });
+      } catch (error: any) {
+        const status = error.response?.status;
+        if (status === 429 && token) {
+          set(() => ({
+            isAuthenticated: true,
+            isLoading: false,
+          }));
+          return;
+        }
+        if (typeof window !== 'undefined') {
+          sessionStorage.removeItem('accessToken');
+          sessionStorage.removeItem('refreshToken');
+        }
+        set({
+          user: null,
+          isAuthenticated: false,
+          isLoading: false,
+        });
+      } finally {
+        pendingAuthCheck = null;
       }
-      if (typeof window !== 'undefined') {
-        sessionStorage.removeItem('accessToken');
-        sessionStorage.removeItem('refreshToken');
-      }
-      set({
-        user: null,
-        isAuthenticated: false,
-        isLoading: false,
-      });
-    }
+    })();
+
+    return pendingAuthCheck;
   },
 
   clearError: () => set({ error: null }),

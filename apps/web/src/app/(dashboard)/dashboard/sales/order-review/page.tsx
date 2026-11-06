@@ -1,5 +1,6 @@
 'use client';
 
+import { WorkspacePageHeader } from '@/components/workspace-page-header';
 import { useState, useMemo, useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
@@ -41,7 +42,7 @@ import { orderReviewApi } from '@/lib/api';
 import { formatDate } from '@/lib/utils';
 import { Textarea } from '@/components/ui/textarea';
 
-const EDITABLE_BG = '#FFFDE7';
+const EDITABLE_BG = '#fcfeff';
 
 export default function OrderReviewPage() {
   const queryClient = useQueryClient();
@@ -369,20 +370,14 @@ export default function OrderReviewPage() {
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Order Review & Dispatch Planning</h1>
-          <p className="text-sm text-muted-foreground">
-            Review sales orders, fill dispatch data, and submit for processing
-          </p>
-        </div>
+      <WorkspacePageHeader title={<>Order Review & Dispatch Planning</>} description="Review sales orders, fill dispatch data, and submit for processing">
         {reviewOpen && (
           <Button variant="outline" onClick={backToSelection}>
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Selection
           </Button>
         )}
-      </div>
+      </WorkspacePageHeader>
 
       {!reviewOpen ? (
         /* ──── ORDER SELECTION ──── */
@@ -1292,7 +1287,7 @@ export default function OrderReviewPage() {
               {/* Mark as N/A — hidden for stock and production */}
               {stageModal.type !== 'production' && stageModal.type !== 'stock' && (
               <div>
-                <label className="flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer" style={{ backgroundColor: '#f3f4f6', border: '1px solid #d1d5db' }}>
+                <label className="flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer" style={{ backgroundColor: '#fcfeff', border: '1px solid #fcfeff' }}>
                   <input
                     type="checkbox"
                     className="h-4 w-4"
@@ -1306,7 +1301,7 @@ export default function OrderReviewPage() {
               )}
 
               {/* Mark as Done */}
-              <label className={cn('flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer', stageForm.na ? 'opacity-40 pointer-events-none' : '')} style={{ backgroundColor: '#ecfdf5', border: '1px solid #a7f3d0' }}>
+              <label className={cn('flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer', stageForm.na ? 'opacity-40 pointer-events-none' : '')} style={{ backgroundColor: '#fcfeff', border: '1px solid #fcfeff' }}>
                 <input
                   type="checkbox"
                   className="h-4 w-4"

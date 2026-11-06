@@ -32,9 +32,9 @@ const NOTIFICATION_COLORS: Record<string, string> = {
   sales: 'bg-sky-100 text-sky-700',
   purchase: 'bg-orange-100 text-orange-600',
   fms: 'bg-violet-100 text-violet-700',
-  mis: 'bg-[#f4eadc] text-[#8a5b25]',
+  mis: 'bg-[#fcfeff]/20 text-[#2563eb]',
   rate: 'bg-emerald-100 text-emerald-700',
-  default: 'bg-[#efe8dc] text-slate-600',
+  default: 'bg-[#fcfeff]/20 text-slate-600',
 };
 
 function formatRelativeTime(dateString: string): string {
@@ -120,7 +120,7 @@ export function NotificationPanel() {
         onClick={() => {
           setIsOpen(!isOpen);
         }}
-        className="relative rounded-lg p-2 transition-colors hover:bg-[#efe8dc]"
+        className="relative rounded-lg p-2 transition-colors hover:bg-[#fcfeff]/20"
         title="Notifications active"
       >
         <Wifi className="h-4 w-4 text-green-500 absolute -top-0.5 -right-0.5" />
@@ -136,7 +136,7 @@ export function NotificationPanel() {
       {isOpen && (
         <div className="absolute right-0 mt-2 w-96 bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden z-50">
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-[#eee8de] bg-[#fbfaf6] px-4 py-3">
+          <div className="flex items-center justify-between border-b border-[#fcfeff]/20 bg-[#fcfeff] px-4 py-3">
             <div className="flex items-center gap-2">
               <h3 className="font-semibold text-slate-800">Notifications</h3>
               {unreadCount > 0 && (
@@ -154,7 +154,7 @@ export function NotificationPanel() {
               {unreadCount > 0 && (
                 <button
                   onClick={handleMarkAllAsRead}
-                  className="rounded p-1.5 text-slate-500 hover:bg-[#efe8dc] hover:text-slate-800"
+                  className="rounded p-1.5 text-slate-500 hover:bg-[#fcfeff]/20 hover:text-slate-800"
                   title="Mark all as read"
                 >
                   <CheckCheck className="h-4 w-4" />
@@ -162,14 +162,14 @@ export function NotificationPanel() {
               )}
               <button
                 onClick={refresh}
-                className="rounded p-1.5 text-slate-500 hover:bg-[#efe8dc] hover:text-slate-800"
+                className="rounded p-1.5 text-slate-500 hover:bg-[#fcfeff]/20 hover:text-slate-800"
                 title="Refresh"
               >
                 <Clock className="h-4 w-4" />
               </button>
               <button
                 onClick={() => setIsOpen(false)}
-                className="rounded p-1.5 text-slate-500 hover:bg-[#efe8dc] hover:text-slate-800"
+                className="rounded p-1.5 text-slate-500 hover:bg-[#fcfeff]/20 hover:text-slate-800"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -192,7 +192,7 @@ export function NotificationPanel() {
                 return (
                   <div
                     key={notification.notificationId}
-                    className={`relative border-b border-[#f2ede4] px-4 py-3 transition-colors hover:bg-[#fbfaf6] ${
+                    className={`relative border-b border-[#fcfeff]/15 px-4 py-3 transition-colors hover:bg-[#fcfeff]/80 ${
                       isUnread ? 'bg-sky-50/50' : ''
                     }`}
                   >
@@ -214,7 +214,7 @@ export function NotificationPanel() {
                               {notification.title}
                             </p>
                             {isUnread && (
-                              <span className="mt-1.5 h-2 w-2 flex-shrink-0 rounded-full bg-[#9a6b36]" />
+                              <span className="mt-1.5 h-2 w-2 flex-shrink-0 rounded-full bg-[#2563eb]" />
                             )}
                           </div>
                           <p className="mt-0.5 line-clamp-2 text-sm text-slate-500">
@@ -256,7 +256,7 @@ export function NotificationPanel() {
 
           {/* Footer */}
           {notifications.length > 0 && (
-            <div className="border-t border-[#eee8de] bg-[#fbfaf6] px-4 py-2">
+            <div className="border-t border-[#fcfeff]/20 bg-[#fcfeff] px-4 py-2">
               <Link
                 href="/dashboard/notifications"
                 className="w-full text-center text-sm text-primary-600 hover:text-primary-700 font-medium block"

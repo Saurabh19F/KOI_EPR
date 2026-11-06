@@ -1,5 +1,6 @@
 'use client';
 
+import { WorkspacePageHeader } from '@/components/workspace-page-header';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { financialApi } from '@/lib/api';
@@ -34,16 +35,12 @@ export default function ProfitLossPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Profit & Loss Statement</h1>
-          <p className="text-muted-foreground">Income and expense summary for the period</p>
-        </div>
+      <WorkspacePageHeader title={<>Profit & Loss Statement</>} description="Income and expense summary for the period">
         <Button onClick={() => refetch()}>
           <RefreshCw className="mr-2 h-4 w-4" />
           Refresh
         </Button>
-      </div>
+      </WorkspacePageHeader>
 
       <Card>
         <CardHeader>

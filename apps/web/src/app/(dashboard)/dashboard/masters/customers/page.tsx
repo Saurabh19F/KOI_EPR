@@ -1,5 +1,6 @@
 'use client';
 
+import { WorkspacePageHeader } from '@/components/workspace-page-header';
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { mastersApi, usersApi } from '@/lib/api';
@@ -403,16 +404,12 @@ export default function CustomersPage() {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Customers</h1>
-          <p className="text-slate-500 mt-1">Manage customer database with buyer codes and credit terms</p>
-        </div>
+      <WorkspacePageHeader title="Customers" description="Manage customer database with buyer codes and credit terms">
         <Button onClick={() => { resetForm(); setEditingCustomer(null); setIsDialogOpen(true); }}>
           <Plus className="h-4 w-4 mr-2" />
           Add Customer
         </Button>
-      </div>
+      </WorkspacePageHeader>
 
       {/* Search & Filters */}
       <div className="bg-white rounded-xl shadow-card p-4">
@@ -474,15 +471,7 @@ export default function CustomersPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {isLoading ? (
-                [...Array(5)].map((_, i) => (
-                  <tr key={i}>
-                    {[...Array(21)].map((_, j) => (
-                      <td key={j} className="px-4 py-4"><div className="h-4 w-16 bg-gray-200 animate-pulse rounded" /></td>
-                    ))}
-                  </tr>
-                ))
-              ) : customers.length ? (
+              {isLoading ? null : customers.length ? (
                 customers.map((customer: any) => (
                   <tr key={customer.customerId} className="hover:bg-gray-50 transition-colors">
                     <td className="px-4 py-4 text-slate-600 text-sm whitespace-nowrap">

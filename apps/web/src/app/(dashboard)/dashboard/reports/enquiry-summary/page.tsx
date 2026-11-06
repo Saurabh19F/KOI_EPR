@@ -1,5 +1,6 @@
 'use client';
 
+import { WorkspacePageHeader } from '@/components/workspace-page-header';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { salesApi, reportsApi } from '@/lib/api';
@@ -215,11 +216,7 @@ export default function EnquirySummaryReportPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Enquiry Summary Report</h1>
-          <p className="text-slate-500 mt-1">Enquiry status distribution and timeline analysis</p>
-        </div>
+      <WorkspacePageHeader title="Enquiry Summary Report" description="Enquiry status distribution and timeline analysis">
         <div className="flex items-center gap-3">
           <Select value={dateRange} onValueChange={(v) => setDateRange(v as DateRange)}>
             <SelectTrigger className="w-40">
@@ -241,7 +238,7 @@ export default function EnquirySummaryReportPage() {
             Export PDF
           </Button>
         </div>
-      </div>
+      </WorkspacePageHeader>
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -250,14 +247,12 @@ export default function EnquirySummaryReportPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-slate-500">Total Enquiries</p>
-                {isLoading ? (
-                  <div className="h-8 w-16 bg-slate-200 animate-pulse rounded mt-1" />
-                ) : (
+                {isLoading ? null : (
                   <p className="text-3xl font-bold text-slate-900 mt-1">{stats.total}</p>
                 )}
                 <div className="flex items-center gap-1 mt-1">
                   <ArrowUpRight className="h-3 w-3 text-green-500" />
-                  <span className="text-xs text-green-600">
+                  <span className="text-xs text-green-800">
                     +{percentChange.total}% vs last period
                   </span>
                 </div>
@@ -279,13 +274,13 @@ export default function EnquirySummaryReportPage() {
                 </p>
                 <div className="flex items-center gap-1 mt-1">
                   <ArrowUpRight className="h-3 w-3 text-green-500" />
-                  <span className="text-xs text-green-600">
+                  <span className="text-xs text-green-800">
                     +{percentChange.conversion}% vs last period
                   </span>
                 </div>
               </div>
               <div className="p-3 bg-green-100 rounded-xl">
-                <TrendingUp className="h-6 w-6 text-green-600" />
+                <TrendingUp className="h-6 w-6 text-green-800" />
               </div>
             </div>
           </CardContent>
@@ -301,14 +296,14 @@ export default function EnquirySummaryReportPage() {
                   {percentChange.avgCycle <= 0 ? (
                     <>
                       <ArrowDownRight className="h-3 w-3 text-green-500" />
-                      <span className="text-xs text-green-600">
+                      <span className="text-xs text-green-800">
                         {Math.abs(percentChange.avgCycle)}% faster
                       </span>
                     </>
                   ) : (
                     <>
                       <ArrowUpRight className="h-3 w-3 text-red-500" />
-                      <span className="text-xs text-red-600">
+                      <span className="text-xs text-red-800">
                         +{percentChange.avgCycle}%
                       </span>
                     </>
@@ -316,7 +311,7 @@ export default function EnquirySummaryReportPage() {
                 </div>
               </div>
               <div className="p-3 bg-blue-100 rounded-xl">
-                <Clock className="h-6 w-6 text-blue-600" />
+                <Clock className="h-6 w-6 text-blue-800" />
               </div>
             </div>
           </CardContent>
@@ -338,7 +333,7 @@ export default function EnquirySummaryReportPage() {
                 </div>
               </div>
               <div className="p-3 bg-orange-100 rounded-xl">
-                <Users className="h-6 w-6 text-orange-600" />
+                <Users className="h-6 w-6 text-orange-800" />
               </div>
             </div>
           </CardContent>
@@ -356,7 +351,7 @@ export default function EnquirySummaryReportPage() {
             <div className="h-52 w-full flex items-center justify-center relative">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  <Tooltip contentStyle={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0', borderRadius: '8px', fontSize: '11px' }} />
+                  <Tooltip contentStyle={{ backgroundColor: '#fcfeff', borderColor: '#fcfeff', borderRadius: '8px', fontSize: '11px' }} />
                   <Pie
                     data={statusDistribution.map(item => ({
                       name: STATUS_CONFIG[item.status]?.label || item.status,
@@ -370,7 +365,7 @@ export default function EnquirySummaryReportPage() {
                     dataKey="value"
                   >
                     {statusDistribution.map((item, index) => {
-                      const colorHex = item.status === 'pending' ? '#eab308' : item.status === 'submitted' ? '#3b82f6' : item.status === 'approved' ? '#a855f7' : item.status === 'won' ? '#22c55e' : item.status === 'lost' ? '#ef4444' : '#64748b';
+                      const colorHex = getStatusColor(item.status);
                       return <Cell key={`cell-${index}`} fill={colorHex} />;
                     })}
                   </Pie>
@@ -442,11 +437,11 @@ export default function EnquirySummaryReportPage() {
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
             <div className="p-4 bg-yellow-50 rounded-lg border border-yellow-100">
-              <p className="text-sm text-yellow-600">Pending</p>
+              <p className="text-sm text-yellow-800">Pending</p>
               <p className="text-2xl font-bold text-yellow-700 mt-1">{stats.pending}</p>
             </div>
             <div className="p-4 bg-blue-50 rounded-lg border border-blue-100">
-              <p className="text-sm text-blue-600">Submitted</p>
+              <p className="text-sm text-blue-800">Submitted</p>
               <p className="text-2xl font-bold text-blue-700 mt-1">{stats.submitted}</p>
             </div>
             <div className="p-4 bg-purple-50 rounded-lg border border-purple-100">
@@ -454,11 +449,11 @@ export default function EnquirySummaryReportPage() {
               <p className="text-2xl font-bold text-purple-700 mt-1">{stats.approved}</p>
             </div>
             <div className="p-4 bg-green-50 rounded-lg border border-green-100">
-              <p className="text-sm text-green-600">Won</p>
+              <p className="text-sm text-green-800">Won</p>
               <p className="text-2xl font-bold text-green-700 mt-1">{stats.won}</p>
             </div>
             <div className="p-4 bg-red-50 rounded-lg border border-red-100">
-              <p className="text-sm text-red-600">Lost</p>
+              <p className="text-sm text-red-800">Lost</p>
               <p className="text-2xl font-bold text-red-700 mt-1">{stats.lost}</p>
             </div>
           </div>
@@ -513,17 +508,7 @@ export default function EnquirySummaryReportPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {isLoading ? (
-                [...Array(5)].map((_, i) => (
-                  <TableRow key={i}>
-                    {[...Array(7)].map((_, j) => (
-                      <TableCell key={j}>
-                        <div className="h-4 w-20 bg-slate-200 animate-pulse rounded" />
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              ) : enquiries.length ? (
+              {isLoading ? null : enquiries.length ? (
                 enquiries.map((enquiry: any) => {
                   const statusConfig = STATUS_CONFIG[enquiry.status] || STATUS_CONFIG.pending;
                   const createdDate = enquiry.createdAt ? new Date(enquiry.createdAt) : null;
@@ -601,11 +586,11 @@ export default function EnquirySummaryReportPage() {
 
 function getStatusColor(status: string): string {
   const colors: Record<string, string> = {
-    pending: '#facc15',
-    submitted: '#3b82f6',
-    approved: '#a855f7',
-    won: '#22c55e',
-    lost: '#ef4444',
+    pending: '#9b9600',
+    submitted: '#154fa6',
+    approved: '#067461',
+    won: '#008947',
+    lost: '#b90f1c',
   };
-  return colors[status] || '#94a3b8';
+  return colors[status] || '#154fa6';
 }

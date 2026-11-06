@@ -447,38 +447,22 @@ export class ReportsService {
       .createQueryBuilder('enquiry')
       .select("TO_CHAR(enquiry.createdAt, 'YYYY-MM')", 'month')
       .addSelect('COUNT(*)', 'count')
-      .addSelect("TO_CHAR(enquiry.createdAt, 'YYYY-MM-DD')", 'date')
       .addSelect('COALESCE(SUM(enquiry.totalValue), 0)', 'value')
       .addSelect(`SUM(CASE WHEN enquiry.status = 'won' THEN 1 ELSE 0 END)`, 'won')
       .addSelect(`SUM(CASE WHEN enquiry.status = 'lost' THEN 1 ELSE 0 END)`, 'lost')
       .where('enquiry.deletedAt IS NULL')
       .andWhere('enquiry.createdAt >= :date', { date: twelveMonthsAgo })
       .groupBy("TO_CHAR(enquiry.createdAt, 'YYYY-MM')")
-      .addGroupBy("TO_CHAR(enquiry.createdAt, 'YYYY-MM-DD')")
-      .orderBy('date', 'ASC')
+      .orderBy('month', 'ASC')
       .getRawMany();
 
-    // Group by month
-    const byMonthMap = new Map<string, SalesTrend>();
-    monthlyData.forEach(row => {
-      const existing = byMonthMap.get(row.month);
-      if (existing) {
-        existing.count += parseInt(row.count);
-        existing.value += parseFloat(row.value);
-        existing.won += parseInt(row.won);
-        existing.lost += parseInt(row.lost);
-      } else {
-        byMonthMap.set(row.month, {
-          date: row.month,
-          count: parseInt(row.count),
-          value: parseFloat(row.value),
-          won: parseInt(row.won),
-          lost: parseInt(row.lost),
-        });
-      }
-    });
-
-    const byMonth = Array.from(byMonthMap.values());
+    const byMonth: SalesTrend[] = monthlyData.map(row => ({
+      date: row.month,
+      count: parseInt(row.count),
+      value: parseFloat(row.value),
+      won: parseInt(row.won),
+      lost: parseInt(row.lost),
+    }));
 
     // Top customers by enquiry count - using buyerName directly since there's no customer relation
     const topCustomersByName = await this.enquiryRepo

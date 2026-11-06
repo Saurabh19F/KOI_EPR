@@ -1,5 +1,6 @@
 'use client';
 
+import { WorkspacePageHeader } from '@/components/workspace-page-header';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { purchaseIndentApi } from '@/lib/api';
@@ -109,10 +110,7 @@ export default function IndentDashboardPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Purchase Indent Dashboard</h1>
-        <p className="text-gray-500">Track indent assignments per person per order</p>
-      </div>
+      <WorkspacePageHeader title="Purchase Indent Dashboard" description="Track indent assignments per person per order" />
 
       {/* Summary Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

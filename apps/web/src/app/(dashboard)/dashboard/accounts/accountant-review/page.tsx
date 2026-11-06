@@ -1,5 +1,6 @@
 'use client';
 
+import { WorkspacePageHeader } from '@/components/workspace-page-header';
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { purchaseOrderApi, filesApi } from '@/lib/api';
@@ -324,12 +325,7 @@ export default function AccountantReviewPage() {
 
   return (
     <div className="p-4 space-y-4">
-      <div>
-        <h1 className="text-2xl font-bold flex items-center gap-2">
-          <ClipboardCheck className="h-6 w-6" /> Accountant Review
-        </h1>
-        <p className="text-sm text-muted-foreground">Indent to Purchase Order — Activity-01 &amp; Activity-02</p>
-      </div>
+      <WorkspacePageHeader title={<><ClipboardCheck className="h-6 w-6" /> Accountant Review</>} description={<>Indent to Purchase Order — Activity-01 &amp; Activity-02</>} />
 
       <div className="flex flex-col sm:flex-row sm:items-center gap-4">
         <Tabs value={activityFilter} onValueChange={(v) => { setActivityFilter(v as ActivityFilter); setPage(1); }}>
@@ -356,20 +352,20 @@ export default function AccountantReviewPage() {
               <th className="border border-gray-300 px-1 py-0.5 text-[10px] text-gray-500 font-normal w-8" rowSpan={3}>
                 #
               </th>
-              <th colSpan={7} className="text-white text-center py-2 px-2 text-sm font-bold border border-gray-300" style={{ backgroundColor: '#2d5016' }}>
+              <th colSpan={7} className="text-white text-center py-2 px-2 text-sm font-bold border border-gray-300" style={{ backgroundColor: '#2563eb' }}>
                 Indent to Purchase Order Sheet 2026-2027
               </th>
-              <th colSpan={4} className="text-white text-center py-2 px-2 text-sm font-bold border border-gray-300" style={{ backgroundColor: '#1a4d6e' }}>
+              <th colSpan={4} className="text-white text-center py-2 px-2 text-sm font-bold border border-gray-300" style={{ backgroundColor: '#2563eb' }}>
                 Purchase Order Details
               </th>
               <th colSpan={1} className="text-white text-center py-2 px-2 text-sm font-bold border border-gray-300 bg-red-700">
                 Buyer
               </th>
-              <th colSpan={6} className="text-white text-center py-2 px-2 text-sm font-bold border border-gray-300" style={{ backgroundColor: '#7b68ae' }}>
+              <th colSpan={6} className="text-white text-center py-2 px-2 text-sm font-bold border border-gray-300" style={{ backgroundColor: '#2563eb' }}>
                 Activity-01
               </th>
               {canEditAct2 && (
-                <th colSpan={4} className="text-white text-center py-2 px-2 text-sm font-bold border border-gray-300" style={{ backgroundColor: '#4285f4' }}>
+                <th colSpan={4} className="text-white text-center py-2 px-2 text-sm font-bold border border-gray-300" style={{ backgroundColor: '#2563eb' }}>
                   Activity-02
                 </th>
               )}

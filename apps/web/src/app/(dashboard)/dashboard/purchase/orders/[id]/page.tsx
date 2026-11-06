@@ -585,7 +585,7 @@ function EditableView({ order, orderId }: { order: any; orderId: string }) {
           <div className="overflow-x-auto">
             <table className="w-full text-xs border-collapse min-w-[1600px]">
               <thead>
-                <tr className="bg-[#003366] text-white text-[10px]">
+                <tr className="bg-[#2563eb] text-white text-[10px]">
                   <th className="py-2 px-2 border border-gray-500 text-center font-bold w-10">S. No.</th>
                   <th className="py-2 px-2 border border-gray-500 text-center font-bold min-w-[140px]">Unique Code</th>
                   <th className="py-2 px-2 border border-gray-500 text-center font-bold min-w-[180px]">Item Description</th>

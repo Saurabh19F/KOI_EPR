@@ -1,5 +1,6 @@
 'use client';
 
+import { WorkspacePageHeader } from '@/components/workspace-page-header';
 import { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { receivingPlanApi, notificationsApi } from '@/lib/api';
@@ -70,18 +71,12 @@ export default function GrnNotificationsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">GRN Email Notifications</h1>
-          <p className="text-muted-foreground">
-            Send email notifications with GRN details and PDF to stakeholders
-          </p>
-        </div>
+      <WorkspacePageHeader title="GRN Email Notifications" description="Send email notifications with GRN details and PDF to stakeholders">
         <Button variant="outline" onClick={() => refetch()}>
           <RefreshCw className="mr-2 h-4 w-4" />
           Refresh
         </Button>
-      </div>
+      </WorkspacePageHeader>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <Card>

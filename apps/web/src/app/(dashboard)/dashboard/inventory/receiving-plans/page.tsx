@@ -1,5 +1,6 @@
 'use client';
 
+import { WorkspacePageHeader } from '@/components/workspace-page-header';
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { receivingPlanApi } from '@/lib/api';
@@ -283,11 +284,7 @@ export default function ReceivingPlansPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Receiving Plans</h1>
-          <p className="text-muted-foreground">Track expected receipts against purchase orders</p>
-        </div>
+      <WorkspacePageHeader title="Receiving Plans" description="Track expected receipts against purchase orders">
         <div className="flex gap-2">
           <Button
             variant="outline"
@@ -302,7 +299,7 @@ export default function ReceivingPlansPage() {
             New Plan
           </Button>
         </div>
-      </div>
+      </WorkspacePageHeader>
 
       <Card>
         <CardHeader>

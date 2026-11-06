@@ -1,5 +1,6 @@
 'use client';
 
+import { WorkspacePageHeader } from '@/components/workspace-page-header';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { authApi } from '@/lib/api';
@@ -33,16 +34,12 @@ export default function UsersPage() {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">User Management</h1>
-          <p className="text-slate-500 mt-1">Manage users and their access</p>
-        </div>
+      <WorkspacePageHeader title="User Management" description="Manage users and their access">
         <Button>
           <UserPlus className="h-4 w-4 mr-2" />
           Add User
         </Button>
-      </div>
+      </WorkspacePageHeader>
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -83,19 +80,13 @@ export default function UsersPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {usersLoading ? (
-                <div className="space-y-4">
-                  {[1, 2, 3].map((i) => (
-                    <div key={i} className="h-20 bg-slate-100 animate-pulse rounded-lg" />
-                  ))}
-                </div>
-              ) : (
+              {usersLoading ? null : (
                 <div className="space-y-4">
                   {/* Current user info */}
                   <div className="p-4 border rounded-lg hover:bg-slate-50 transition-colors">
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 rounded-full bg-primary-100 flex items-center justify-center">
-                        <span className="text-primary-600 font-semibold">
+                        <span className="text-primary-800 font-semibold">
                           {getInitials(usersData?.data?.name || 'U')}
                         </span>
                       </div>
@@ -138,11 +129,7 @@ export default function UsersPage() {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {rolesLoading ? (
-                  [...Array(3)].map((_, i) => (
-                    <div key={i} className="h-24 bg-slate-100 animate-pulse rounded-lg" />
-                  ))
-                ) : (
+                {rolesLoading ? null : (
                   roles.map((role: any) => (
                     <div key={role.roleId} className="p-4 border rounded-lg hover:shadow-md transition-shadow cursor-pointer"
                       onClick={() => window.location.href = '/dashboard/users/roles'}>

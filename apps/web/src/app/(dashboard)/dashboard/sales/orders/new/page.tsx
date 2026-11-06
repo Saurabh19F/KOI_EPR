@@ -1,5 +1,6 @@
 'use client';
 
+import { WorkspacePageHeader } from '@/components/workspace-page-header';
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -745,10 +746,7 @@ export default function NewSalesOrderPage() {
               <ArrowLeft className="h-5 w-5" />
             </Link>
           </Button>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">New Sales Order</h1>
-            <p className="text-gray-500">Create a new sales order{form.enquiryIds.length ? ` (from ${form.enquiryIds.length} enquir${form.enquiryIds.length > 1 ? 'ies' : 'y'})` : ''}</p>
-          </div>
+          <WorkspacePageHeader title="New Sales Order" description={<>Create a new sales order{form.enquiryIds.length ? ` (from ${form.enquiryIds.length} enquir${form.enquiryIds.length > 1 ? 'ies' : 'y'})` : ''}</>} />
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={() => setShowEnquiryPicker(true)}>

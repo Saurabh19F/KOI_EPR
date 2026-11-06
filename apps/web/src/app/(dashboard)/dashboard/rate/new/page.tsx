@@ -1,5 +1,6 @@
 'use client';
 
+import { WorkspacePageHeader } from '@/components/workspace-page-header';
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -212,10 +213,7 @@ export default function NewRateAnalysisPage() {
               <ArrowLeft className="h-5 w-5" />
             </Button>
           </Link>
-          <div>
-            <h1 className="text-2xl font-bold">Create Price Analysis</h1>
-            <p className="text-gray-500">Calculate and analyze product rates</p>
-          </div>
+          <WorkspacePageHeader title="Create Price Analysis" description="Calculate and analyze product rates" />
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={() => router.push('/rate')}>
@@ -229,7 +227,7 @@ export default function NewRateAnalysisPage() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         <Card>
           <CardContent className="pt-4">
             <div className="flex items-center gap-3">

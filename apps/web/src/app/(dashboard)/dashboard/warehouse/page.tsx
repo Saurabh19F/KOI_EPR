@@ -1,5 +1,6 @@
 'use client';
 
+import { WorkspacePageHeader } from '@/components/workspace-page-header';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { inventoryApi } from '@/lib/api';
@@ -64,11 +65,7 @@ export default function WarehouseDashboardPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Department Dashboard</h1>
-          <p className="text-muted-foreground">Warehouse overview and key metrics</p>
-        </div>
+      <WorkspacePageHeader title="Department Dashboard" description="Review stock balances, movements, and low-stock alerts by warehouse.">
         <Select value={selectedWarehouse} onValueChange={setSelectedWarehouse}>
           <SelectTrigger className="w-[200px]">
             <SelectValue placeholder="All Warehouses" />
@@ -80,7 +77,7 @@ export default function WarehouseDashboardPage() {
             ))}
           </SelectContent>
         </Select>
-      </div>
+      </WorkspacePageHeader>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>

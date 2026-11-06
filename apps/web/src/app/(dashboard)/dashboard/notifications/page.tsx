@@ -1,5 +1,6 @@
 'use client';
 
+import { WorkspacePageHeader } from '@/components/workspace-page-header';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Bell, Check, CheckCheck, Filter, Search, Trash2, Mail, AlertTriangle, Info, Clock } from 'lucide-react';
@@ -86,14 +87,10 @@ export default function NotificationsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-white">
       <div className="max-w-4xl mx-auto p-6 space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900">Notifications</h1>
-            <p className="text-slate-500 mt-1">{unreadCount} unread of {mappedNotifications.length} notifications</p>
-          </div>
+        <WorkspacePageHeader title="Notifications" description={<>{unreadCount} unread of {mappedNotifications.length} notifications</>}>
           <div className="flex items-center gap-3">
             {unreadCount > 0 && (
               <Button variant="outline" onClick={() => markAllAsRead()} className="gap-2">
@@ -102,7 +99,7 @@ export default function NotificationsPage() {
               </Button>
             )}
           </div>
-        </div>
+        </WorkspacePageHeader>
 
         {/* Filters */}
         <Card>
@@ -122,7 +119,7 @@ export default function NotificationsPage() {
                 <button
                   onClick={() => setFilter('all')}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    filter === 'all' ? 'bg-amber-500 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    filter === 'all' ? 'bg-[#9a4508] text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                   }`}
                 >
                   All
@@ -130,7 +127,7 @@ export default function NotificationsPage() {
                 <button
                   onClick={() => setFilter('unread')}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    filter === 'unread' ? 'bg-amber-500 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    filter === 'unread' ? 'bg-[#9a4508] text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                   }`}
                 >
                   Unread

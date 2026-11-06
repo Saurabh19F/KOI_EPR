@@ -1,5 +1,6 @@
 'use client';
 
+import { WorkspacePageHeader } from '@/components/workspace-page-header';
 import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { qualityApi } from '@/lib/api';
@@ -195,18 +196,12 @@ export default function PostReceiptQCPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Post-Receipt QC</h1>
-          <p className="text-muted-foreground">
-            All GRN items arrive here for quality inspection — Accept or Reject each item
-          </p>
-        </div>
+      <WorkspacePageHeader title="Post-Receipt QC" description="All GRN items arrive here for quality inspection — Accept or Reject each item">
         <Button variant="outline" onClick={() => refetch()}>
           <RefreshCw className="mr-2 h-4 w-4" />
           Refresh
         </Button>
-      </div>
+      </WorkspacePageHeader>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
         <Card>
@@ -261,7 +256,7 @@ export default function PostReceiptQCPage() {
         <CardHeader>
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <CardTitle>GRN Quality Inspections</CardTitle>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
@@ -271,7 +266,7 @@ export default function PostReceiptQCPage() {
                   className="pl-9 w-[220px]"
                 />
               </div>
-              <div className="flex gap-1">
+              <div className="flex flex-wrap gap-1">
                 {['pending', 'in_progress', 'completed', 'cancelled', ''].map((s) => (
                   <Button
                     key={s || 'all'}
@@ -517,7 +512,7 @@ export default function PostReceiptQCPage() {
                           else if (approved === 0) setDecision('rejected');
                           else setDecision('partially_approved');
                         }}
-                        style={{ backgroundColor: '#fefce8' }}
+                        style={{ backgroundColor: '#fcfeff' }}
                       />
                     </div>
                     <div>
@@ -536,7 +531,7 @@ export default function PostReceiptQCPage() {
                           else if (rejected === 0) setDecision('approved');
                           else setDecision('partially_approved');
                         }}
-                        style={{ backgroundColor: '#fefce8' }}
+                        style={{ backgroundColor: '#fcfeff' }}
                       />
                     </div>
                   </div>

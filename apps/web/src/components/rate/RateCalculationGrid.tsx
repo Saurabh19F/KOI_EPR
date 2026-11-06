@@ -365,8 +365,8 @@ export function RateCalculationGrid({ analysisId, isLocked, applyAllCurrency, ap
                 <th rowSpan={2} className="bg-slate-700 text-white text-center p-2 text-[10px] border-r sticky-col-1 align-middle">#</th>
                 <th rowSpan={2} className="bg-slate-700 text-white text-left p-2 text-[10px] sticky-col-2 min-w-[100px] align-middle">SKU</th>
                 <th colSpan={5} className="bg-slate-600 text-white text-center p-1 text-[10px] font-semibold">Product Info</th>
-                <th colSpan={7} className="bg-teal-600 text-white text-center p-1 text-[10px] font-semibold">Purchase Team (G–M)</th>
-                <th colSpan={12} className="bg-amber-500 text-white text-center p-1 text-[10px] font-semibold">Cost Calculations (N–Y)</th>
+                <th colSpan={7} className="bg-teal-800 text-white text-center p-1 text-[10px] font-semibold">Purchase Team (G–M)</th>
+                <th colSpan={12} className="bg-amber-800 text-white text-center p-1 text-[10px] font-semibold">Cost Calculations (N–Y)</th>
                 <th colSpan={3} className="bg-blue-600 text-white text-center p-1 text-[10px] font-semibold">Haulage (Z–AB)</th>
                 <th colSpan={2} className="bg-purple-600 text-white text-center p-1 text-[10px] font-semibold">Final Rate (AD)</th>
               </tr>

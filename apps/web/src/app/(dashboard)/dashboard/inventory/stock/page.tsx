@@ -1,5 +1,6 @@
 'use client';
 
+import { WorkspacePageHeader } from '@/components/workspace-page-header';
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { inventoryApi, mastersApi } from '@/lib/api';
@@ -141,18 +142,14 @@ export default function StockPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Stock Overview</h1>
-          <p className="text-gray-500">Monitor and manage inventory levels</p>
-        </div>
+      <WorkspacePageHeader title="Stock Overview" description="Monitor and manage inventory levels">
         <div className="flex items-center gap-2">
           <Button variant="outline" onClick={() => queryClient.invalidateQueries({ queryKey: ['inventory-stock'] })}>
             <RefreshCw className="h-4 w-4 mr-2" />
             Refresh
           </Button>
         </div>
-      </div>
+      </WorkspacePageHeader>
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -280,13 +277,7 @@ export default function StockPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {isLoading ? (
-            <div className="space-y-4">
-              {[1, 2, 3, 4, 5].map((i) => (
-                <div key={i} className="h-16 bg-gray-100 rounded animate-pulse" />
-              ))}
-            </div>
-          ) : stocks.length > 0 ? (
+          {isLoading ? null : stocks.length > 0 ? (
             <>
               <Table>
                 <TableHeader>

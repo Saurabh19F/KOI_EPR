@@ -1,5 +1,6 @@
 'use client';
 
+import { WorkspacePageHeader } from '@/components/workspace-page-header';
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
@@ -63,15 +64,11 @@ export default function ReturnMaterialNotesPage() {
 
   return (
     <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Return Material Notes</h1>
-          <p className="text-sm text-slate-500 mt-1">Material returns to vendors from quality rejections</p>
-        </div>
+      <WorkspacePageHeader title="Return Material Notes" description="Material returns to vendors from quality rejections">
         <Button variant="outline" size="sm" onClick={() => refetch()}>
           <RefreshCw className="h-4 w-4 mr-2" /> Refresh
         </Button>
-      </div>
+      </WorkspacePageHeader>
 
       <div className="flex items-center gap-4">
         <div className="relative flex-1 max-w-sm">

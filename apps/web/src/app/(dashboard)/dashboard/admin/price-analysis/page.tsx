@@ -1,5 +1,6 @@
 'use client';
 
+import { WorkspacePageHeader } from '@/components/workspace-page-header';
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { rateApi } from '@/lib/api';
@@ -229,10 +230,7 @@ export default function AdminPriceAnalysisPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Price Analysis Configuration</h1>
-        <p className="text-gray-500">Manage currency, haulage, margin rules, and notifications</p>
-      </div>
+      <WorkspacePageHeader title="Price Analysis Configuration" description="Manage currency, haulage, margin rules, and notifications" />
 
       {/* Tabs */}
       <Tabs defaultValue="currency" className="space-y-6">

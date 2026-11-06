@@ -1,5 +1,6 @@
 'use client';
 
+import { WorkspacePageHeader } from '@/components/workspace-page-header';
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fmsApi } from '@/lib/api';
@@ -234,16 +235,12 @@ export default function WorkflowDefinitionsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Workflow Definitions</h1>
-          <p className="text-slate-500 mt-1">Design and manage approval workflows</p>
-        </div>
+      <WorkspacePageHeader title="Workflow Definitions" description="Design and manage approval workflows">
         <Button onClick={openNewDialog}>
           <Plus className="h-4 w-4 mr-2" />
           Create Workflow
         </Button>
-      </div>
+      </WorkspacePageHeader>
 
       {/* Workflows Table */}
       <Card>
@@ -259,17 +256,7 @@ export default function WorkflowDefinitionsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {isLoading ? (
-                [...Array(5)].map((_, i) => (
-                  <TableRow key={i}>
-                    {[...Array(5)].map((_, j) => (
-                      <TableCell key={j}>
-                        <div className="h-4 w-16 bg-gray-200 animate-pulse rounded" />
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              ) : workflows.length ? (
+              {isLoading ? null : workflows.length ? (
                 workflows.map((workflow: any) => (
                   <TableRow key={workflow.id}>
                     <TableCell>

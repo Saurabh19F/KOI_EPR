@@ -1060,14 +1060,7 @@ export default function PurchaseQuoteDetailPage() {
   const gridRowsPaddingCount = Math.max(0, 10 - form.items.length);
 
   if (isLoading) {
-    return (
-      <div className="container mx-auto py-12 flex justify-center items-center">
-        <div className="animate-pulse flex flex-col items-center gap-3">
-          <div className="h-10 w-48 bg-gray-200 rounded" />
-          <div className="h-4 w-64 bg-gray-200 rounded" />
-        </div>
-      </div>
-    );
+    return <p role="status">Loading quote…</p>;
   }
 
   if (!quote) {
@@ -1150,7 +1143,7 @@ export default function PurchaseQuoteDetailPage() {
           {quote?.status === 'approved' && (
             <Button
               onClick={() => setShowConvertToPO(true)}
-              className="bg-orange-600 hover:bg-orange-700 text-white h-9 text-xs font-semibold px-4"
+              className="bg-orange-800 hover:bg-orange-900 text-white h-9 text-xs font-semibold px-4"
             >
               <ShoppingCart className="h-4 w-4 mr-2" /> Convert to PO
             </Button>
@@ -1267,7 +1260,7 @@ export default function PurchaseQuoteDetailPage() {
                 </tr>
 
                 {/* Spreadsheet Headers */}
-                <tr className="border-b border-slate-300 bg-[#1e293b] text-white font-semibold text-[11px] text-center">
+                <tr className="border-b border-slate-300 bg-[#2563eb] text-white font-semibold text-[11px] text-center">
                   <td className="border-r border-slate-300 bg-slate-100 text-slate-500 text-center font-medium py-1.5">11</td>
                   <td className="border-r border-slate-600 bg-[#2563eb] text-white font-bold px-1 py-1">Product Description</td>
                   <td className="border-r border-slate-600 px-1 py-1">Code</td>
@@ -2069,7 +2062,7 @@ export default function PurchaseQuoteDetailPage() {
                 size="sm"
                 disabled={!convertForm.vendorId || convertToPOMutation.isPending}
                 onClick={() => convertToPOMutation.mutate()}
-                className="bg-orange-600 hover:bg-orange-700 text-white h-9 px-4"
+                className="bg-orange-800 hover:bg-orange-900 text-white h-9 px-4"
               >
                 <ShoppingCart className="h-4 w-4 mr-2" />
                 {convertToPOMutation.isPending ? 'Creating PO...' : 'Create Purchase Order'}

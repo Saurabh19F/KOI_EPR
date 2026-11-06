@@ -1,5 +1,6 @@
 'use client';
 
+import { WorkspacePageHeader } from '@/components/workspace-page-header';
 import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { salesOrderApi, productionApi, inventoryApi } from '@/lib/api';
@@ -143,18 +144,12 @@ export default function SalesAssignmentPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Production Assignment from Sales</h1>
-          <p className="text-muted-foreground">
-            Create production jobs directly from confirmed sales orders
-          </p>
-        </div>
+      <WorkspacePageHeader title="Production Assignment from Sales" description="Create production jobs directly from confirmed sales orders">
         <Button variant="outline" onClick={() => refetch()}>
           <RefreshCw className="mr-2 h-4 w-4" />
           Refresh
         </Button>
-      </div>
+      </WorkspacePageHeader>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <Card>

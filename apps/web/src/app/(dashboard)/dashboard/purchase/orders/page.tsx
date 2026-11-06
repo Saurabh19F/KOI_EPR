@@ -1,5 +1,6 @@
 'use client';
 
+import { WorkspacePageHeader } from '@/components/workspace-page-header';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -211,18 +212,14 @@ export default function PurchaseOrdersPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Purchase Orders</h1>
-          <p className="text-gray-500">Manage purchase orders, approvals, and PDF generation</p>
-        </div>
+      <WorkspacePageHeader title="Purchase Orders" description="Manage purchase orders, approvals, and PDF generation">
         <Button asChild>
           <Link href="/dashboard/purchase/orders/new">
             <Plus className="h-4 w-4 mr-2" />
             New Purchase Order
           </Link>
         </Button>
-      </div>
+      </WorkspacePageHeader>
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

@@ -1,5 +1,6 @@
 'use client';
 
+import { WorkspacePageHeader } from '@/components/workspace-page-header';
 import { useQuery } from '@tanstack/react-query';
 import { mastersApi } from '@/lib/api';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -49,10 +50,7 @@ export default function PermissionsPage() {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900">Permissions</h1>
-        <p className="text-slate-500 mt-1">Review system permissions matrix and module operations</p>
-      </div>
+      <WorkspacePageHeader title="Permissions" description="Review system permissions matrix and module operations" />
 
       {/* Tabs */}
       <Tabs value="permissions">
@@ -101,9 +99,7 @@ export default function PermissionsPage() {
                         <span className="text-slate-700 capitalize font-medium">{action}</span>
                         <div className="flex items-center gap-1.5">
                           <code className="text-[10px] text-slate-400 font-mono bg-slate-50 px-1 rounded">{code}</code>
-                          {isLoading ? (
-                            <div className="h-4 w-4 rounded-full bg-slate-100 animate-pulse" />
-                          ) : activeInDb ? (
+                          {isLoading ? null : activeInDb ? (
                             <CheckCircle2 className="h-4 w-4 text-green-500" />
                           ) : (
                             <Badge variant="outline" className="text-[10px] border-slate-200 text-slate-400 py-0 px-1">Implicit</Badge>

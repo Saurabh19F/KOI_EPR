@@ -1,3 +1,5 @@
+import { GstVerificationService } from './gst-verification.service';
+import { Throttle } from '@nestjs/throttler';
 import {
   Controller,
   Get,
@@ -37,9 +39,18 @@ import { ReceivingPlanStatus } from './entities/receiving-plan.entity';
 @Controller('receiving-plans')
 export class ReceivingPlanController {
   constructor(
+    private readonly gstVerificationService: GstVerificationService,
     private readonly receivingPlanService: ReceivingPlanService,
     private readonly receivingPlanPdfService: ReceivingPlanPdfService,
   ) {}
+
+  @Post('verify-gstin')
+  @Permissions('RECEIVING_PLAN_EDIT')
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
+  @ApiOperation({ summary: 'Look up GST registration details via AppyFlow' })
+  verifyGstin(@Body() body: { gstin?: unknown }) {
+    return this.gstVerificationService.verify(body?.gstin);
+  }
 
   @Post()
   @Permissions('RECEIVING_PLAN_CREATE')

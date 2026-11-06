@@ -1,5 +1,6 @@
 'use client';
 
+import { WorkspacePageHeader } from '@/components/workspace-page-header';
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fmsApi } from '@/lib/api';
@@ -122,16 +123,12 @@ export default function QualityFmsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Quality FMS</h1>
-          <p className="text-gray-500">Quality inspection and control tracking</p>
-        </div>
+      <WorkspacePageHeader title="Quality FMS" description="Quality inspection and control tracking">
         <Button onClick={() => setShowCreate(true)}>
           <Plus className="h-4 w-4 mr-2" />
           New Quality Task
         </Button>
-      </div>
+      </WorkspacePageHeader>
 
       {/* Filters */}
       <Card>

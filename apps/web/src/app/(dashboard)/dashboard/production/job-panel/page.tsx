@@ -300,12 +300,12 @@ export default function ProductionJobPanelPage() {
       <div className="rounded-lg bg-slate-800 p-4 text-white">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-xs font-medium uppercase tracking-wider text-slate-400">
+            <p className="text-xs font-medium uppercase tracking-wider text-slate-200">
               Order-Wise Production Control
             </p>
             <h1 className="text-xl font-bold">Production Job & Closing Panel</h1>
           </div>
-          <span className="rounded bg-emerald-600 px-3 py-1 text-xs font-semibold uppercase">
+          <span className="rounded bg-emerald-800 px-3 py-1 text-xs font-semibold uppercase">
             Active Production Warehouse {activeWarehouse}
           </span>
         </div>

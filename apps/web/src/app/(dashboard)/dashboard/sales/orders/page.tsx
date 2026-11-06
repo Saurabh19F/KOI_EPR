@@ -1,5 +1,6 @@
 'use client';
 
+import { WorkspacePageHeader } from '@/components/workspace-page-header';
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
@@ -369,10 +370,7 @@ export default function SalesOrderDispatchMasterPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Sales Order to Dispatch Master</h1>
-          <p className="text-gray-500">Track confirmed orders through dispatch, invoice, costing, CBM, haulage, and final rates</p>
-        </div>
+        <WorkspacePageHeader title="Sales Order to Dispatch Master" description="Track confirmed orders through dispatch, invoice, costing, CBM, haulage, and final rates" />
         <div className="flex flex-wrap items-center justify-end gap-2">
           <Button asChild variant="outline" size="sm">
             <Link href="/dashboard/sales">
@@ -497,13 +495,7 @@ export default function SalesOrderDispatchMasterPage() {
           <CardTitle>Workflow Register</CardTitle>
         </CardHeader>
         <CardContent>
-          {ordersQuery.isLoading ? (
-            <div className="space-y-4">
-              {[1, 2, 3, 4, 5].map((item) => (
-                <div key={item} className="h-16 rounded bg-gray-100 animate-pulse" />
-              ))}
-            </div>
-          ) : rows.length ? (
+          {ordersQuery.isLoading ? null : rows.length ? (
             <>
               <div className="overflow-x-auto">
                 <Table>
@@ -697,9 +689,7 @@ export default function SalesOrderDispatchMasterPage() {
               <FileText className="mx-auto mb-3 h-10 w-10 text-slate-300" />
               <p className="text-slate-500">Select a sales order to inspect its dispatch master lines.</p>
             </div>
-          ) : selectedOrderQuery.isLoading ? (
-            <div className="h-32 rounded bg-gray-100 animate-pulse" />
-          ) : selectedOrder ? (
+          ) : selectedOrderQuery.isLoading ? null : selectedOrder ? (
             <div className="space-y-5">
               <div className="grid grid-cols-2 gap-4 md:grid-cols-4 lg:grid-cols-7">
                 <div>

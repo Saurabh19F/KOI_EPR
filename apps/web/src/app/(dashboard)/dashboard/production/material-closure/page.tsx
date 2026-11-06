@@ -1,5 +1,6 @@
 'use client';
 
+import { WorkspacePageHeader } from '@/components/workspace-page-header';
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { productionApi, inventoryApi } from '@/lib/api';
@@ -150,13 +151,7 @@ export default function MaterialClosurePage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Production Material Closure</h1>
-          <p className="text-muted-foreground">
-            Per-material received/used/returned reconciliation on job close
-          </p>
-        </div>
+      <WorkspacePageHeader title="Production Material Closure" description="Per-material received/used/returned reconciliation on job close">
         <div className="flex gap-2">
           <Button onClick={() => setShowCreateDialog(true)}>
             <Plus className="mr-2 h-4 w-4" />
@@ -167,7 +162,7 @@ export default function MaterialClosurePage() {
             Refresh
           </Button>
         </div>
-      </div>
+      </WorkspacePageHeader>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <Card>

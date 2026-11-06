@@ -1,5 +1,6 @@
 'use client';
 
+import { WorkspacePageHeader } from '@/components/workspace-page-header';
 import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -145,17 +146,27 @@ export function MastersCrudPage({
         )
       );
 
-      const failed = results.filter((r) => r.status === 'rejected');
-      const succeeded = results.length - failed.length;
+      const ids = Array.from(selectedIds);
+      const failedIds = new Set<string>();
+      const reasons = new Set<string>();
+      results.forEach((result, index) => {
+        if (result.status === 'rejected') {
+          failedIds.add(ids[index]);
+          const message = result.reason?.response?.data?.message;
+          if (typeof message === 'string') reasons.add(message);
+        }
+      });
 
+      const succeeded = results.length - failedIds.size;
       if (succeeded > 0) {
         toast.success(`${succeeded} ${singularName}(s) deleted successfully`);
       }
-      if (failed.length > 0) {
-        toast.error(`Failed to delete ${failed.length} ${singularName}(s)`);
+      if (failedIds.size > 0) {
+        const reason = [...reasons].join(' ') || 'Please try again.';
+        toast.error(`Failed to delete ${failedIds.size} ${singularName}(s). ${reason}`, { duration: 8000 });
       }
 
-      setSelectedIds(new Set());
+      setSelectedIds(failedIds);
       setSelectAll(false);
       setShowBulkMenu(false);
       fetchData();
@@ -253,16 +264,12 @@ export function MastersCrudPage({
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">{title}</h1>
-          <p className="text-slate-500 mt-1">Manage {title.toLowerCase()} master data</p>
-        </div>
+      <WorkspacePageHeader title={<>{title}</>} description={<>Manage {title.toLowerCase()} master data</>}>
         <Button onClick={() => handleOpenDialog()} className="gap-2">
           <Plus className="h-4 w-4" />
           Add {singularName}
         </Button>
-      </div>
+      </WorkspacePageHeader>
 
       {/* Filters & Bulk Actions */}
       <div className="flex items-center justify-between gap-4">

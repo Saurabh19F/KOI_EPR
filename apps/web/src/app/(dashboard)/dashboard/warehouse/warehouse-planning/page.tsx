@@ -105,7 +105,7 @@ export default function WarehousePlanningPage() {
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-xs font-semibold text-emerald-600 uppercase tracking-wider">Infrastructure Matrix</p>
+          <p className="text-xs font-semibold text-emerald-800 uppercase tracking-wider">Infrastructure Matrix</p>
           <h1 className="text-2xl font-bold text-slate-900">Registered Locations Matrix</h1>
         </div>
         <div className="flex items-center gap-2">

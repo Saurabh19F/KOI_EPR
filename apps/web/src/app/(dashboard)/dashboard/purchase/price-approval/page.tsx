@@ -1,5 +1,6 @@
 'use client';
 
+import { WorkspacePageHeader } from '@/components/workspace-page-header';
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { rateApi } from '@/lib/api';
@@ -156,10 +157,7 @@ export default function PriceApprovalPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Price Approval Tool</h1>
-        <p className="text-gray-500">Review and approve/reject price analyses submitted for approval</p>
-      </div>
+      <WorkspacePageHeader title="Price Approval Tool" description="Review and approve/reject price analyses submitted for approval" />
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

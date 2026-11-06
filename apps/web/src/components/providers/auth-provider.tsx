@@ -37,7 +37,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   // Don't render children until client-side hydration is complete
   if (!isClient) {
-    return null;
+    return <div className="erp-entry" role="status">Loading workspace…</div>;
   }
 
   return (
@@ -47,20 +47,20 @@ export function Providers({ children }: { children: React.ReactNode }) {
         position="top-right"
         toastOptions={{
           style: {
-            background: '#1e293b',
-            color: '#fff',
+            background: '#2563eb',
+            color: '#fcfeff',
             borderRadius: '12px',
           },
           success: {
             iconTheme: {
-              primary: '#0d9488',
-              secondary: '#fff',
+              primary: '#2563eb',
+              secondary: '#fcfeff',
             },
           },
           error: {
             iconTheme: {
-              primary: '#ef4444',
-              secondary: '#fff',
+              primary: '#2563eb',
+              secondary: '#fcfeff',
             },
           },
         }}

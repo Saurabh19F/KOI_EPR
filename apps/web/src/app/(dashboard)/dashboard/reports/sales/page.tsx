@@ -1,5 +1,6 @@
 'use client';
 
+import { WorkspacePageHeader } from '@/components/workspace-page-header';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { salesApi, reportsApi } from '@/lib/api';
@@ -85,11 +86,11 @@ interface EnquiryStats {
 }
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; bgColor: string }> = {
-  pending: { label: 'Pending', color: 'text-yellow-600', bgColor: 'bg-yellow-100' },
-  submitted: { label: 'Submitted', color: 'text-blue-600', bgColor: 'bg-blue-100' },
+  pending: { label: 'Pending', color: 'text-yellow-800', bgColor: 'bg-yellow-100' },
+  submitted: { label: 'Submitted', color: 'text-blue-800', bgColor: 'bg-blue-100' },
   approved: { label: 'Approved', color: 'text-purple-600', bgColor: 'bg-purple-100' },
-  won: { label: 'Won', color: 'text-green-600', bgColor: 'bg-green-100' },
-  lost: { label: 'Lost', color: 'text-red-600', bgColor: 'bg-red-100' },
+  won: { label: 'Won', color: 'text-green-800', bgColor: 'bg-green-100' },
+  lost: { label: 'Lost', color: 'text-red-800', bgColor: 'bg-red-100' },
   cancelled: { label: 'Cancelled', color: 'text-slate-600', bgColor: 'bg-slate-100' },
 };
 
@@ -179,11 +180,7 @@ export default function SalesReportPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Sales Report</h1>
-          <p className="text-slate-500 mt-1">Sales enquiry analytics and performance metrics</p>
-        </div>
+      <WorkspacePageHeader title="Sales Report" description="Sales enquiry analytics and performance metrics">
         <div className="flex items-center gap-3">
           <Select value={dateRange} onValueChange={(v) => setDateRange(v as DateRange)}>
             <SelectTrigger className="w-40">
@@ -205,7 +202,7 @@ export default function SalesReportPage() {
             Export PDF
           </Button>
         </div>
-      </div>
+      </WorkspacePageHeader>
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -214,9 +211,7 @@ export default function SalesReportPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-slate-500">Total Enquiries</p>
-                {isLoading ? (
-                  <div className="h-8 w-16 bg-slate-200 animate-pulse rounded mt-1" />
-                ) : (
+                {isLoading ? null : (
                   <p className="text-3xl font-bold text-slate-900 mt-1">{stats.total}</p>
                 )}
                 <div className="flex items-center gap-1 mt-1">
@@ -225,13 +220,13 @@ export default function SalesReportPage() {
                   ) : (
                     <ArrowDownRight className="h-3 w-3 text-red-500" />
                   )}
-                  <span className={`text-xs ${percentChange.total >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  <span className={`text-xs ${percentChange.total >= 0 ? 'text-green-800' : 'text-red-800'}`}>
                     {Math.abs(percentChange.total)}% vs last period
                   </span>
                 </div>
               </div>
               <div className="p-3 bg-blue-100 rounded-xl">
-                <ShoppingCart className="h-6 w-6 text-blue-600" />
+                <ShoppingCart className="h-6 w-6 text-blue-800" />
               </div>
             </div>
           </CardContent>
@@ -247,13 +242,13 @@ export default function SalesReportPage() {
                 </p>
                 <div className="flex items-center gap-1 mt-1">
                   <TrendingUp className="h-3 w-3 text-green-500" />
-                  <span className="text-xs text-green-600">
+                  <span className="text-xs text-green-800">
                     +{percentChange.conversion}% improvement
                   </span>
                 </div>
               </div>
               <div className="p-3 bg-green-100 rounded-xl">
-                <CheckCircle className="h-6 w-6 text-green-600" />
+                <CheckCircle className="h-6 w-6 text-green-800" />
               </div>
             </div>
           </CardContent>
@@ -264,16 +259,16 @@ export default function SalesReportPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-slate-500">Won Enquiries</p>
-                <p className="text-3xl font-bold text-green-600 mt-1">{stats.won}</p>
+                <p className="text-3xl font-bold text-green-800 mt-1">{stats.won}</p>
                 <div className="flex items-center gap-1 mt-1">
                   <ArrowUpRight className="h-3 w-3 text-green-500" />
-                  <span className="text-xs text-green-600">
+                  <span className="text-xs text-green-800">
                     +{percentChange.won}% vs last period
                   </span>
                 </div>
               </div>
               <div className="p-3 bg-green-100 rounded-xl">
-                <TrendingUp className="h-6 w-6 text-green-600" />
+                <TrendingUp className="h-6 w-6 text-green-800" />
               </div>
             </div>
           </CardContent>
@@ -284,14 +279,14 @@ export default function SalesReportPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-slate-500">Pending</p>
-                <p className="text-3xl font-bold text-yellow-600 mt-1">{stats.pending}</p>
+                <p className="text-3xl font-bold text-yellow-800 mt-1">{stats.pending}</p>
                 <div className="flex items-center gap-1 mt-1">
                   <Clock className="h-3 w-3 text-yellow-500" />
-                  <span className="text-xs text-yellow-600">Awaiting action</span>
+                  <span className="text-xs text-yellow-800">Awaiting action</span>
                 </div>
               </div>
               <div className="p-3 bg-yellow-100 rounded-xl">
-                <Clock className="h-6 w-6 text-yellow-600" />
+                <Clock className="h-6 w-6 text-yellow-800" />
               </div>
             </div>
           </CardContent>
@@ -348,13 +343,13 @@ export default function SalesReportPage() {
               </div>
               <div className="p-4 bg-slate-50 rounded-lg">
                 <p className="text-sm text-slate-500">Lost Rate</p>
-                <p className="text-2xl font-bold text-red-600 mt-1">
+                <p className="text-2xl font-bold text-red-800 mt-1">
                   {stats.total > 0 ? (stats.lost / stats.total * 100).toFixed(1) : 0}%
                 </p>
               </div>
               <div className="p-4 bg-slate-50 rounded-lg">
                 <p className="text-sm text-slate-500">Submitted</p>
-                <p className="text-2xl font-bold text-blue-600 mt-1">{stats.submitted}</p>
+                <p className="text-2xl font-bold text-blue-800 mt-1">{stats.submitted}</p>
               </div>
               <div className="p-4 bg-slate-50 rounded-lg">
                 <p className="text-sm text-slate-500">Approved</p>
@@ -412,17 +407,7 @@ export default function SalesReportPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {isLoading ? (
-                [...Array(5)].map((_, i) => (
-                  <TableRow key={i}>
-                    {[...Array(6)].map((_, j) => (
-                      <TableCell key={j}>
-                        <div className="h-4 w-20 bg-slate-200 animate-pulse rounded" />
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              ) : enquiries.length ? (
+              {isLoading ? null : enquiries.length ? (
                 enquiries.map((enquiry: any, index: number) => {
                   const statusConfig = STATUS_CONFIG[enquiry.status] || STATUS_CONFIG.pending;
                   const enquiryId = enquiry.enquiryOrderId || enquiry.id || String(index);

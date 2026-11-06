@@ -107,7 +107,7 @@ export default function HelpPage() {
   );
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-white">
       <div className="max-w-5xl mx-auto p-6 space-y-8">
         {/* Page Header */}
         <div className="text-center space-y-4 py-8 bg-gradient-to-b from-amber-50 to-transparent rounded-2xl">
@@ -241,18 +241,18 @@ export default function HelpPage() {
         </div>
 
         {/* Contact Support */}
-        <Card className="bg-gradient-to-r from-amber-500 to-orange-500 border-0 text-white">
+        <Card className="border-violet-200 text-indigo-950">
           <CardContent className="p-8 flex flex-col sm:flex-row items-center justify-between gap-6">
             <div>
               <h3 className="text-xl font-bold">Still need help?</h3>
-              <p className="text-amber-100 mt-1">Our support team is available Mon-Sat, 9 AM - 7 PM IST</p>
+              <p className="text-indigo-900 mt-1">Our support team is available Mon-Sat, 9 AM - 7 PM IST</p>
             </div>
             <div className="flex gap-3">
-              <button className="flex items-center gap-2 px-5 py-2.5 bg-white text-amber-600 rounded-xl font-medium hover:bg-amber-50 transition-colors">
+              <button className="flex items-center gap-2 px-5 py-2.5 bg-white text-indigo-800 rounded-xl font-medium hover:bg-amber-50 transition-colors">
                 <Mail className="h-4 w-4" />
                 Email Support
               </button>
-              <button className="flex items-center gap-2 px-5 py-2.5 bg-white/20 text-white rounded-xl font-medium hover:bg-white/30 transition-colors">
+              <button className="flex items-center gap-2 px-5 py-2.5 bg-indigo-800 text-white rounded-xl font-medium hover:bg-indigo-900 transition-colors">
                 <Phone className="h-4 w-4" />
                 Request Call
               </button>

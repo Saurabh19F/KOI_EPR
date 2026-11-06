@@ -1,5 +1,6 @@
 'use client';
 
+import { WorkspacePageHeader } from '@/components/workspace-page-header';
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { adminApi } from '@/lib/api';
@@ -178,16 +179,12 @@ export default function NumberSeriesPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Number Series</h1>
-          <p className="text-slate-500 mt-1">Configure automatic numbering for documents</p>
-        </div>
+      <WorkspacePageHeader title="Number Series" description="Configure automatic numbering for documents">
         <Button onClick={openNewDialog}>
           <Plus className="h-4 w-4 mr-2" />
           Add Series
         </Button>
-      </div>
+      </WorkspacePageHeader>
 
       {/* Table */}
       <Card>
@@ -205,17 +202,7 @@ export default function NumberSeriesPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {isLoading ? (
-                [...Array(5)].map((_, i) => (
-                  <TableRow key={i}>
-                    {[...Array(7)].map((_, j) => (
-                      <TableCell key={j}>
-                        <div className="h-4 w-16 bg-gray-200 animate-pulse rounded" />
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              ) : seriesList.length ? (
+              {isLoading ? null : seriesList.length ? (
                 seriesList.map((series: any) => (
                   <TableRow key={series.id}>
                     <TableCell>

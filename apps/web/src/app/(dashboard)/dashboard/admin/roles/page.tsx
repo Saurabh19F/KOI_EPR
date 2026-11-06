@@ -1,5 +1,6 @@
 'use client';
 
+import { WorkspacePageHeader } from '@/components/workspace-page-header';
 import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { mastersApi } from '@/lib/api';
@@ -478,13 +479,7 @@ export default function RolesPermissionsPage() {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Roles & Permissions</h1>
-          <p className="text-slate-500 mt-1">
-            Configure access control for your organization
-          </p>
-        </div>
+      <WorkspacePageHeader title={<>Roles & Permissions</>} description="Configure access control for your organization">
         <div className="flex items-center gap-3">
           <Button variant="outline" onClick={() => window.location.href = '/dashboard/admin/users'}>
             <Users className="h-4 w-4 mr-2" />
@@ -503,7 +498,7 @@ export default function RolesPermissionsPage() {
             New Role
           </Button>
         </div>
-      </div>
+      </WorkspacePageHeader>
 
       {/* Main Content - Master Detail */}
       <div className="flex gap-6 min-h-[calc(100vh-220px)]">
@@ -523,14 +518,7 @@ export default function RolesPermissionsPage() {
             </CardHeader>
             <CardContent className="p-0">
               <div className="divide-y divide-slate-100">
-                {rolesLoading ? (
-                  [...Array(6)].map((_, i) => (
-                    <div key={i} className="p-4">
-                      <div className="h-5 bg-slate-100 animate-pulse rounded w-3/4 mb-2" />
-                      <div className="h-4 bg-slate-50 animate-pulse rounded w-1/2" />
-                    </div>
-                  ))
-                ) : filteredRoles.length === 0 ? (
+                {rolesLoading ? null : filteredRoles.length === 0 ? (
                   <div className="py-12 text-center text-slate-500">
                     <Shield className="h-10 w-10 mx-auto mb-3 text-slate-300" />
                     <p className="text-sm">No roles found</p>

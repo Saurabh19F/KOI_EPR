@@ -1,5 +1,6 @@
 'use client';
 
+import { WorkspacePageHeader } from '@/components/workspace-page-header';
 import Link from 'next/link';
 import {
   Package,
@@ -52,10 +53,7 @@ export default function MastersPage() {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900">Masters</h1>
-        <p className="text-slate-500 mt-1">Manage master data and configuration</p>
-      </div>
+      <WorkspacePageHeader title="Masters" description="Manage master data and configuration" />
 
       {/* Modules Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">

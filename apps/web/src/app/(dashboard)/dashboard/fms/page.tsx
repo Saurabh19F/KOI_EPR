@@ -1,5 +1,6 @@
 'use client';
 
+import { WorkspacePageHeader } from '@/components/workspace-page-header';
 import { useState } from 'react';
 import Link from 'next/link';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -117,12 +118,7 @@ export default function FmsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">FMS Tasks</h1>
-          <p className="text-gray-500">Workflow task management</p>
-        </div>
-      </div>
+      <WorkspacePageHeader title="FMS Tasks" description="Find assigned work, review deadlines, and open task details." />
 
       {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -201,13 +197,7 @@ export default function FmsPage() {
           <CardTitle>Task List</CardTitle>
         </CardHeader>
         <CardContent>
-          {isLoading ? (
-            <div className="space-y-4">
-              {[1, 2, 3, 4, 5].map((i) => (
-                <div key={i} className="h-16 bg-gray-100 rounded animate-pulse" />
-              ))}
-            </div>
-          ) : data?.data?.data?.length ? (
+          {isLoading ? null : data?.data?.data?.length ? (
             <>
               <Table>
                 <TableHeader>

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
@@ -137,6 +137,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="p-0 overflow-hidden gap-0 max-w-2xl">
+        <DialogTitle className="sr-only">Search the workspace</DialogTitle>
         {/* Search Input */}
         <div className="flex items-center border-b border-gray-200 px-4">
           <Search className="h-5 w-5 text-slate-400 flex-shrink-0" />

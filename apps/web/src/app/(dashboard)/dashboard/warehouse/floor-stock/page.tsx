@@ -1,5 +1,6 @@
 'use client';
 
+import { WorkspacePageHeader } from '@/components/workspace-page-header';
 import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { inventoryApi } from '@/lib/api';
@@ -113,18 +114,12 @@ export default function FloorStockPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Floor / Location Stock</h1>
-          <p className="text-muted-foreground">
-            Stock aggregated by physical floor location and bin rack
-          </p>
-        </div>
+      <WorkspacePageHeader title="Floor / Location Stock" description="Stock aggregated by physical floor location and bin rack">
         <Button variant="outline" onClick={() => refetch()}>
           <RefreshCw className="mr-2 h-4 w-4" />
           Refresh
         </Button>
-      </div>
+      </WorkspacePageHeader>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <Card>

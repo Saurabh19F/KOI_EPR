@@ -1,5 +1,6 @@
 'use client';
 
+import { WorkspacePageHeader } from '@/components/workspace-page-header';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { stockAdjustmentApi } from '@/lib/api';
@@ -36,16 +37,12 @@ export default function StockAdjustmentsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Stock Adjustments</h1>
-          <p className="text-muted-foreground">View and manage inventory stock adjustments</p>
-        </div>
+      <WorkspacePageHeader title="Stock Adjustments" description="View and manage inventory stock adjustments">
         <Button onClick={() => refetch()}>
           <RefreshCw className="mr-2 h-4 w-4" />
           Refresh
         </Button>
-      </div>
+      </WorkspacePageHeader>
 
       <Card>
         <CardHeader>

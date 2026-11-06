@@ -1,5 +1,6 @@
 'use client';
 
+import { WorkspacePageHeader } from '@/components/workspace-page-header';
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { labelsApi, usersApi } from '@/lib/api';
@@ -110,18 +111,14 @@ export default function DesignerFmsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Designer FMS</h1>
-          <p className="text-gray-500">Label artwork design tracking by designer</p>
-        </div>
+      <WorkspacePageHeader title="Designer FMS" description="Label artwork design tracking by designer">
         <Button asChild variant="outline">
           <Link href="/dashboard/labels">
             <Eye className="h-4 w-4 mr-2" />
             All Labels
           </Link>
         </Button>
-      </div>
+      </WorkspacePageHeader>
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">

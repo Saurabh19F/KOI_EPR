@@ -1,5 +1,6 @@
 'use client';
 
+import { WorkspacePageHeader } from '@/components/workspace-page-header';
 import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { mastersApi, salesApi } from '@/lib/api';
@@ -490,16 +491,12 @@ export default function ProductsPage() {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Products</h1>
-          <p className="text-slate-500 mt-1">Manage product catalog with full inventory details</p>
-        </div>
+      <WorkspacePageHeader title="Products" description="Search product codes, check inventory details, and maintain the catalogue.">
         <Button onClick={() => { resetForm(); setEditingProduct(null); setIsDialogOpen(true); }}>
           <Plus className="h-4 w-4 mr-2" />
           Add Product
         </Button>
-      </div>
+      </WorkspacePageHeader>
 
       {/* Search & Filters */}
       <div className="bg-white rounded-xl shadow-card p-4">
@@ -558,15 +555,7 @@ export default function ProductsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {isLoading ? (
-                [...Array(5)].map((_, i) => (
-                  <tr key={i}>
-                    {[...Array(17)].map((_, j) => (
-                      <td key={j} className="px-4 py-4"><div className="h-4 w-16 bg-gray-200 animate-pulse rounded" /></td>
-                    ))}
-                  </tr>
-                ))
-              ) : products.length ? (
+              {isLoading ? null : products.length ? (
                 products.map((product: any) => (
                   <tr key={product.productId} className="hover:bg-gray-50 transition-colors">
                     <td className="px-4 py-4">

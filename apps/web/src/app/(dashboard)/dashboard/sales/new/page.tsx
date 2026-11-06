@@ -1,5 +1,6 @@
 'use client';
 
+import { WorkspacePageHeader } from '@/components/workspace-page-header';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -502,15 +503,12 @@ export default function NewSalesEnquiryPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Link href="/sales">
+          <Link href="/dashboard/sales">
             <Button variant="ghost" size="icon">
               <ArrowLeft className="h-5 w-5" />
             </Button>
           </Link>
-          <div>
-            <h1 className="text-2xl font-bold">Create Sales Enquiry</h1>
-            <p className="text-gray-500">New enquiry order</p>
-          </div>
+          <WorkspacePageHeader title="Create Sales Enquiry" description="Select a buyer, enter shipping details, and add products." />
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={() => router.push('/dashboard/sales')}>
@@ -548,7 +546,7 @@ export default function NewSalesEnquiryPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 {/* Customer Selection */}
                 <div className="space-y-2">
                   <Label>Customer *</Label>
@@ -584,7 +582,7 @@ export default function NewSalesEnquiryPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label>Buyer Code</Label>
                   <Input value={form.buyerCode} disabled readOnly className="bg-slate-50 cursor-not-allowed text-slate-700 font-medium" />
@@ -595,7 +593,7 @@ export default function NewSalesEnquiryPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label>Contact Person</Label>
                   <Input value={form.contactName} disabled readOnly className="bg-slate-50 cursor-not-allowed text-slate-700 font-medium" />
@@ -606,7 +604,7 @@ export default function NewSalesEnquiryPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label>Email</Label>
                   <Input type="email" value={form.buyerEmail} disabled readOnly className="bg-slate-50 cursor-not-allowed text-slate-700 font-medium" />
@@ -617,7 +615,7 @@ export default function NewSalesEnquiryPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label>State</Label>
                   <Input value={form.state} disabled readOnly className="bg-slate-50 cursor-not-allowed text-slate-700 font-medium" />
@@ -641,7 +639,7 @@ export default function NewSalesEnquiryPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label>Enquiry Date</Label>
                   <Input type="datetime-local" value={form.enquiryDate} disabled readOnly className="bg-slate-50 cursor-not-allowed text-slate-700 font-medium" />
@@ -652,7 +650,7 @@ export default function NewSalesEnquiryPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label>Payment Terms</Label>
                   <Select value={form.paymentTermsId} onValueChange={(v) => handleFieldChange('paymentTermsId', v)}>
@@ -685,7 +683,7 @@ export default function NewSalesEnquiryPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label>Cube Size</Label>
                   <Select value={form.cubeSize} onValueChange={(v) => handleFieldChange('cubeSize', v)}>

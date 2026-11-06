@@ -947,6 +947,7 @@ export const stockAdjustmentApi = {
 
 // Receiving Plan API
 export const receivingPlanApi = {
+  verifyGstin: (gstin: string) => api.post('/receiving-plans/verify-gstin', { gstin }),
   getPlans: (params?: { page?: number; limit?: number; search?: string; status?: string; warehouseId?: string; poNumber?: string }) =>
     api.get<PaginatedResponse<any>>('/receiving-plans', { params }),
   getPlan: (id: string) => api.get(`/receiving-plans/${id}`),

@@ -1,0 +1,89 @@
+.page {
+  min-height: calc(100svh / var(--erp-screen-scale, 1));
+  display: grid;
+  place-items: center;
+  padding: clamp(18px, 4vw, 64px);
+  background: #eff0f3;
+  color: #17192a;
+}
+.card {
+  width: min(100%, 1130px);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(28px, 4vw, 65px);
+  padding: clamp(24px, 3vw, 46px);
+  background: radial-gradient(ellipse at top right, #e5e3ff, transparent 25%), radial-gradient(ellipse at bottom left, #d8f6ee, transparent 30%), #fff;
+  border-radius: 30px;
+  box-shadow: 0 20px 60px -32px #38405d44;
+}
+.story {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+  padding: clamp(26px, 3.6vw, 52px) clamp(25px, 3vw, 48px);
+  border-radius: 42px;
+  background: radial-gradient(ellipse at 105% 105%, #008093, transparent 65%), linear-gradient(145deg,#182652,#154fa6 78%);
+  color: white;
+}
+.story h2, .signin h1 {
+  font-weight: 750;
+  letter-spacing: -.045em;
+  line-height: 1.08;
+}
+.story h2 { font-size: clamp(36px, 3.7vw, 57px); }
+.story p { max-width: 35ch; margin-top: 1rem; font-size: 1.08rem; line-height: 1.6; }
+.workflow {
+  margin: 2.25rem 0 0;
+  padding: 1.35rem 1.5rem;
+  background: #fcfeff;
+  border-radius: 18px;
+  color: #182652;
+  box-shadow: 0 12px 30px #101b3a33;
+}
+.workflow figcaption { font-size: 1rem; font-weight: 750; }
+.workflow ol { list-style: none; margin: .9rem 0 0; padding: 0; }
+.workflow li { position: relative; display: flex; align-items: center; gap: .85rem; font-weight: 600; }
+.workflow li + li { padding-top: 1rem; }
+.workflow li + li::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 17px;
+  height: 1rem;
+  border-left: 2px dotted #a8baca;
+}
+.workflow li span { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 10px; }
+.workflow svg { width: 19px; height: 19px; }
+.enquiry { background: #e2edff; color: #154fa6; }
+.costing { background: #f3e8ff; color: #481f6b; }
+.quote { background: #d9f7ed; color: #067461; }
+.signin { width: min(100%, 390px); align-self: center; justify-self: center; padding-block: 22px; }
+.brand { display: flex; align-items: center; justify-content: center; gap: 10px; color: #414cba; font-weight: 750; font-size: 1.25rem; }
+.brand img { object-fit: contain; border-radius: 8px; }
+.signin h1 { margin: 1.3rem 0 .55rem; font-size: clamp(32px, 3vw, 46px); text-align: center; }
+.subtitle { text-align: center; color: #606677; }
+.signin form { display: grid; gap: 1.15rem; margin-top: 2.25rem; }
+.signin label { display: block; margin-bottom: .45rem; font-size: .9rem; font-weight: 600; }
+.signin input {
+  width: 100%; min-height: 48px; padding: .8rem 1rem;
+  background: #f6f7fa; border: 1px solid #d9dce5; border-radius: 10px;
+}
+.signin input:focus-visible { outline: 2px solid #5964df; outline-offset: 2px; }
+.signin input[aria-invalid="true"] { border-color: #b90f1c; }
+.password { position: relative; }
+.password input { padding-right: 46px; }
+.password button { position: absolute; inset: 0 0 0 auto; width: 44px; display: grid; place-items: center; color: #575e71; }
+.help { font-size: .9rem; color: #4b538b; }
+.help summary { cursor: pointer; text-align: right; list-style: none; }
+.help summary::-webkit-details-marker { display: none; }
+.help p { padding-top: .6rem; color: #51576a; }
+.submit { background: linear-gradient(105deg,#154fa6,#3e2e9b); color: white; border-radius: 10px; min-height: 48px; font-weight: 650; }
+.submit:hover { background: #424dbd; }
+.submit:disabled { opacity: .7; cursor: wait; }
+.error { color: #a51b2c; margin-top: .4rem; font-size: .9rem; }
+@media (max-width: 720px) {
+  .card { grid-template-columns: 1fr; max-width: 460px; gap: 0; padding: 22px; border-radius: 22px; }
+  .story { display: none; }
+  .signin { padding: 20px 0; }
+}

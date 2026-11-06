@@ -1,5 +1,6 @@
 'use client';
 
+import { WorkspacePageHeader } from '@/components/workspace-page-header';
 import { useState, useEffect } from 'react';
 import { useAuthStore } from '@/store/auth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -255,10 +256,7 @@ export default function SettingsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
-        <p className="text-gray-500">Manage your account and application settings</p>
-      </div>
+      <WorkspacePageHeader title="Settings" description="Manage your account and application settings" />
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
@@ -292,7 +290,7 @@ export default function SettingsPage() {
               <CardContent className="space-y-4">
                 <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
                   <div className="w-16 h-16 rounded-full bg-primary-100 flex items-center justify-center">
-                    <span className="text-primary-600 font-bold text-xl">
+                    <span className="text-primary-800 font-bold text-xl">
                       {user?.name?.charAt(0)?.toUpperCase() || 'U'}
                     </span>
                   </div>

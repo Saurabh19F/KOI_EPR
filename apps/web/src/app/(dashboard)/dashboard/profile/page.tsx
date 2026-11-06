@@ -1,5 +1,6 @@
 'use client';
 
+import { WorkspacePageHeader } from '@/components/workspace-page-header';
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { User, Mail, Phone, MapPin, Building2, Shield, Key, Bell, Globe, Camera, Save, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -167,13 +168,10 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-white">
       <div className="max-w-5xl mx-auto p-6 space-y-6">
         {/* Page Header */}
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">My Profile</h1>
-          <p className="text-slate-500 mt-1">Manage your account settings and preferences</p>
-        </div>
+        <WorkspacePageHeader title="My Profile" description="Manage your account settings and preferences" />
 
         {/* Profile Header Card */}
         <Card className="border-0 shadow-lg overflow-hidden">
