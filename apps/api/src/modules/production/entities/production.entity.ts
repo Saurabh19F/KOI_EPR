@@ -90,6 +90,42 @@ export class ProductionJob {
   @Column({ type: 'text', nullable: true })
   remarks: string;
 
+  @Column({ nullable: true })
+  batchNo: string;
+
+  @Column({ type: 'date', nullable: true })
+  mfgDate: Date;
+
+  @Column({ type: 'date', nullable: true })
+  expiryDate: Date;
+
+  @Column({ type: 'int', nullable: true })
+  shelfLifeMonths: number;
+
+  @Column('decimal', { precision: 15, scale: 3, nullable: true })
+  cartonCount: number;
+
+  @Column('decimal', { precision: 15, scale: 3, nullable: true })
+  totalPieces: number;
+
+  @Column('decimal', { precision: 10, scale: 4, nullable: true })
+  actualCbm: number;
+
+  @Column('decimal', { precision: 10, scale: 3, nullable: true })
+  netWeight: number;
+
+  @Column('decimal', { precision: 10, scale: 3, nullable: true })
+  grossWeight: number;
+
+  @Column('decimal', { precision: 15, scale: 3, nullable: true })
+  wasteQty: number;
+
+  @Column({ type: 'jsonb', nullable: true })
+  wasteBreakdown: { sort?: number; husk?: number; damaged?: number; other?: number };
+
+  @Column({ type: 'jsonb', nullable: true })
+  evidencePhotos: string[];
+
   @Column()
   createdBy: string;
 

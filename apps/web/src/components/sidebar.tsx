@@ -91,6 +91,7 @@ const navItems: NavItem[] = [
       { title: 'PO Approvals', href: '/dashboard/purchase/po-dashboard?tab=approvals', roles: ['ADMIN'] },
       { title: 'GRN Notifications', href: '/dashboard/purchase/grn-notifications', permissions: ['PURCHASE_VIEW'] },
       { title: 'Reject Actions', href: '/dashboard/purchase/reject-actions', permissions: ['PURCHASE_VIEW'] },
+      { title: 'Replacement Tracking', href: '/dashboard/purchase/replacement-tracking', permissions: ['PURCHASE_VIEW'] },
       { title: 'Return Material Notes', href: '/dashboard/purchase/return-material-notes', permissions: ['PURCHASE_VIEW'] },
     ],
   },
@@ -136,6 +137,7 @@ const navItems: NavItem[] = [
     permissions: ['RECEIVING_PLAN_VIEW', 'INVENTORY_VIEW'],
     children: [
       { title: 'Dashboard', href: '/dashboard/planner', permissions: ['RECEIVING_PLAN_VIEW', 'INVENTORY_VIEW'] },
+      { title: 'Purchase Assignment', href: '/dashboard/planner/sales-assignment', permissions: ['RECEIVING_PLAN_VIEW', 'INVENTORY_VIEW'] },
       { title: 'Purchase Orders', href: '/dashboard/planner/purchase-orders', permissions: ['RECEIVING_PLAN_VIEW', 'INVENTORY_VIEW'] },
       { title: 'Material Requests', href: '/dashboard/planner/material-request-dashboard', permissions: ['RECEIVING_PLAN_VIEW', 'INVENTORY_VIEW'] },
       {
@@ -225,6 +227,7 @@ const navItems: NavItem[] = [
       { title: 'Receiving History Log', href: '/dashboard/production/receiving-history', permissions: ['PRODUCTION_VIEW'] },
       { title: 'Transfer History Log', href: '/dashboard/production/transfer-history', permissions: ['PRODUCTION_VIEW'] },
       { title: 'Production Tracking', href: '/dashboard/production/job-panel', permissions: ['PRODUCTION_VIEW'] },
+      { title: 'Create Material Request', href: '/dashboard/production/create-material-request', permissions: ['PRODUCTION_VIEW'] },
       { title: 'Material Request Dashboard', href: '/dashboard/production/material-request-dashboard', permissions: ['PRODUCTION_VIEW'] },
     ],
   },
@@ -236,6 +239,7 @@ const navItems: NavItem[] = [
     children: [
       { title: 'Inspections', href: '/dashboard/quality', permissions: ['QUALITY_VIEW'] },
       { title: 'Post-Receipt QC', href: '/dashboard/quality/post-receipt-qc', permissions: ['QUALITY_VIEW'] },
+      { title: 'Production QC', href: '/dashboard/quality/production-qc', permissions: ['QUALITY_VIEW'] },
       { title: 'Reject Actions', href: '/dashboard/quality/reject-actions', permissions: ['QUALITY_VIEW'] },
     ],
   },
@@ -245,6 +249,7 @@ const navItems: NavItem[] = [
     icon: BookOpen,
     permissions: ['ACCOUNTS_VIEW'],
     children: [
+      { title: 'Overview', href: '/dashboard/accounts/overview', permissions: ['ACCOUNTS_VIEW'] },
       { title: 'Accountant Review', href: '/dashboard/accounts/accountant-review', permissions: ['ACCOUNTS_VIEW'] },
       { title: 'PO / Invoice Status', href: '/dashboard/accounts/po-invoice-status', permissions: ['ACCOUNTS_VIEW'] },
       { title: 'Debit Notes', href: '/dashboard/accounts/debit-notes', permissions: ['ACCOUNTS_VIEW'] },
@@ -445,7 +450,7 @@ export function MobileNavigation() {
       <Drawer.Trigger className="rounded-lg p-2 text-plum-800 md:hidden" aria-label="Open navigation"><Menu size={20} /></Drawer.Trigger>
       <Drawer.Portal>
         <Drawer.Overlay className="fixed inset-0 z-50 bg-plum-950/50" />
-        <Drawer.Content aria-describedby={undefined} className="fixed inset-y-0 left-0 z-50 bg-plum-900">
+        <Drawer.Content aria-describedby={undefined} className="fixed inset-y-0 left-0 z-50 w-[280px] max-w-[85vw] bg-plum-900">
           <Drawer.Title className="sr-only">ERP navigation</Drawer.Title>
           <Sidebar drawer onNavigate={() => setOpen(false)} />
         </Drawer.Content>
@@ -510,7 +515,7 @@ export function Sidebar({ drawer = false, onNavigate }: { drawer?: boolean; onNa
       onClick={event => { if ((event.target as Element).closest('a')) onNavigate?.(); }}
       className={cn(
         'erp-rail sticky top-0 flex h-screen flex-shrink-0 flex-col overflow-hidden text-white shadow-sidebar transition-all duration-300 ease-in-out',
-        drawer ? 'h-dvh w-64' : expanded ? 'hidden w-64 md:flex' : 'hidden w-[68px] md:flex'
+        drawer ? 'h-dvh w-full' : expanded ? 'hidden w-64 md:flex' : 'hidden w-[68px] md:flex'
       )}
     >
       <div className={cn('flex h-[72px] shrink-0 items-center border-b border-slate-100 px-2', expanded ? 'justify-between gap-1' : 'justify-center')}>

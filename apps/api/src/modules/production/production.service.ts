@@ -194,6 +194,18 @@ export class ProductionService {
       job.closedBy = user?.userId || user?.email;
       job.updatedBy = user?.userId || user?.email;
       if (dto.remarks) job.remarks = dto.remarks;
+      if (dto.batchNo) job.batchNo = dto.batchNo;
+      if (dto.mfgDate) job.mfgDate = new Date(dto.mfgDate);
+      if (dto.expiryDate) job.expiryDate = new Date(dto.expiryDate);
+      if (dto.shelfLifeMonths) job.shelfLifeMonths = dto.shelfLifeMonths;
+      if (dto.cartonCount != null) job.cartonCount = dto.cartonCount;
+      if (dto.totalPieces != null) job.totalPieces = dto.totalPieces;
+      if (dto.actualCbm != null) job.actualCbm = dto.actualCbm;
+      if (dto.netWeight != null) job.netWeight = dto.netWeight;
+      if (dto.grossWeight != null) job.grossWeight = dto.grossWeight;
+      if (dto.wasteQty != null) job.wasteQty = dto.wasteQty;
+      if (dto.wasteBreakdown) job.wasteBreakdown = dto.wasteBreakdown;
+      if (dto.evidencePhotos) job.evidencePhotos = dto.evidencePhotos;
 
       const saved = await manager.save(ProductionJob, job);
       this.logger.log(`Production job closed: ${saved.jobNumber}, produced: ${saved.finalProducedQty}`);

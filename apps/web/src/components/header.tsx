@@ -7,6 +7,7 @@ import { getInitials } from '@/lib/utils';
 import { useState } from 'react';
 import { NotificationPanel } from './notification-panel';
 import { MobileNavigation } from './sidebar';
+import { ThemeToggle } from '@/components/theme/ThemeProvider';
 import Link from 'next/link';
 import { Magnetic } from '@/components/ui/magnetic';
 import { GradientText } from '@/components/ui/text-animation';
@@ -29,7 +30,7 @@ export function Header({ onSearch }: { onSearch: () => void }) {
 
   return (
     <>
-      <header className="erp-topbar sticky top-0 z-30 flex h-16 items-center justify-between border-b border-[#fcfeff]/20 px-4 sm:px-6">
+      <header className="erp-topbar sticky top-0 z-30 flex h-14 items-center justify-between border-b border-[#fcfeff]/20 px-2 sm:px-4 md:h-16 md:px-6">
         {/* Left side - Search & Title */}
         <div className="flex items-center gap-1 md:gap-6">
           <MobileNavigation />
@@ -37,7 +38,7 @@ export function Header({ onSearch }: { onSearch: () => void }) {
           <button
             onClick={onSearch}
             aria-label="Quick search"
-            className="group flex w-auto items-center gap-3 rounded-full border border-[#fcfeff]/40 bg-white/80 px-4 py-2.5 transition-all duration-200 hover:border-[#2563eb] hover:bg-white hover:shadow-sm sm:w-72"
+            className="group flex w-auto items-center gap-2 rounded-full border border-[#fcfeff]/40 bg-white/80 px-3 py-2 transition-all duration-200 hover:border-[#2563eb] hover:bg-white hover:shadow-sm sm:gap-3 sm:px-4 sm:py-2.5 sm:w-72"
           >
             <Search className="h-4 w-4 text-[#2563eb] transition-transform group-hover:scale-110" />
             <span className="hidden sm:block flex-1 text-left text-sm font-medium text-plum-700">Quick search...</span>
@@ -64,11 +65,16 @@ export function Header({ onSearch }: { onSearch: () => void }) {
             <NotificationPanel />
           </Magnetic>
 
-          {/* Settings */}
+          {/* Theme Toggle */}
+          <Magnetic strength={0.2} radius={50}>
+            <ThemeToggle />
+          </Magnetic>
+
+          {/* Settings - hidden on phone */}
           <Magnetic strength={0.2} radius={50}>
             <Link
               href="/dashboard/settings"
-              className="rounded-full p-2 text-slate-500 transition-all duration-200 hover:bg-[#fcfeff]/20 hover:text-[#2563eb] hover:scale-110"
+              className="hidden sm:inline-flex rounded-full p-2 text-slate-500 transition-all duration-200 hover:bg-[#fcfeff]/20 hover:text-[#2563eb] hover:scale-110"
               title="Settings"
             >
               <Settings className="h-5 w-5" />
@@ -81,7 +87,7 @@ export function Header({ onSearch }: { onSearch: () => void }) {
               onClick={() => setShowDropdown(!showDropdown)}
               className="flex items-center gap-3 rounded-full p-2 transition-colors hover:bg-[#fcfeff]/20"
             >
-              <div className="relative flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-[#2563eb] text-sm font-bold text-white shadow-sm">
+              <div className="relative flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-[#2563eb] text-xs font-bold text-white shadow-sm sm:h-9 sm:w-9 sm:text-sm">
                 <span>{getInitials(user?.name || 'U')}</span>
                 {user?.avatar ? (
                   <img
@@ -98,7 +104,7 @@ export function Header({ onSearch }: { onSearch: () => void }) {
                 <p className="text-sm font-bold leading-tight text-slate-900">{user?.name || 'User'}</p>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500">{user?.roles?.[0]?.roleName || user?.role || 'Staff'}</p>
               </div>
-              <ChevronDown className="h-4 w-4 text-slate-400" />
+              <ChevronDown className="hidden sm:block h-4 w-4 text-slate-400" />
             </button>
 
             {showDropdown && (

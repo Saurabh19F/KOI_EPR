@@ -1,0 +1,13 @@
+-- Add production closing fields (batch, billing, weight, waste, evidence)
+ALTER TABLE production_jobs ADD COLUMN IF NOT EXISTS batch_no VARCHAR(255);
+ALTER TABLE production_jobs ADD COLUMN IF NOT EXISTS mfg_date DATE;
+ALTER TABLE production_jobs ADD COLUMN IF NOT EXISTS expiry_date DATE;
+ALTER TABLE production_jobs ADD COLUMN IF NOT EXISTS shelf_life_months INTEGER;
+ALTER TABLE production_jobs ADD COLUMN IF NOT EXISTS carton_count NUMERIC(15,3);
+ALTER TABLE production_jobs ADD COLUMN IF NOT EXISTS total_pieces NUMERIC(15,3);
+ALTER TABLE production_jobs ADD COLUMN IF NOT EXISTS actual_cbm NUMERIC(10,4);
+ALTER TABLE production_jobs ADD COLUMN IF NOT EXISTS net_weight NUMERIC(10,3);
+ALTER TABLE production_jobs ADD COLUMN IF NOT EXISTS gross_weight NUMERIC(10,3);
+ALTER TABLE production_jobs ADD COLUMN IF NOT EXISTS waste_qty NUMERIC(15,3);
+ALTER TABLE production_jobs ADD COLUMN IF NOT EXISTS waste_breakdown JSONB;
+ALTER TABLE production_jobs ADD COLUMN IF NOT EXISTS evidence_photos JSONB;

@@ -756,8 +756,9 @@ export class MastersService {
   }
 
   private async enrichCustomers(customers: Customer[]): Promise<any[]> {
-    const countryIds = [...new Set(customers.map(c => c.countryId).filter(Boolean))];
-    const portIds = [...new Set(customers.map(c => c.portOfLoading).filter(Boolean))];
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const countryIds = [...new Set(customers.map(c => c.countryId).filter(v => v && uuidRegex.test(v)))];
+    const portIds = [...new Set(customers.map(c => c.portOfLoading).filter(v => v && uuidRegex.test(v)))];
 
     const [countries, ports] = await Promise.all([
       countryIds.length > 0 ? this.countryRepo.find({ where: { id: In(countryIds) } }) : [],
@@ -769,17 +770,24 @@ export class MastersService {
 
     return customers.map(c => ({
       ...c,
-      country: c.countryId ? countryMap.get(c.countryId) || '' : '',
-      portOfLoading: c.portOfLoading ? portMap.get(c.portOfLoading) || c.portOfLoading : '',
+      country: c.countryId ? (countryMap.get(c.countryId) || '') : '',
+      portOfLoading: c.portOfLoading ? (portMap.get(c.portOfLoading) || c.portOfLoading) : '',
     }));
   }
 
   async findAllCustomers(params: { page?: number; limit?: number; search?: string; zone?: string } = {}, user?: CurrentUserDto) {
     const { page = 1, limit = 20, search, zone } = params;
-    const where = this.getTenantWhere(user, { deletedAt: IsNull() as any });
-    if (zone) where.productZone = zone;
+    const baseWhere = this.getTenantWhere(user, { deletedAt: IsNull() as any });
+    if (zone) baseWhere.productZone = zone;
+    let where: any = baseWhere;
     if (search) {
-      where.customerName = ILike(`%${search}%`);
+      where = [
+        { ...baseWhere, customerName: ILike(`%${search}%`) },
+        { ...baseWhere, buyerCode: ILike(`%${search}%`) },
+        { ...baseWhere, email: ILike(`%${search}%`) },
+        { ...baseWhere, contactPerson: ILike(`%${search}%`) },
+        { ...baseWhere, gstNumber: ILike(`%${search}%`) },
+      ];
     }
     const result = await this.paginate(this.customerRepo, page, limit, where, { createdAt: 'DESC' }, []);
     result.data = await this.enrichCustomers(result.data);

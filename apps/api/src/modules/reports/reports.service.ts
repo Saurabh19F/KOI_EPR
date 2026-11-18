@@ -473,7 +473,7 @@ export class ReportsService {
       .where('enquiry.deletedAt IS NULL')
       .andWhere('enquiry.buyerName IS NOT NULL')
       .groupBy('enquiry.buyerName')
-      .orderBy('enquiryCount', 'DESC')
+      .orderBy('"enquiryCount"', 'DESC')
       .limit(10)
       .getRawMany();
 

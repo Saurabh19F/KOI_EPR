@@ -33,7 +33,7 @@ html {
 }
 
 /* Viewport units are measured before CSS zoom. Keep full-height screens fitted. */
-@media screen {
+@media screen and (min-width: 768px) {
   html {
     --erp-screen-scale: 0.8;
     zoom: var(--erp-screen-scale);
@@ -41,6 +41,9 @@ html {
   .min-h-screen { min-height: calc(100vh / var(--erp-screen-scale)); }
   .h-screen { height: calc(100vh / var(--erp-screen-scale)); }
   .h-dvh { height: calc(100dvh / var(--erp-screen-scale)); }
+}
+@media screen and (max-width: 767px) {
+  html { --erp-screen-scale: 1; font-size: 87.5%; }
 }
 
 body {
@@ -916,4 +919,45 @@ table, .stats-card { font-variant-numeric: tabular-nums; }
     transition-delay: 0s !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* ===== MOBILE / PHONE VIEW ===== */
+@media (max-width: 767px) {
+  .page-title { @apply text-xl; }
+  .page-subtitle { @apply text-xs; }
+
+  .workspace-page-header { padding: .6rem .8rem; }
+  .workspace-page-header h1 { font-size: 1.15rem !important; }
+  .workspace-page-header p { font-size: .75rem; }
+
+  .workspace-context { @apply flex-col gap-1.5 text-xs px-2.5 py-2 mb-3; }
+  .workspace-context select { @apply w-full text-xs; }
+
+  .card-header { @apply px-3 py-2; }
+  .card-body { @apply p-3; }
+  .stats-card { @apply p-3; }
+
+  .table th { @apply px-2 py-2 text-[10px]; }
+  .table td { @apply px-2 py-2 text-xs; }
+
+  .modal-content { @apply mx-2 max-h-[95vh] rounded-xl; }
+
+  .filter-section { @apply p-2.5 mb-2; }
+
+  .overview-hero { @apply px-4 py-4; }
+  .overview-value { font-size: 1.5rem !important; }
+  .overview-ledger { @apply grid-cols-2 gap-2; }
+  .overview-metric { @apply p-3; }
+
+  .tabs { @apply gap-0 overflow-x-auto -mx-1 px-1; }
+  .tab { @apply px-3 py-2 text-xs whitespace-nowrap; }
+
+  .btn-primary, .btn-secondary, .btn-ghost { @apply px-3 py-2 text-sm; }
+  .badge { @apply text-[10px] px-2; }
+  .input { @apply text-sm py-2; }
+
+  .erp-analytics { grid-template-columns: 1fr !important; }
+  .erp-glass-panel { padding: .75rem; }
+
+  .dropdown-menu { @apply w-56; }
 }

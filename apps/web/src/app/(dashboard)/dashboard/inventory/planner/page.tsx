@@ -793,6 +793,43 @@ export default function PlannerPage() {
               </div>
             </div>
 
+            {/* ---- Active Filter Chips ---- */}
+            {filtersApplied && (
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-xs font-medium text-muted-foreground">Active filters:</span>
+                {filterPoId !== '__all__' && (
+                  <Badge variant="secondary" className="gap-1 text-xs cursor-pointer hover:bg-destructive/10" onClick={() => { setFilterPoId('__all__'); }}>
+                    PO: {filterPoId} <X className="h-3 w-3" />
+                  </Badge>
+                )}
+                {filterOrderNo && (
+                  <Badge variant="secondary" className="gap-1 text-xs cursor-pointer hover:bg-destructive/10" onClick={() => setFilterOrderNo('')}>
+                    Order: {filterOrderNo} <X className="h-3 w-3" />
+                  </Badge>
+                )}
+                {filterProductCode && (
+                  <Badge variant="secondary" className="gap-1 text-xs cursor-pointer hover:bg-destructive/10" onClick={() => setFilterProductCode('')}>
+                    Code: {filterProductCode} <X className="h-3 w-3" />
+                  </Badge>
+                )}
+                {filterItemName && (
+                  <Badge variant="secondary" className="gap-1 text-xs cursor-pointer hover:bg-destructive/10" onClick={() => setFilterItemName('')}>
+                    Item: {filterItemName} <X className="h-3 w-3" />
+                  </Badge>
+                )}
+                {filterVendorName !== '__all__' && (
+                  <Badge variant="secondary" className="gap-1 text-xs cursor-pointer hover:bg-destructive/10" onClick={() => { setFilterVendorName('__all__'); }}>
+                    Vendor: {filterVendorName} <X className="h-3 w-3" />
+                  </Badge>
+                )}
+                {filterExpectedDate && (
+                  <Badge variant="secondary" className="gap-1 text-xs cursor-pointer hover:bg-destructive/10" onClick={() => setFilterExpectedDate('')}>
+                    Date: {filterExpectedDate} <X className="h-3 w-3" />
+                  </Badge>
+                )}
+              </div>
+            )}
+
             {/* ---- Table ---- */}
             {isLoading ? (
               <div className="flex items-center justify-center py-8">

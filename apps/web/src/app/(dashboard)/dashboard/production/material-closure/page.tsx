@@ -50,6 +50,10 @@ const EMPTY_FORM = {
   receivedQty: '',
   usedQty: '',
   returnedQty: '',
+  wasteSort: '',
+  wasteHusk: '',
+  wasteDamaged: '',
+  wasteOther: '',
   remarks: '',
 };
 
@@ -100,6 +104,8 @@ export default function MaterialClosurePage() {
     },
   });
 
+  const wasteTotal = (Number(form.wasteSort) || 0) + (Number(form.wasteHusk) || 0) + (Number(form.wasteDamaged) || 0) + (Number(form.wasteOther) || 0);
+
   const handleCreate = () => {
     if (!form.productionJobId || !form.materialId || !form.materialName) {
       toast.error('Production job, material ID and name are required');
@@ -112,8 +118,8 @@ export default function MaterialClosurePage() {
       toast.error('Quantities cannot be negative');
       return;
     }
-    if (used + returned > received) {
-      toast.error('Used + Returned cannot exceed Received');
+    if (used + wasteTotal + returned > received) {
+      toast.error('Used + Waste + Returned cannot exceed Received');
       return;
     }
     const srcWh = warehouseList.find((w: any) => w.id === form.sourceWarehouseId);
@@ -217,6 +223,7 @@ export default function MaterialClosurePage() {
                       <TableHead className="text-right">Received</TableHead>
                       <TableHead className="text-right">Used</TableHead>
                       <TableHead className="text-right">Returned</TableHead>
+                      <TableHead className="text-right">Waste</TableHead>
                       <TableHead className="text-right">Variance</TableHead>
                       <TableHead>Remarks</TableHead>
                     </TableRow>
@@ -226,7 +233,9 @@ export default function MaterialClosurePage() {
                       const received = Number(c.receivedQty || 0);
                       const used = Number(c.usedQty || 0);
                       const returned = Number(c.returnedQty || 0);
-                      const variance = received - used - returned;
+                      const wb = c.wasteBreakdown || {};
+                      const waste = (Number(wb.sort) || 0) + (Number(wb.husk) || 0) + (Number(wb.damaged) || 0) + (Number(wb.other) || 0);
+                      const variance = received - used - waste - returned;
                       return (
                         <TableRow key={c.closureId}>
                           <TableCell className="font-medium whitespace-nowrap">{c.closureNumber}</TableCell>
@@ -243,6 +252,13 @@ export default function MaterialClosurePage() {
                           <TableCell className="text-right">{received.toLocaleString()}</TableCell>
                           <TableCell className="text-right">{used.toLocaleString()}</TableCell>
                           <TableCell className="text-right">{returned.toLocaleString()}</TableCell>
+                          <TableCell className="text-right">
+                            {waste > 0 ? (
+                              <span className="cursor-help text-sm" title={`Sort: ${wb.sort || 0}, Husk: ${wb.husk || 0}, Damaged: ${wb.damaged || 0}, Other: ${wb.other || 0}`}>
+                                {waste.toLocaleString()}
+                              </span>
+                            ) : '0'}
+                          </TableCell>
                           <TableCell className="text-right">
                             {variance === 0 ? (
                               <Badge variant="default" className="text-xs">Balanced</Badge>
@@ -340,17 +356,50 @@ export default function MaterialClosurePage() {
             <div className="grid grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label className="font-semibold">Received Qty *</Label>
-                <Input type="number" min={0} value={form.receivedQty} onChange={(e) => setForm(f => ({ ...f, receivedQty: e.target.value }))} />
+                <Input type="number" min={0} value={form.receivedQty} onChange={(e) => setForm(f => ({ ...f, receivedQty: e.target.value }))} className="bg-yellow-50" />
               </div>
               <div className="space-y-2">
                 <Label className="font-semibold">Used Qty *</Label>
-                <Input type="number" min={0} value={form.usedQty} onChange={(e) => setForm(f => ({ ...f, usedQty: e.target.value }))} />
+                <Input type="number" min={0} value={form.usedQty} onChange={(e) => setForm(f => ({ ...f, usedQty: e.target.value }))} className="bg-yellow-50" />
               </div>
               <div className="space-y-2">
                 <Label className="font-semibold">Returned Qty</Label>
-                <Input type="number" min={0} value={form.returnedQty} onChange={(e) => setForm(f => ({ ...f, returnedQty: e.target.value }))} />
+                <Input type="number" min={0} value={form.returnedQty} onChange={(e) => setForm(f => ({ ...f, returnedQty: e.target.value }))} className="bg-yellow-50" />
               </div>
             </div>
+            {/* Waste Breakdown */}
+            <div>
+              <Label className="mb-2 block font-semibold">Waste Breakdown <span className="font-normal text-muted-foreground">(Sort + Husk + Damaged + Other = {wasteTotal})</span></Label>
+              <div className="grid grid-cols-4 gap-3">
+                <div className="space-y-1">
+                  <Label className="text-xs">Sort</Label>
+                  <Input type="number" min={0} value={form.wasteSort} onChange={(e) => setForm(f => ({ ...f, wasteSort: e.target.value }))} className="bg-yellow-50" placeholder="0" />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">Husk</Label>
+                  <Input type="number" min={0} value={form.wasteHusk} onChange={(e) => setForm(f => ({ ...f, wasteHusk: e.target.value }))} className="bg-yellow-50" placeholder="0" />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">Damaged</Label>
+                  <Input type="number" min={0} value={form.wasteDamaged} onChange={(e) => setForm(f => ({ ...f, wasteDamaged: e.target.value }))} className="bg-yellow-50" placeholder="0" />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">Other</Label>
+                  <Input type="number" min={0} value={form.wasteOther} onChange={(e) => setForm(f => ({ ...f, wasteOther: e.target.value }))} className="bg-yellow-50" placeholder="0" />
+                </div>
+              </div>
+            </div>
+            {/* Reconciliation check */}
+            {form.receivedQty && (
+              <div className={`rounded-lg border p-2 text-sm ${
+                Number(form.receivedQty) === (Number(form.usedQty) || 0) + wasteTotal + (Number(form.returnedQty) || 0)
+                  ? 'border-green-300 bg-green-50 text-green-700'
+                  : 'border-amber-300 bg-amber-50 text-amber-700'
+              }`}>
+                Received ({Number(form.receivedQty)}) = Used ({Number(form.usedQty) || 0}) + Waste ({wasteTotal}) + Returned ({Number(form.returnedQty) || 0})
+                {Number(form.receivedQty) === (Number(form.usedQty) || 0) + wasteTotal + (Number(form.returnedQty) || 0) ? ' ✓ Balanced' : ' — Not balanced'}
+              </div>
+            )}
             <div className="space-y-2">
               <Label className="font-semibold">Remarks</Label>
               <Input value={form.remarks} onChange={(e) => setForm(f => ({ ...f, remarks: e.target.value }))} />

@@ -1,5 +1,6 @@
 import { Type } from 'class-transformer';
 import {
+  IsArray,
   IsString,
   IsOptional,
   IsEmail,
@@ -7,6 +8,7 @@ import {
   IsBoolean,
   IsEnum,
   Min,
+  MinLength,
   Matches,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
@@ -26,7 +28,7 @@ export class ResetPasswordDto {
 
   @ApiProperty()
   @IsString()
-  @Min(8)
+  @MinLength(8)
   @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/, {
     message: 'Password must contain at least 8 characters, one uppercase, one lowercase, one number and one special character',
   })
@@ -324,6 +326,3 @@ export class ResendVerificationDto {
   @IsEmail()
   email: string;
 }
-
-// ============ Import ============
-import { IsArray } from 'class-validator';

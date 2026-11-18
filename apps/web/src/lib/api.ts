@@ -726,6 +726,15 @@ export const inventoryTrackingApi = {
     api.get(`/inventory-tracking/bin-rack/${warehouseId}`, { params }),
   assignBinRack: (data: { stockId: string; newBin: string }) =>
     api.put('/inventory-tracking/bin-rack/assign', data),
+  requestMaterial: (warehouseId: string, data: {
+    sourceWarehouseId: string;
+    sourceWarehouseName: string;
+    orderNo?: string;
+    requestType?: string;
+    productionId?: string;
+    remarks?: string;
+    items: { productId: string; productName: string; qty: number }[];
+  }) => api.post('/inventory-tracking/request-material', data, { params: { warehouseId } }),
 };
 
 // Files API

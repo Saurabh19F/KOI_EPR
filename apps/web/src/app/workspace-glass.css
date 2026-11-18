@@ -197,3 +197,57 @@
 @media (max-width: 639px) {
   .erp-shell .overview-engraving { width: 65%; opacity: .18; }
 }
+
+/* ===== PHONE LAYOUT ===== */
+@media (max-width: 767px) {
+  .erp-shell { padding: 0 !important; gap: 0 !important; }
+  .erp-shell > .flex-col.min-w-0 { border: 0; border-radius: 0; }
+  .erp-topbar { border-radius: 0; }
+  .erp-shell > .erp-rail { display: none; }
+
+  .workspace-main { padding: 0.75rem !important; border-radius: 0 !important; }
+  .workspace-main[data-icon-accent] { border-radius: 0 !important; }
+
+  .erp-shell .overview-hero { border-radius: 0.75rem; padding: 1rem 1rem; }
+  .erp-shell .overview-hero h1 { font-size: 1.25rem !important; line-height: 1.3; }
+
+  .erp-shell .overview-metric { padding: 0.75rem; }
+  .erp-shell .overview-value { font-size: 1.35rem !important; }
+  .erp-shell .overview-symbol { padding: 0.35rem; }
+  .erp-shell .overview-symbol svg { width: 16px; height: 16px; }
+
+  .erp-table-frame { border-radius: 0.5rem; overflow: hidden; }
+  .erp-card-heading { padding: 0.5rem 0.75rem; }
+
+  /* Dialog/modal full-width on mobile */
+  [role="dialog"] > div, .modal-content {
+    max-width: calc(100vw - 1rem) !important;
+    margin-inline: 0.5rem !important;
+    border-radius: 0.75rem !important;
+  }
+
+  /* Make all grids stack on mobile */
+  .workspace-main .grid-cols-2,
+  .workspace-main .grid-cols-3,
+  .workspace-main .grid-cols-4 {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Horizontal scroll for wide tables */
+  .workspace-main table { display: block; overflow-x: auto; white-space: nowrap; }
+  .workspace-main table thead,
+  .workspace-main table tbody { display: table; width: 100%; min-width: max-content; }
+
+  /* Tighter spacing */
+  .workspace-main .gap-6 { gap: 0.75rem; }
+  .workspace-main .gap-5 { gap: 0.625rem; }
+  .workspace-main .gap-4 { gap: 0.5rem; }
+  .workspace-main .space-y-6 > * + * { margin-top: 0.75rem; }
+  .workspace-main .space-y-4 > * + * { margin-top: 0.5rem; }
+
+  /* AG Grid mobile */
+  .ag-theme-alpine { font-size: 11px !important; }
+  .ag-theme-alpine .ag-header-cell { padding: 4px 6px !important; font-size: 10px !important; }
+  .ag-theme-alpine .ag-cell { padding: 4px 6px !important; }
+  .ag-theme-alpine .ag-row { height: 32px !important; }
+}

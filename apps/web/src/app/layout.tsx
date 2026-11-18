@@ -1,7 +1,15 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Providers } from '@/components/providers/auth-provider';
+import { ThemeProvider } from '@/components/theme/ThemeProvider';
 import './globals.css';
 import './workspace-glass.css';
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+};
 
 export const metadata: Metadata = {
   title: 'ERP Platform',
@@ -32,7 +40,9 @@ export default function RootLayout({
             </filter>
           </defs>
         </svg>
-        <Providers>{children}</Providers>
+        <Providers>
+          <ThemeProvider defaultTheme="system">{children}</ThemeProvider>
+        </Providers>
       </body>
     </html>
   );

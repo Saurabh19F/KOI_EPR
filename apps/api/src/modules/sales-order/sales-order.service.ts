@@ -283,6 +283,13 @@ export class SalesOrderService {
       .take(limit)
       .getManyAndCount();
 
+    for (const order of data) {
+      order.items = await this.salesOrderItemRepository.find({
+        where: { orderId: order.orderId, ...(companyId ? { companyId } : {}) },
+        order: { lineNumber: 'ASC' },
+      });
+    }
+
     return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
   }
 

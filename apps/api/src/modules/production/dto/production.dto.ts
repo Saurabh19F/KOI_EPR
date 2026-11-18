@@ -163,6 +163,73 @@ export class CloseProductionJobDto {
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
+  batchNo?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsDateString()
+  mfgDate?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsDateString()
+  expiryDate?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsNumber()
+  @Min(1)
+  shelfLifeMonths?: number;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  cartonCount?: number;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  totalPieces?: number;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  actualCbm?: number;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  netWeight?: number;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  grossWeight?: number;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  wasteQty?: number;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  wasteBreakdown?: { sort?: number; husk?: number; damaged?: number; other?: number };
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  evidencePhotos?: string[];
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
   remarks?: string;
 }
 
