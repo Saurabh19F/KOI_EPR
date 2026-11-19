@@ -20,6 +20,7 @@ import {
 import { Response } from 'express';
 import * as fs from 'fs';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { Permissions } from '../auth/decorators/permissions.decorator';
 import { ReportsService } from './reports.service';
 import {
   CreateReportDefinitionDto,
@@ -37,6 +38,7 @@ import {
 @ApiTags('Reports')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
+@Permissions('REPORTS_VIEW')
 @Controller('reports')
 export class ReportsController {
   constructor(private readonly reportsService: ReportsService) {}

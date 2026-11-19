@@ -107,7 +107,7 @@ export function MastersCrudPage({
   const totalPages = Math.ceil(total / limit) || 1;
 
   const getItemId = (item: any): string => {
-    return item.id || item.categoryId || item.brandId || item.gstRateId || item.uomId || item.zoneId || '';
+    return item.id || item.vendorId || item.categoryId || item.brandId || item.gstRateId || item.uomId || item.zoneId || '';
   };
 
   // Handle select all
@@ -227,7 +227,12 @@ export function MastersCrudPage({
     setIsSubmitting(true);
 
     const id = editingItem ? getItemId(editingItem) : null;
-    const dataToSend = transformFormData ? transformFormData(formData, !!editingItem) : formData;
+    const allowedKeys = new Set(formFields.map((f) => f.name));
+    const cleanedData: Record<string, any> = {};
+    for (const key of Object.keys(formData)) {
+      if (allowedKeys.has(key)) cleanedData[key] = formData[key];
+    }
+    const dataToSend = transformFormData ? transformFormData(cleanedData, !!editingItem) : cleanedData;
 
     try {
       if (id) {

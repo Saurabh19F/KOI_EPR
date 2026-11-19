@@ -7,6 +7,7 @@ import {
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { SearchService } from './search.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { Permissions } from '../auth/decorators/permissions.decorator';
 
 @ApiTags('search')
 @ApiBearerAuth()
@@ -16,6 +17,7 @@ export class SearchController {
   constructor(private readonly searchService: SearchService) {}
 
   @Get()
+  @Permissions('MASTERS_VIEW')
   @ApiOperation({ summary: 'Global search across all modules' })
   @ApiQuery({ name: 'q', required: true, type: String, description: 'Search query' })
   @ApiQuery({ name: 'module', required: false, type: String, description: 'Filter by module' })
@@ -36,6 +38,7 @@ export class SearchController {
   }
 
   @Get('suggestions')
+  @Permissions('MASTERS_VIEW')
   @ApiOperation({ summary: 'Get search suggestions for autocomplete' })
   @ApiQuery({ name: 'q', required: true, type: String })
   @ApiQuery({ name: 'limit', required: false, type: Number })

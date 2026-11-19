@@ -3,10 +3,12 @@ import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger'
 import { OrderReviewService } from './order-review.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { Permissions } from '../auth/decorators/permissions.decorator';
 
 @ApiTags('order-review')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
+@Permissions('SALES_VIEW')
 @Controller('order-review')
 export class OrderReviewController {
   constructor(private readonly orderReviewService: OrderReviewService) {}

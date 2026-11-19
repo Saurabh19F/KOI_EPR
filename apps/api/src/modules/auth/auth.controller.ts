@@ -3,6 +3,7 @@ import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { IsAdminGuard } from './guards/is-admin.guard';
+import { Permissions } from './decorators/permissions.decorator';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -11,6 +12,7 @@ export class AuthController {
 
   @Post('seed-demo')
   @UseGuards(JwtAuthGuard, IsAdminGuard)
+  @Permissions('ADMIN_SETTINGS')
   @ApiOperation({ summary: 'Seed demo users with passwords' })
   @ApiResponse({ status: 200, description: 'Demo users seeded successfully' })
   async seedDemoUsers() {
@@ -18,6 +20,7 @@ export class AuthController {
   }
 
   @Post('reset-password')
+  @Permissions('ADMIN_SETTINGS')
   @ApiOperation({ summary: 'Reset password for demo users (admin only)' })
   @ApiResponse({ status: 200, description: 'Password reset successfully' })
   @ApiResponse({ status: 400, description: 'DEMO_USER_PASSWORD not configured' })

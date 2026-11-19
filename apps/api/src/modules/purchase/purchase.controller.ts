@@ -18,7 +18,9 @@ import {
   IndentDashboardQueryDto,
 } from './dto/purchase-indent.dto';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { Permissions } from '../auth/decorators/permissions.decorator';
 
+@Permissions('PURCHASE_VIEW')
 @Controller('purchase')
 @UseGuards(JwtAuthGuard)
 export class PurchaseController {

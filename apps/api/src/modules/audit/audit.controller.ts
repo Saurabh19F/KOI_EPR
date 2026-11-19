@@ -12,10 +12,12 @@ import { AuditService } from './audit.service';
 import { AuditLog } from './entities/audit-log.entity';
 import { StatusHistory } from './entities/status-history.entity';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { Permissions } from '../auth/decorators/permissions.decorator';
 
 @ApiTags('audit')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
+@Permissions('ADMIN_SETTINGS')
 @Controller('audit')
 export class AuditController {
   constructor(

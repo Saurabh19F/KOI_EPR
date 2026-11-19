@@ -15,12 +15,14 @@ import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@ne
 import { SalesService } from './sales.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { Permissions } from '../auth/decorators/permissions.decorator';
 import { CreateEnquiryDto, UpdateEnquiryDto, UpdateEnquiryItemDto } from '../../common/dto/create-sales.dto';
 import { EnquiryStatus } from './entities/sales-enquiry.entity';
 
 @ApiTags('sales')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
+@Permissions('SALES_VIEW')
 @Controller('sales-enquiries')
 export class SalesController {
   constructor(private readonly salesService: SalesService) { }

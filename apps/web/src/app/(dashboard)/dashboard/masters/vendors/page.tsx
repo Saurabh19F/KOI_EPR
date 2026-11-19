@@ -1,7 +1,7 @@
 'use client';
 
 import { MastersCrudPage } from '@/components/masters/masters-crud-page';
-import { mastersApi } from '@/lib/api';
+import { mastersApi, usersApi } from '@/lib/api';
 import { useQuery } from '@tanstack/react-query';
 
 const uniqueOptions = (values: Array<string | undefined | null>) => {
@@ -39,6 +39,23 @@ export default function VendorsPage() {
     refetchOnMount: 'always',
   });
 
+  const { data: departmentsData } = useQuery({
+    queryKey: ['vendor-departments'],
+    queryFn: usersApi.getDepartments,
+    refetchOnMount: 'always',
+  });
+
+  const purchaseDeptId = responseList(departmentsData).find(
+    (d: any) => (d.departmentCode || d.code || '').toUpperCase() === 'PURCHASE'
+  )?.departmentId;
+
+  const { data: usersData, refetch: refetchUsers } = useQuery({
+    queryKey: ['vendor-purchase-persons', purchaseDeptId],
+    queryFn: () => usersApi.getUsers({ limit: 200, departmentId: purchaseDeptId }),
+    enabled: !!purchaseDeptId,
+    refetchOnMount: 'always',
+  });
+
   const compactText = (value: string) => (
     <span className="block min-w-40 max-w-xs truncate" title={value || ''}>
       {value || '-'}
@@ -51,6 +68,7 @@ export default function VendorsPage() {
   };
 
   const vendors = responseList(vendorsData);
+  const users = responseList(usersData);
   const paymentTermsMaster = responseList(paymentTermsData);
 
   const paymentTermsOptions = uniqueOptions([
@@ -60,6 +78,7 @@ export default function VendorsPage() {
 
   const purchasePersonOptions = uniqueOptions([
     ...vendors.map((vendor: any) => vendor.purchasePerson),
+    ...users.map((user: any) => user.name),
   ]);
 
   return (
@@ -71,6 +90,7 @@ export default function VendorsPage() {
         await Promise.all([
           refetchPaymentTerms(),
           refetchVendors(),
+          refetchUsers(),
         ]);
       }}
       columns={[

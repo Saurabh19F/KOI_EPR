@@ -1,6 +1,7 @@
 import { Controller, Get, Post, Body, Param, UseGuards, Request } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { Permissions } from '../auth/decorators/permissions.decorator';
 import { SubscriptionManagementService } from '../../common/tenant/subscription-management.service';
 import { UsageTrackingService } from '../../common/tenant/usage-tracking.service';
 import { FeatureGuard, UsageLimitGuard } from '../../common/tenant/tenant.guard';
@@ -9,6 +10,8 @@ import { FeatureGuard, UsageLimitGuard } from '../../common/tenant/tenant.guard'
 @ApiBearerAuth()
 @Controller('tenant')
 @UseGuards(JwtAuthGuard)
+@Permissions('ADMIN_SETTINGS')
+@Permissions('ADMIN_SETTINGS')
 export class TenantController {
   constructor(
     private readonly subscriptionService: SubscriptionManagementService,

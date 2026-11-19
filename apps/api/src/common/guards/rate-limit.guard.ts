@@ -1,72 +1,82 @@
-import { Injectable, CanActivate, ExecutionContext, HttpException, HttpStatus } from '@nestjs/common';
+import { Injectable, CanActivate, ExecutionContext, HttpException, HttpStatus, OnModuleInit, OnModuleDestroy, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import Redis from 'ioredis';
+import { createRedisConnectionOptions } from '../queue.config';
 
-/**
- * Simple in-memory rate limiter guard.
- * For production, use Redis-based rate limiting with @nestjs/throttler
- */
 @Injectable()
-export class RateLimitGuard implements CanActivate {
-  // In-memory store for rate limiting (use Redis in production)
-  private requestCounts: Map<string, { count: number; resetAt: number }> = new Map();
+export class RateLimitGuard implements CanActivate, OnModuleInit, OnModuleDestroy {
+  private redis: Redis | null = null;
+  private fallbackStore: Map<string, { count: number; resetAt: number }> = new Map();
+  private cleanupTimer: ReturnType<typeof setInterval> | null = null;
+  private readonly logger = new Logger(RateLimitGuard.name);
 
-  constructor(private configService: ConfigService) {
-    // Clean up expired entries every minute
-    setInterval(() => this.cleanup(), 60000);
+  constructor(private configService: ConfigService) {}
+
+  async onModuleInit() {
+    try {
+      const opts = createRedisConnectionOptions(this.configService);
+      this.redis = new Redis({
+        ...(opts as any),
+        lazyConnect: false,
+        maxRetriesPerRequest: 3,
+        retryStrategy: (times: number) => (times > 3 ? null : Math.min(times * 200, 2000)),
+      });
+      await this.redis.ping();
+      this.logger.log('Rate limiter connected to Redis');
+    } catch {
+      this.logger.warn('Redis unavailable for rate limiting — using in-memory fallback');
+      this.redis = null;
+      this.cleanupTimer = setInterval(() => this.cleanup(), 60000);
+    }
   }
 
-  canActivate(context: ExecutionContext): boolean {
+  async onModuleDestroy() {
+    if (this.cleanupTimer) clearInterval(this.cleanupTimer);
+    await this.redis?.quit();
+  }
+
+  async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
     const response = context.switchToHttp().getResponse();
 
-    // Get user identifier (userId for authenticated, IP for anonymous)
     const user = request.user;
     const userId = user?.userId;
     const companyId = user?.companyId;
     const ip = request.ip || request.connection?.remoteAddress || 'unknown';
 
-    // Default limits
     const requestsPerMinutePerUser = this.configService.get<number>('RATE_LIMIT_USER') || 100;
     const requestsPerMinutePerCompany = this.configService.get<number>('RATE_LIMIT_COMPANY') || 1000;
+    const windowSec = 60;
 
-    const now = Date.now();
-    const windowMs = 60000; // 1 minute window
-
-    // Check per-user limit if authenticated
     if (userId) {
-      const userKey = `user:${userId}`;
-      const userRate = this.checkRateLimit(userKey, requestsPerMinutePerUser, windowMs, now);
+      const userKey = `ratelimit:user:${userId}`;
+      const result = await this.checkRateLimit(userKey, requestsPerMinutePerUser, windowSec);
 
-      if (!userRate.allowed) {
-        response.setHeader('X-RateLimit-Limit', requestsPerMinutePerUser);
+      response.setHeader('X-RateLimit-Limit', requestsPerMinutePerUser);
+
+      if (!result.allowed) {
         response.setHeader('X-RateLimit-Remaining', 0);
-        response.setHeader('X-RateLimit-Reset', Math.ceil(userRate.resetAt / 1000));
-        response.setHeader('Retry-After', Math.ceil((userRate.resetAt - now) / 1000));
-
+        response.setHeader('Retry-After', result.retryAfter);
         throw new HttpException(
           {
             statusCode: HttpStatus.TOO_MANY_REQUESTS,
             error: 'Too Many Requests',
-            message: `Rate limit exceeded. Try again in ${Math.ceil((userRate.resetAt - now) / 1000)} seconds.`,
+            message: `Rate limit exceeded. Try again in ${result.retryAfter} seconds.`,
           },
           HttpStatus.TOO_MANY_REQUESTS,
         );
       }
 
-      response.setHeader('X-RateLimit-Limit', requestsPerMinutePerUser);
-      response.setHeader('X-RateLimit-Remaining', requestsPerMinutePerUser - userRate.count);
+      response.setHeader('X-RateLimit-Remaining', Math.max(0, requestsPerMinutePerUser - result.count));
     }
 
-    // Check per-company limit
     if (companyId) {
-      const companyKey = `company:${companyId}`;
-      const companyRate = this.checkRateLimit(companyKey, requestsPerMinutePerCompany, windowMs, now);
+      const companyKey = `ratelimit:company:${companyId}`;
+      const result = await this.checkRateLimit(companyKey, requestsPerMinutePerCompany, windowSec);
 
-      if (!companyRate.allowed) {
+      if (!result.allowed) {
         response.setHeader('X-CompanyRateLimit-Limit', requestsPerMinutePerCompany);
         response.setHeader('X-CompanyRateLimit-Remaining', 0);
-        response.setHeader('X-CompanyRateLimit-Reset', Math.ceil(companyRate.resetAt / 1000));
-
         throw new HttpException(
           {
             statusCode: HttpStatus.TOO_MANY_REQUESTS,
@@ -78,14 +88,12 @@ export class RateLimitGuard implements CanActivate {
       }
     }
 
-    // Also rate limit by IP for unauthenticated requests
     if (!userId) {
-      const ipKey = `ip:${ip}`;
-      const ipRate = this.checkRateLimit(ipKey, 30, windowMs, now); // Stricter limit for anonymous
+      const ipKey = `ratelimit:ip:${ip}`;
+      const result = await this.checkRateLimit(ipKey, 30, windowSec);
 
-      if (!ipRate.allowed) {
-        response.setHeader('Retry-After', Math.ceil((ipRate.resetAt - now) / 1000));
-
+      if (!result.allowed) {
+        response.setHeader('Retry-After', result.retryAfter);
         throw new HttpException(
           {
             statusCode: HttpStatus.TOO_MANY_REQUESTS,
@@ -100,29 +108,45 @@ export class RateLimitGuard implements CanActivate {
     return true;
   }
 
-  private checkRateLimit(key: string, limit: number, windowMs: number, now: number): { allowed: boolean; count: number; resetAt: number } {
-    let record = this.requestCounts.get(key);
+  private async checkRateLimit(key: string, limit: number, windowSec: number): Promise<{ allowed: boolean; count: number; retryAfter: number }> {
+    if (this.redis) {
+      try {
+        return await this.checkRedis(key, limit, windowSec);
+      } catch {
+        return this.checkMemory(key, limit, windowSec * 1000);
+      }
+    }
+    return this.checkMemory(key, limit, windowSec * 1000);
+  }
 
-    // Create new record or reset if window expired
+  private async checkRedis(key: string, limit: number, windowSec: number): Promise<{ allowed: boolean; count: number; retryAfter: number }> {
+    const count = await this.redis!.incr(key);
+    if (count === 1) {
+      await this.redis!.expire(key, windowSec);
+    }
+    const ttl = await this.redis!.ttl(key);
+    return { allowed: count <= limit, count, retryAfter: ttl > 0 ? ttl : windowSec };
+  }
+
+  private checkMemory(key: string, limit: number, windowMs: number): { allowed: boolean; count: number; retryAfter: number } {
+    const now = Date.now();
+    let record = this.fallbackStore.get(key);
+
     if (!record || now > record.resetAt) {
       record = { count: 0, resetAt: now + windowMs };
-      this.requestCounts.set(key, record);
+      this.fallbackStore.set(key, record);
     }
 
     record.count++;
-
-    return {
-      allowed: record.count <= limit,
-      count: record.count,
-      resetAt: record.resetAt,
-    };
+    const retryAfter = Math.ceil((record.resetAt - now) / 1000);
+    return { allowed: record.count <= limit, count: record.count, retryAfter };
   }
 
   private cleanup(): void {
     const now = Date.now();
-    for (const [key, record] of this.requestCounts.entries()) {
+    for (const [key, record] of this.fallbackStore.entries()) {
       if (now > record.resetAt) {
-        this.requestCounts.delete(key);
+        this.fallbackStore.delete(key);
       }
     }
   }

@@ -37,6 +37,7 @@ import {
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
+import { Permissions } from '../auth/decorators/permissions.decorator';
 
 @ApiTags('Platform')
 @Controller('platform')
@@ -173,6 +174,7 @@ export class PlatformController {
 
   @Get('branding')
   @UseGuards(JwtAuthGuard)
+  @Permissions('ADMIN_SETTINGS')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get current company branding' })
   @ApiResponse({ status: 200, description: 'Company branding' })
@@ -182,6 +184,7 @@ export class PlatformController {
 
   @Put('branding')
   @UseGuards(JwtAuthGuard)
+  @Permissions('ADMIN_SETTINGS')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update current company branding' })
   @ApiResponse({ status: 200, description: 'Branding updated' })
@@ -196,6 +199,7 @@ export class PlatformController {
 
   @Get('settings')
   @UseGuards(JwtAuthGuard)
+  @Permissions('ADMIN_SETTINGS')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get current company settings' })
   @ApiResponse({ status: 200, description: 'Company settings' })
@@ -205,6 +209,7 @@ export class PlatformController {
 
   @Put('settings')
   @UseGuards(JwtAuthGuard)
+  @Permissions('ADMIN_SETTINGS')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update current company settings' })
   @ApiResponse({ status: 200, description: 'Settings updated' })

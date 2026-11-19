@@ -16,6 +16,7 @@ import {
   ApiResponse,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { Permissions } from '../auth/decorators/permissions.decorator';
 import { InventoryAdvancedService } from './inventory-advanced.service';
 import {
   CreateBatchDto,
@@ -37,6 +38,7 @@ import {
 @ApiTags('Inventory Tracking')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
+@Permissions('PURCHASE_VIEW')
 @Controller('inventory-tracking')
 export class InventoryAdvancedController {
   constructor(private readonly inventoryService: InventoryAdvancedService) {}

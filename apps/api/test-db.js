@@ -1,6 +1,13 @@
 const { Client } = require('pg');
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '.env') });
+if (!process.env.DATABASE_URL) {
+  console.error('❌ DATABASE_URL environment variable is required');
+  process.exit(1);
+}
 const client = new Client({
-  connectionString: 'postgresql://neondb_owner:npg_Up3HTVElA0DY@ep-crimson-wave-aow9s031.c-2.ap-southeast-1.aws.neon.tech/neondb?sslmode=require'
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false }
 });
 async function run() {
   await client.connect();

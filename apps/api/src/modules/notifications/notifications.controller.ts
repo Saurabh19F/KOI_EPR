@@ -14,10 +14,12 @@ import { AuthGuard } from '@nestjs/passport';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { NotificationsService } from './notifications.service';
 import { NotificationsGateway } from './notifications.gateway';
+import { Permissions } from '../auth/decorators/permissions.decorator';
 
 @ApiTags('notifications')
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'))
+@Permissions('DASHBOARD_VIEW')
 @Controller('notifications')
 export class NotificationsController {
   constructor(

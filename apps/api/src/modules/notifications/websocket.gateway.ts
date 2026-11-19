@@ -14,7 +14,18 @@ import { ConfigService } from '@nestjs/config';
 
 @WebSocketGateway({
   cors: {
-    origin: '*',
+    origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+      if (!origin) return callback(null, true);
+      if (origin.match(/^http:\/\/localhost:\d+$/)) return callback(null, true);
+      if (origin.match(/^https?:\/\/187\.127\.149\.196(:\d+)?$/)) return callback(null, true);
+      if (origin.match(/^https?:\/\/.*187\.127\.149\.196\.nip\.io(:\d+)?$/)) return callback(null, true);
+      const frontendUrl = process.env.FRONTEND_URL;
+      if (frontendUrl && origin === frontendUrl) return callback(null, true);
+      const extraOrigins = (process.env.EXTRA_CORS_ORIGINS || '').split(',').map(o => o.trim()).filter(Boolean);
+      if (extraOrigins.includes(origin)) return callback(null, true);
+      callback(new Error('Not allowed by CORS'));
+    },
+    credentials: true,
   },
   namespace: '/notifications',
 })

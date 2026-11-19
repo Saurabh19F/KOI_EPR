@@ -10,7 +10,9 @@ import {
   ApprovalType,
 } from './dto/approval.dto';
 import { ApprovalStatus } from './entities/approval.entity';
+import { Permissions } from '../auth/decorators/permissions.decorator';
 
+@Permissions('DASHBOARD_VIEW')
 @Controller('approvals')
 @UseGuards(JwtAuthGuard)
 export class ApprovalController {

@@ -3,6 +3,7 @@ import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@ne
 import { FmsService } from './fms.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { Permissions } from '../auth/decorators/permissions.decorator';
 import { FmsTaskStatus } from './entities/fms-task.entity';
 import { QualityStatus } from './entities/quality-fms-task.entity';
 import { PoTrackingStatus } from './entities/po-tracking.entity';
@@ -10,6 +11,7 @@ import { PoTrackingStatus } from './entities/po-tracking.entity';
 @ApiTags('fms')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
+@Permissions('FMS_VIEW')
 @Controller('fms')
 export class FmsController {
   constructor(private readonly fmsService: FmsService) {}
@@ -38,18 +40,21 @@ export class FmsController {
   }
 
   @Post('workflows')
+  @Permissions('FMS_CREATE')
   @ApiOperation({ summary: 'Create a workflow definition' })
   createWorkflow(@Body() data: any, @CurrentUser() user: any) {
     return this.fmsService.createWorkflow(data, user);
   }
 
   @Patch('workflows/:id')
+  @Permissions('FMS_EDIT')
   @ApiOperation({ summary: 'Update a workflow definition' })
   updateWorkflow(@Param('id') id: string, @Body() data: any, @CurrentUser() user: any) {
     return this.fmsService.updateWorkflow(id, data, user);
   }
 
   @Delete('workflows/:id')
+  @Permissions('FMS_EDIT')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Delete a workflow definition' })
   deleteWorkflow(@Param('id') id: string, @CurrentUser() user: any) {
@@ -58,6 +63,7 @@ export class FmsController {
 
   // ========== TASKS ==========
   @Post('tasks')
+  @Permissions('FMS_CREATE')
   @ApiOperation({ summary: 'Create a new task' })
   create(@Body() data: any, @CurrentUser() user: any) {
     return this.fmsService.createTask({ ...data, createdBy: user?.userId });
@@ -117,12 +123,14 @@ export class FmsController {
   }
 
   @Patch('tasks/:id')
+  @Permissions('FMS_EDIT')
   @ApiOperation({ summary: 'Update a task' })
   update(@Param('id') id: string, @Body() data: any) {
     return this.fmsService.updateTask(id, data);
   }
 
   @Patch('tasks/:id/assign')
+  @Permissions('FMS_ASSIGN')
   @ApiOperation({ summary: 'Assign task to user' })
   assign(
     @Param('id') id: string,
@@ -165,6 +173,7 @@ export class FmsController {
   }
 
   @Post('tasks/enquiry/:enquiryId/create-tasks')
+  @Permissions('FMS_CREATE')
   @ApiOperation({ summary: 'Create tasks for enquiry items' })
   createTasksForEnquiry(
     @Param('enquiryId') enquiryId: string,
@@ -229,6 +238,7 @@ export class FmsController {
 
   // ========== QUALITY FMS ==========
   @Post('quality')
+  @Permissions('FMS_CREATE')
   @ApiOperation({ summary: 'Create a quality FMS task' })
   createQualityTask(@Body() data: any, @CurrentUser() user: any) {
     return this.fmsService.createQualityTask({ ...data, createdBy: user?.userId, companyId: user?.companyId });
@@ -263,6 +273,7 @@ export class FmsController {
   }
 
   @Patch('quality/:id')
+  @Permissions('FMS_EDIT')
   @ApiOperation({ summary: 'Update a quality task' })
   updateQualityTask(@Param('id') id: string, @Body() data: any, @CurrentUser() user: any) {
     return this.fmsService.updateQualityTask(id, { ...data, updatedBy: user?.userId });
@@ -284,6 +295,7 @@ export class FmsController {
 
   // ========== PO TRACKING ==========
   @Post('po-tracking')
+  @Permissions('FMS_CREATE')
   @ApiOperation({ summary: 'Create a PO tracking entry' })
   createPoTracking(@Body() data: any, @CurrentUser() user: any) {
     return this.fmsService.createPoTracking({ ...data, createdBy: user?.userId, companyId: user?.companyId });
@@ -318,6 +330,7 @@ export class FmsController {
   }
 
   @Patch('po-tracking/:id')
+  @Permissions('FMS_EDIT')
   @ApiOperation({ summary: 'Update a PO tracking entry' })
   updatePoTracking(@Param('id') id: string, @Body() data: any, @CurrentUser() user: any) {
     return this.fmsService.updatePoTracking(id, { ...data, updatedBy: user?.userId });

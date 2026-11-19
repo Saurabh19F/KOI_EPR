@@ -1,9 +1,11 @@
 import { Controller, Get, Query, UseGuards, Request } from '@nestjs/common';
 import { GstReportService } from './services/gst-report.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { Permissions } from '../auth/decorators/permissions.decorator';
 
 @Controller('reports/gst')
 @UseGuards(JwtAuthGuard)
+@Permissions('REPORTS_VIEW')
 export class GstReportController {
   constructor(private readonly gstReportService: GstReportService) {}
 

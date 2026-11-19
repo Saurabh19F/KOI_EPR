@@ -2,6 +2,7 @@ import { Controller, Get, Query, Param, UseGuards, Res, StreamableFile } from '@
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { ReportsService } from './reports.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { Permissions } from '../auth/decorators/permissions.decorator';
 import { Response } from 'express';
 import { EnquiryStatus } from '../sales/entities/sales-enquiry.entity';
 import { PurchaseStatus } from '../purchase/entities/purchase-quote.entity';
@@ -13,6 +14,7 @@ import PDFDocument from 'pdfkit';
 @ApiTags('reports')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
+@Permissions('REPORTS_VIEW')
 @Controller('reports')
 export class ReportsController {
   constructor(private readonly reportsService: ReportsService) {}
@@ -219,6 +221,7 @@ export class ReportsController {
   // ========== EXPORTS ==========
 
   @Get('export/excel/:type')
+  @Permissions('REPORTS_EXPORT')
   @ApiOperation({ summary: 'Export report to Excel' })
   async exportToExcel(
     @Param('type') type: string,
@@ -301,6 +304,7 @@ export class ReportsController {
   }
 
   @Get('export/pdf/:type')
+  @Permissions('REPORTS_EXPORT')
   @ApiOperation({ summary: 'Export report to PDF' })
   async exportToPdf(
     @Param('type') type: string,

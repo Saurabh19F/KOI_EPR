@@ -3,11 +3,13 @@ import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger'
 import { InventoryService } from './inventory.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { Permissions } from '../auth/decorators/permissions.decorator';
 import { MovementType } from './entities/stock-movement.entity';
 
 @ApiTags('inventory')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
+@Permissions('PURCHASE_VIEW')
 @Controller('inventory')
 export class InventoryController {
   constructor(private readonly inventoryService: InventoryService) {}

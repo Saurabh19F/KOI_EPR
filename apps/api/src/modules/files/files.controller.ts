@@ -17,6 +17,7 @@ import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger'
 import { FilesService } from './files.service';
 import { S3Service } from './s3.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { Permissions } from '../auth/decorators/permissions.decorator';
 import { Request, Response } from 'express';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -24,6 +25,7 @@ import * as path from 'path';
 @ApiTags('files')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
+@Permissions('DASHBOARD_VIEW')
 @Controller('files')
 export class FilesController {
   constructor(

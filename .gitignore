@@ -31,6 +31,18 @@ memory/
 scratch/
 videos/
 
+# Database backups
+apps/api/backups/
+
+# Test coverage & reports
+coverage/
+playwright-report/
+test-results/
+blob-report/
+
+# Accidental local package extraction
+/@pkgjs/
+
 # Office temp/lock files
 ~$*
 

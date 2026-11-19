@@ -15,6 +15,7 @@ import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@ne
 import { MastersService } from './masters.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { Permissions } from '../auth/decorators/permissions.decorator';
 import {
   CreateProductDto,
   UpdateProductDto,
@@ -29,6 +30,7 @@ import {
 @ApiTags('masters')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
+@Permissions('MASTERS_VIEW')
 @Controller('masters')
 export class MastersController {
   constructor(private readonly mastersService: MastersService) {}

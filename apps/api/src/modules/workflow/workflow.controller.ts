@@ -12,10 +12,12 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { WorkflowService } from './workflow.service';
+import { Permissions } from '../auth/decorators/permissions.decorator';
 
 @ApiTags('workflows')
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'))
+@Permissions('FMS_VIEW')
 @Controller('workflows')
 export class WorkflowController {
   constructor(private readonly workflowService: WorkflowService) {}
