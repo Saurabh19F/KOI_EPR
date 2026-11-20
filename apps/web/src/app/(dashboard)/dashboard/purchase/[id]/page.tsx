@@ -1149,7 +1149,30 @@ export default function PurchaseQuoteDetailPage() {
             </Button>
           )}
 
-          <Button variant="outline" size="sm" className="h-9 text-xs">
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-9 text-xs"
+            onClick={async () => {
+              try {
+                toast.loading('Generating PDF...', { id: 'pdf' });
+                const res = await purchaseApi.downloadPdf(quoteId);
+                const blob = new Blob([res.data], { type: 'application/pdf' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${quote?.quoteNo || quote?.quoteNumber || 'PURCHASE_QUOTE'}.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                window.URL.revokeObjectURL(url);
+                toast.success('PDF downloaded', { id: 'pdf' });
+              } catch (err: any) {
+                console.error('PDF download failed:', err);
+                toast.error(err.response?.data?.message || 'Failed to generate PDF', { id: 'pdf' });
+              }
+            }}
+          >
             <Printer className="h-4 w-4 mr-2" /> Print
           </Button>
         </div>

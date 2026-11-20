@@ -434,6 +434,9 @@ export const purchaseApi = {
   submitQuote: (id: string) => api.post(`/purchase/quotes/${id}/submit`),
   approveQuote: (id: string, remarks?: string) => api.post(`/purchase/quotes/${id}/approve`, { remarks }),
 
+  // PDF
+  downloadPdf: (id: string) => api.get(`/purchase/quotes/${id}/pdf`, { responseType: 'blob' }),
+
   // Convert to PO
   convertToPO: (id: string, data: {
     vendorId: string;
