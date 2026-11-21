@@ -87,8 +87,6 @@ const navItems: NavItem[] = [
       { title: 'Purchase Orders', href: '/dashboard/purchase/orders', permissions: ['PURCHASE_VIEW'] },
       { title: 'GRNs', href: '/dashboard/purchase/grns', permissions: ['PURCHASE_VIEW'] },
       { title: 'Purchase Invoices', href: '/dashboard/purchase/invoices', permissions: ['PURCHASE_VIEW'] },
-      { title: 'Price Approval', href: '/dashboard/purchase/price-approval', permissions: ['PURCHASE_VIEW', 'RATE_APPROVE'] },
-      { title: 'PO Approvals', href: '/dashboard/purchase/po-dashboard?tab=approvals', roles: ['ADMIN'] },
       { title: 'GRN Notifications', href: '/dashboard/purchase/grn-notifications', permissions: ['PURCHASE_VIEW'] },
       { title: 'Reject Actions', href: '/dashboard/purchase/reject-actions', permissions: ['PURCHASE_VIEW'] },
       { title: 'Replacement Tracking', href: '/dashboard/purchase/replacement-tracking', permissions: ['PURCHASE_VIEW'] },
@@ -103,6 +101,8 @@ const navItems: NavItem[] = [
     children: [
       { title: 'Price Analysis', href: '/dashboard/rate', permissions: ['RATE_VIEW'] },
       { title: 'Currency & Haulage', href: '/dashboard/rate/currency', permissions: ['RATE_VIEW'] },
+      { title: 'Price Approval', href: '/dashboard/purchase/price-approval', permissions: ['PURCHASE_VIEW', 'RATE_APPROVE'] },
+      { title: 'PO Approvals', href: '/dashboard/purchase/po-dashboard?tab=approvals', roles: ['ADMIN'] },
     ],
   },
   {
@@ -137,7 +137,7 @@ const navItems: NavItem[] = [
     permissions: ['RECEIVING_PLAN_VIEW', 'INVENTORY_VIEW'],
     children: [
       { title: 'Dashboard', href: '/dashboard/planner', permissions: ['RECEIVING_PLAN_VIEW', 'INVENTORY_VIEW'] },
-      { title: 'Purchase Assignment', href: '/dashboard/planner/sales-assignment', permissions: ['RECEIVING_PLAN_VIEW', 'INVENTORY_VIEW'] },
+      { title: 'Production Assignment', href: '/dashboard/planner/sales-assignment', permissions: ['RECEIVING_PLAN_VIEW', 'INVENTORY_VIEW'] },
       { title: 'Purchase Orders', href: '/dashboard/planner/purchase-orders', permissions: ['RECEIVING_PLAN_VIEW', 'INVENTORY_VIEW'] },
       { title: 'Material Requests', href: '/dashboard/planner/material-request-dashboard', permissions: ['RECEIVING_PLAN_VIEW', 'INVENTORY_VIEW'] },
       {

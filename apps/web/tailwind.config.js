@@ -3,6 +3,7 @@ const shades = { ...colors.blue, 900: '#182652', 950: '#101b3a' };
 
 /** @type {import('tailwindcss').Config} */
 module.exports = {
+  darkMode: 'class',
   content: ['./src/**/*.{js,ts,jsx,tsx,mdx}'],
   theme: {
     extend: {

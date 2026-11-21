@@ -430,7 +430,7 @@ function MISContent() {
                     Pre-MIS Enquiries Status Tracker
                   </CardTitle>
                   <p className="text-xs text-slate-500 mt-0.5">
-                    Tracks Sales Enquiries from Creation &amp; Purchase Assignment before reaching MIS Review.
+                    Tracks Sales Enquiries from Creation &amp; Production Assignment before reaching MIS Review.
                   </p>
                 </div>
                 <div className="relative w-72">
