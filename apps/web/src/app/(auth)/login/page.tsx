@@ -30,7 +30,6 @@ import {
 } from "lucide-react";
 import { useAuthStore } from "@/store/auth";
 import { api } from "@/lib/api";
-import { LogisticsScene } from "./logistics-scene";
 import styles from "./login.module.css";
 
 const loginSchema = z.object({
@@ -152,8 +151,15 @@ export default function LoginPage() {
           pointerY.set(0);
         }}
       >
-        <div className={styles.ambient} aria-hidden="true" />
-        <div className={styles.grain} aria-hidden="true" />
+        <video
+          className={styles.bgVideo}
+          autoPlay
+          muted
+          loop
+          playsInline
+          src="/login-bg.mp4"
+        />
+        <div className={styles.videoOverlay} aria-hidden="true" />
         <header className={styles.header}>
           <a
             href="/login"
@@ -166,7 +172,7 @@ export default function LoginPage() {
             <span>
               KRISHNA OVERSEAS
               <span className={styles.brandSub}>
-                CONNECTED LOGISTICS. SIMPLIFIED.
+                Beyond Borders. Delivering Excellence.
               </span>
             </span>
           </a>
@@ -174,80 +180,40 @@ export default function LoginPage() {
             <span className={styles.workspaceLabel}>
               <span /> YOUR WORLD. CONNECTED.
             </span>
-            <button
-              type="button"
-              className={styles.motionToggle}
-              onClick={() => setPaused(!paused)}
-              aria-pressed={paused}
-              aria-label={
-                paused
-                  ? "Play background animation"
-                  : "Pause background animation"
-              }
-              disabled={!!reduceMotion}
-              title={
-                reduceMotion
-                  ? "Reduced motion is enabled on your device"
-                  : "Toggle background animation"
-              }
-            >
-              {paused || reduceMotion ? (
-                <Play size={15} />
-              ) : (
-                <Pause size={15} />
-              )}
-              <span>{paused || reduceMotion ? "Motion off" : "Motion on"}</span>
-            </button>
           </div>
         </header>
         <div className={styles.content}>
-          <section
-            className={styles.story}
-            aria-label="Animated logistics network"
+          <motion.div
+            className={styles.heroSide}
+            initial={still ? false : { opacity: 0, x: -30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8, delay: 0.3 }}
           >
-            <div className={styles.sceneWrap}>
-              <motion.div
-                className={styles.sceneCanvas}
-                style={{ x: sceneX, y: sceneY }}
-              >
-                <LogisticsScene />
-              </motion.div>
-              <div className={styles.sceneLegend}>
-                <div className={`${styles.sceneTag} ${styles.airTag}`}>
-                  <span className={styles.tagDot} />
-                  <span>
-                    AIR FREIGHT<small>Beyond boundaries</small>
-                  </span>
-                  <ArrowRight size={15} />
-                </div>
-                <div className={`${styles.sceneTag} ${styles.roadTag}`}>
-                  <span className={styles.tagDot} />
-                  <span>
-                    CONNECTED BY ROAD<small>Every mile matters</small>
-                  </span>
-                  <ArrowRight size={15} />
-                </div>
-                <div className={`${styles.sceneTag} ${styles.shipTag}`}>
-                  <span className={styles.tagDot} />
-                  <span>
-                    SHIP<small>Ocean freight</small>
-                  </span>
-                  <ArrowRight size={15} />
-                </div>
+            <p className={styles.heroTagline}>FMCG Production & Export</p>
+            <h2 className={styles.heroTitle}>
+              Produce Better.
+              <span>Export Globally.</span>
+            </h2>
+            <p className={styles.heroDesc}>
+              Manage your entire FMCG production pipeline from a single
+              platform — procurement, manufacturing, quality control,
+              packaging and export.
+            </p>
+            <div className={styles.heroStats}>
+              <div className={styles.heroStat}>
+                <span className={styles.heroStatNum}>500+</span>
+                <span className={styles.heroStatLabel}>Products</span>
+              </div>
+              <div className={styles.heroStat}>
+                <span className={styles.heroStatNum}>50+</span>
+                <span className={styles.heroStatLabel}>Countries</span>
+              </div>
+              <div className={styles.heroStat}>
+                <span className={styles.heroStatNum}>99%</span>
+                <span className={styles.heroStatLabel}>Quality</span>
               </div>
             </div>
-            <div className={styles.storyFooter}>
-              <span>
-                <Globe2 size={17} /> Global reach.
-              </span>
-              <span>
-                <ShieldCheck size={17} /> Complete control.
-              </span>
-              <span>
-                <CheckCircle2 size={17} /> One workspace.
-              </span>
-            </div>
-          </section>
+          </motion.div>
           <motion.div
             className={styles.cardEntrance}
             initial={still ? false : { opacity: 0, y: 24 }}

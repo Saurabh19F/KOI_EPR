@@ -186,7 +186,7 @@ export default function PurchaseQuoteDetailPage() {
 
   const { data: productsData } = useQuery({
     queryKey: ['products-for-quote-all'],
-    queryFn: () => mastersApi.getProducts({ limit: 500 }),
+    queryFn: () => mastersApi.getProducts({ limit: 1000 }),
   });
 
   const { data: currenciesData } = useQuery({

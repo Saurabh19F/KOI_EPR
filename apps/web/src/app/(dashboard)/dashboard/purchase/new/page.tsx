@@ -341,7 +341,7 @@ function NewPurchaseQuoteContent() {
 
   const { data: productsData } = useQuery({
     queryKey: ['products-for-quote', productSearch],
-    queryFn: () => mastersApi.getProducts({ limit: 100, search: productSearch }),
+    queryFn: () => mastersApi.getProducts({ limit: 1000, search: productSearch }),
     enabled: showProductSearch,
   });
 

@@ -107,7 +107,7 @@ function MISContent() {
   // --- Fetch products for mapping ---
   const { data: productsData } = useQuery({
     queryKey: ['products-for-mapping', productSearchInput],
-    queryFn: () => mastersApi.getProducts({ limit: 100, search: productSearchInput }),
+    queryFn: () => mastersApi.getProducts({ limit: 1000, search: productSearchInput }),
     enabled: showProductSearch,
   });
 

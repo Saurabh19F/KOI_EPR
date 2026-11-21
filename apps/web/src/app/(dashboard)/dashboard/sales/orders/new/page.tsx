@@ -261,7 +261,7 @@ export default function NewSalesOrderPage() {
 
   const { data: productsData } = useQuery({
     queryKey: ['products-so', productSearch],
-    queryFn: () => mastersApi.getProducts({ limit: 100, search: productSearch }),
+    queryFn: () => mastersApi.getProducts({ limit: 1000, search: productSearch }),
   });
 
   const { data: paymentTermsData } = useQuery({
