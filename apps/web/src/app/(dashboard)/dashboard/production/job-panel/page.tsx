@@ -149,7 +149,7 @@ export default function ProductionJobPanelPage() {
   const filteredJobs = useMemo(() => {
     let filtered = allJobs;
     if (statusFilter !== '__all__') {
-      filtered = filtered.filter((j: any) => j.status === statusFilter);
+      filtered = filtered.filter((j: any) => j.status?.toUpperCase() === statusFilter);
     }
     if (search.trim()) {
       const q = search.toLowerCase();
@@ -167,12 +167,12 @@ export default function ProductionJobPanelPage() {
   const stats = useMemo(() => {
     const totalJobs = allJobs.length;
     const inProgress = allJobs.filter(
-      (j: any) =>
-        j.status === 'IN_PROGRESS' ||
-        j.status === 'WAITING_FOR_MATERIAL' ||
-        j.status === 'READY_FOR_PRODUCTION',
+      (j: any) => {
+        const s = j.status?.toUpperCase();
+        return s === 'IN_PROGRESS' || s === 'WAITING_FOR_MATERIAL' || s === 'READY_FOR_PRODUCTION';
+      },
     ).length;
-    const completed = allJobs.filter((j: any) => j.status === 'COMPLETED').length;
+    const completed = allJobs.filter((j: any) => j.status?.toUpperCase() === 'COMPLETED').length;
     const salesOrders = new Set(allJobs.map((j: any) => j.orderNo).filter(Boolean)).size;
     return { totalJobs, inProgress, completed, salesOrders };
   }, [allJobs]);
@@ -335,6 +335,7 @@ export default function ProductionJobPanelPage() {
     try {
       await productionApi.startJob(job.jobId);
       toast.success(`Job ${job.jobNumber} started`);
+      setDetailJob(null);
       refetchJobs();
     } catch (err: any) {
       toast.error(err?.response?.data?.message || 'Failed to start job');
@@ -598,11 +599,11 @@ export default function ProductionJobPanelPage() {
                 const closures = closuresByJob[job.jobId] || [];
                 const merges = mergesByJob[job.jobId] || [];
                 const totalReceived = closures.reduce(
-                  (sum: number, c: any) => sum + (c.receivedQty || 0),
+                  (sum: number, c: any) => sum + (Number(c.receivedQty) || 0),
                   0,
                 );
                 const totalDispatched = closures.reduce(
-                  (sum: number, c: any) => sum + (c.usedQty || 0),
+                  (sum: number, c: any) => sum + (Number(c.usedQty) || 0),
                   0,
                 );
                 const stage = STAGE_CONFIG[job.status?.toUpperCase()] || STAGE_CONFIG[job.status] || {
@@ -1182,7 +1183,16 @@ export default function ProductionJobPanelPage() {
                       <Package className="mr-1.5 h-4 w-4" /> Request Material
                     </Button>
                   )}
-                  {(detailJob.status?.toUpperCase() === 'IN_PROGRESS' || detailJob.status?.toUpperCase() === 'READY_FOR_PRODUCTION') && (
+                  {(detailJob.status?.toUpperCase() === 'READY_FOR_PRODUCTION' || detailJob.status?.toUpperCase() === 'WAITING_FOR_MATERIAL') && (
+                    <Button
+                      size="sm"
+                      className="bg-blue-600 hover:bg-blue-700"
+                      onClick={() => handleStartProduction(detailJob)}
+                    >
+                      <Factory className="mr-1.5 h-4 w-4" /> Start Production
+                    </Button>
+                  )}
+                  {detailJob.status?.toUpperCase() === 'IN_PROGRESS' && (
                     <Button
                       size="sm"
                       className="bg-green-600 hover:bg-green-700"

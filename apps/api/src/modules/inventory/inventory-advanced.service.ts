@@ -514,20 +514,21 @@ export class InventoryAdvancedService {
   private async generateTransferNumberForTransfer(manager: any, companyId: string): Promise<string> {
     const currentYear = new Date().getFullYear();
     const fy = `${currentYear}-${(currentYear + 1).toString().slice(-2)}`;
+    const prefix = `ST/${fy}/`;
 
     const lastTransfer = await manager.findOne(StockTransfer, {
       where: { companyId },
-      order: { createdAt: 'DESC' },
+      order: { transferNumber: 'DESC' },
     });
 
     let nextNumber = 1;
-    if (lastTransfer) {
+    if (lastTransfer?.transferNumber?.startsWith(prefix)) {
       const parts = lastTransfer.transferNumber.split('/');
       const numPart = parts[parts.length - 1];
       nextNumber = parseInt(numPart, 10) + 1;
     }
 
-    return `ST/${fy}/${nextNumber.toString().padStart(5, '0')}`;
+    return `${prefix}${nextNumber.toString().padStart(5, '0')}`;
   }
 
   // ============ STOCK COUNT OPERATIONS ============
@@ -955,30 +956,13 @@ export class InventoryAdvancedService {
       throw new BadRequestException('No items provided in the request');
     }
 
-    const isCrossWarehouse = requestingWarehouseId !== dto.sourceWarehouseId;
-    const initialStatus = isCrossWarehouse ? 'pending' : 'in_transit';
+    const initialStatus = 'pending';
 
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
     try {
-      const stockMap = await this.getWarehouseStockMapInternal(dto.sourceWarehouseId, companyId, queryRunner.manager);
-
-      const requestedByProduct: Record<string, number> = {};
-      for (const item of dto.items) {
-        requestedByProduct[item.productId] = (requestedByProduct[item.productId] || 0) + item.qty;
-      }
-
-      for (const [productId, requested] of Object.entries(requestedByProduct)) {
-        const available = stockMap[productId] || 0;
-        if (requested > available) {
-          throw new BadRequestException(
-            `Insufficient unreserved stock for ${productId}. Available: ${available}, Requested: ${requested}`,
-          );
-        }
-      }
-
       const transfers: StockTransfer[] = [];
 
       for (const item of dto.items) {
@@ -1019,29 +1003,12 @@ export class InventoryAdvancedService {
 
         await queryRunner.manager.save(transferItem);
 
-        if (!isCrossWarehouse) {
-          await this.updateStockValuation(
-            item.productId,
-            dto.sourceWarehouseId,
-            -item.qty,
-            0,
-            queryRunner.manager,
-          );
-
-          await queryRunner.manager.update(StockTransfer, savedTransfer.transferId, {
-            sentBy: userId,
-            sentAt: new Date(),
-          });
-        }
-
         transfers.push(savedTransfer);
       }
 
       await queryRunner.commitTransaction();
 
-      const message = isCrossWarehouse
-        ? 'Cross-warehouse request logged. Sent for approval.'
-        : `Internal material request created and auto-approved for ${dto.sourceWarehouseId}.`;
+      const message = 'Material request created. Sent for approval.';
 
       return { status: 'success', message, transfers };
     } catch (error) {

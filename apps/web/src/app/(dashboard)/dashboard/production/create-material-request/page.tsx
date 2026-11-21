@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { productionApi, mastersApi, inventoryApi, inventoryTrackingApi } from '@/lib/api';
@@ -88,6 +88,111 @@ const FMCG_STAGES: MaterialStage[] = [
   { id: 3, label: 'Repacking', sublabel: 'Optional material', purpose: 'Repacking', showCategory: false, categoryId: '', sourceWarehouseId: '', materialId: '', materialName: '', requiredQty: '' },
 ];
 
+function WarehouseMaterialSelect({
+  warehouseId,
+  value,
+  materialName,
+  onSelect,
+  placeholder = 'Search material...',
+}: {
+  warehouseId: string;
+  value: string;
+  materialName: string;
+  onSelect: (productId: string, productName: string) => void;
+  placeholder?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const containerRef = React.useRef<HTMLDivElement>(null);
+
+  const { data: stockData } = useQuery({
+    queryKey: ['warehouse-stock', warehouseId, search],
+    queryFn: () => inventoryApi.getStock({ warehouseId, search: search || undefined, limit: 50 }),
+    enabled: !!warehouseId && open,
+  });
+
+  const stockItems: any[] = useMemo(() => {
+    const raw = stockData?.data;
+    return Array.isArray(raw?.data) ? raw.data : Array.isArray(raw) ? raw : [];
+  }, [stockData]);
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [open]);
+
+  return (
+    <div ref={containerRef} className="relative">
+      <div
+        className="flex h-10 w-full items-center rounded-md border border-input bg-background px-3 py-2 text-sm cursor-pointer hover:bg-accent/50 mt-1"
+        onClick={() => {
+          if (!warehouseId) {
+            toast.error('Please select a Source Warehouse first');
+            return;
+          }
+          setOpen(!open);
+        }}
+      >
+        <span className={materialName ? 'text-foreground' : 'text-muted-foreground'}>
+          {materialName || placeholder}
+        </span>
+      </div>
+      {open && warehouseId && (
+        <div className="absolute z-50 mt-1 w-full rounded-md border bg-white shadow-lg">
+          <div className="p-2">
+            <input
+              type="text"
+              autoFocus
+              className="w-full rounded border px-2.5 py-1.5 text-sm outline-none focus:border-indigo-500"
+              placeholder="Search by name or SKU..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+          <div className="max-h-48 overflow-y-auto">
+            {stockItems.length === 0 && (
+              <div className="px-3 py-4 text-center text-sm text-muted-foreground">
+                {search ? 'No materials found' : 'No stock in this warehouse'}
+              </div>
+            )}
+            {stockItems.map((item: any) => {
+              const pid = item.productId || item.id;
+              const name = item.productName || item.product?.productName || '';
+              const stock = item.currentStock ?? item.quantity ?? 0;
+              const sku = item.sku || item.product?.sku || '';
+              return (
+                <div
+                  key={pid}
+                  className={`flex items-center justify-between px-3 py-2 text-sm cursor-pointer hover:bg-indigo-50 ${pid === value ? 'bg-indigo-50 font-medium' : ''}`}
+                  onClick={() => {
+                    onSelect(pid, name);
+                    setOpen(false);
+                    setSearch('');
+                  }}
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="truncate font-medium">{name}</div>
+                    {sku && <div className="text-xs text-muted-foreground font-mono">{sku}</div>}
+                  </div>
+                  <span className="ml-2 shrink-0 rounded bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700">
+                    Qty: {stock}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function getWarehouseShort(name: string): string {
   if (!name) return '';
   const match = name.match(/W\d+|Warehouse\s*(\d+)/i);
@@ -100,7 +205,7 @@ export default function CreateMaterialRequestPage() {
   const searchParams = useSearchParams();
   const jobId = searchParams.get('jobId');
   const { user } = useAuthStore();
-  const warehouseId = user?.warehouseId;
+  const userWarehouseId = user?.warehouseId;
 
   const [requiredDate, setRequiredDate] = useState(new Date().toISOString().split('T')[0]);
   const [timeSlot, setTimeSlot] = useState('');
@@ -149,9 +254,11 @@ export default function CreateMaterialRequestPage() {
   });
   const searchedProducts: any[] = searchedProductData?.data || [];
 
+  const warehouseId = job?.warehouseId || userWarehouseId;
+
   const productionWarehouse = useMemo(() => {
-    return warehouseList.find((w: any) => w.id === (job?.warehouseId || warehouseId));
-  }, [warehouseList, job, warehouseId]);
+    return warehouseList.find((w: any) => w.id === warehouseId);
+  }, [warehouseList, warehouseId]);
 
   const matchedProduct = useMemo(() => {
     if (!job?.productId) return null;
@@ -204,7 +311,15 @@ export default function CreateMaterialRequestPage() {
   }, [skuType]);
 
   const updateStage = (idx: number, field: keyof MaterialStage, value: string) => {
-    setStages(prev => prev.map((s, i) => i === idx ? { ...s, [field]: value } : s));
+    setStages(prev => prev.map((s, i) => {
+      if (i !== idx) return s;
+      const updated = { ...s, [field]: value };
+      if (field === 'sourceWarehouseId' && value !== s.sourceWarehouseId) {
+        updated.materialId = '';
+        updated.materialName = '';
+      }
+      return updated;
+    }));
   };
 
   const addExtraStage = () => {
@@ -216,7 +331,15 @@ export default function CreateMaterialRequestPage() {
   };
 
   const updateExtraStage = (idx: number, field: keyof MaterialStage, value: string) => {
-    setExtraStages(prev => prev.map((s, i) => i === idx ? { ...s, [field]: value } : s));
+    setExtraStages(prev => prev.map((s, i) => {
+      if (i !== idx) return s;
+      const updated = { ...s, [field]: value };
+      if (field === 'sourceWarehouseId' && value !== s.sourceWarehouseId) {
+        updated.materialId = '';
+        updated.materialName = '';
+      }
+      return updated;
+    }));
   };
 
   const removeExtraStage = (idx: number) => {
@@ -283,6 +406,12 @@ export default function CreateMaterialRequestPage() {
           remarks,
           items: group.items,
         });
+      }
+
+      if (job.status?.toUpperCase() === 'DRAFT') {
+        try {
+          await productionApi.updateJob(job.jobId, { status: 'PLANNED' });
+        } catch {}
       }
 
       toast.success('Material request sent successfully!');
@@ -466,14 +595,15 @@ export default function CreateMaterialRequestPage() {
             <div className="grid grid-cols-[1fr_200px] gap-4">
               <div>
                 <Label className="text-xs font-bold uppercase text-slate-500">Material / Item</Label>
-                <Input
-                  className="mt-1"
-                  placeholder={stage.showCategory ? 'Enter packing material name' : 'Search material...'}
-                  value={stage.materialName}
-                  onChange={(e) => {
-                    updateStage(idx, 'materialName', e.target.value);
-                    updateStage(idx, 'materialId', e.target.value);
+                <WarehouseMaterialSelect
+                  warehouseId={stage.sourceWarehouseId}
+                  value={stage.materialId}
+                  materialName={stage.materialName}
+                  onSelect={(productId, productName) => {
+                    updateStage(idx, 'materialId', productId);
+                    updateStage(idx, 'materialName', productName);
                   }}
+                  placeholder={stage.showCategory ? 'Select packing material' : 'Search material...'}
                 />
               </div>
               <div>
@@ -552,13 +682,13 @@ export default function CreateMaterialRequestPage() {
             <div className="grid grid-cols-[1fr_200px] gap-4">
               <div>
                 <Label className="text-xs font-bold uppercase text-slate-500">Material / Item</Label>
-                <Input
-                  className="mt-1"
-                  placeholder="Search material..."
-                  value={stage.materialName}
-                  onChange={(e) => {
-                    updateExtraStage(idx, 'materialName', e.target.value);
-                    updateExtraStage(idx, 'materialId', e.target.value);
+                <WarehouseMaterialSelect
+                  warehouseId={stage.sourceWarehouseId}
+                  value={stage.materialId}
+                  materialName={stage.materialName}
+                  onSelect={(productId, productName) => {
+                    updateExtraStage(idx, 'materialId', productId);
+                    updateExtraStage(idx, 'materialName', productName);
                   }}
                 />
               </div>

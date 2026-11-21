@@ -33,6 +33,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
@@ -102,6 +103,8 @@ export default function PurchasePage() {
   const [remarks, setRemarks] = useState('');
   const [assignDialog, setAssignDialog] = useState<{ open: boolean; enquiry: any | null; items: any[] }>({ open: false, enquiry: null, items: [] });
   const [assignSelections, setAssignSelections] = useState<Record<string, string>>({});
+  const [takeDialog, setTakeDialog] = useState<{ open: boolean; enquiry: any | null; items: any[] }>({ open: false, enquiry: null, items: [] });
+  const [takeSelections, setTakeSelections] = useState<Record<string, boolean>>({});
 
   const queryStatus = status !== 'all'
     ? status
@@ -669,8 +672,14 @@ export default function PurchasePage() {
                                 className="h-8 border-emerald-200 hover:bg-emerald-50 text-emerald-700"
                                 disabled={selfAssignMutation.isPending}
                                 onClick={() => {
-                                  const itemIds = unassignedItems.map((it: any) => it.itemId || it.id);
-                                  selfAssignMutation.mutate(itemIds);
+                                  if (unassignedItems.length === 1) {
+                                    selfAssignMutation.mutate([unassignedItems[0].itemId || unassignedItems[0].id]);
+                                  } else {
+                                    const selections: Record<string, boolean> = {};
+                                    unassignedItems.forEach((it: any) => { selections[it.itemId || it.id] = true; });
+                                    setTakeSelections(selections);
+                                    setTakeDialog({ open: true, enquiry, items: unassignedItems });
+                                  }
                                 }}
                               >
                                 <User className="h-3.5 w-3.5 mr-1" />
@@ -1116,6 +1125,113 @@ export default function PurchasePage() {
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Update Costs & Resubmit Quote
               </Link>
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Take Items Dialog */}
+      <Dialog open={takeDialog.open} onOpenChange={(open) => { if (!open) { setTakeDialog({ open: false, enquiry: null, items: [] }); setTakeSelections({}); } }}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-emerald-700">
+              <User className="h-5 w-5 text-emerald-500" />
+              Take Items - {takeDialog.enquiry?.enquiryOrderNo || takeDialog.enquiry?.enquiryNumber}
+            </DialogTitle>
+            <DialogDescription>
+              Buyer: <strong>{takeDialog.enquiry?.buyerName || '-'}</strong> — Select which items you want to assign to yourself.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 my-2">
+            <div className="flex items-center gap-3">
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-xs"
+                onClick={() => {
+                  const all: Record<string, boolean> = {};
+                  takeDialog.items.forEach((it: any) => { all[it.itemId || it.id] = true; });
+                  setTakeSelections(all);
+                }}
+              >
+                Select All
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-xs"
+                onClick={() => setTakeSelections({})}
+              >
+                Deselect All
+              </Button>
+            </div>
+
+            <div className="border border-slate-200 rounded-md overflow-hidden max-h-64 overflow-y-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-slate-50 text-xs">
+                    <TableHead className="w-10"></TableHead>
+                    <TableHead>Product Name</TableHead>
+                    <TableHead>SKU</TableHead>
+                    <TableHead>Qty</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {takeDialog.items.map((item: any) => {
+                    const itemKey = item.itemId || item.id;
+                    return (
+                      <TableRow
+                        key={itemKey}
+                        className="cursor-pointer hover:bg-emerald-50/50"
+                        onClick={() => setTakeSelections(prev => ({ ...prev, [itemKey]: !prev[itemKey] }))}
+                      >
+                        <TableCell className="text-center">
+                          <Checkbox
+                            checked={!!takeSelections[itemKey]}
+                            onCheckedChange={(checked) => setTakeSelections(prev => ({ ...prev, [itemKey]: !!checked }))}
+                          />
+                        </TableCell>
+                        <TableCell className="font-medium text-xs">
+                          {item.productName || item.manualProductName || 'N/A'}
+                        </TableCell>
+                        <TableCell className="text-xs font-mono text-slate-500">
+                          {item.sku || '-'}
+                        </TableCell>
+                        <TableCell className="text-xs">
+                          {item.quantity || '-'}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+          </div>
+
+          <DialogFooter className="flex justify-between items-center sm:justify-between">
+            <Button variant="outline" onClick={() => { setTakeDialog({ open: false, enquiry: null, items: [] }); setTakeSelections({}); }}>
+              Cancel
+            </Button>
+            <Button
+              className="bg-emerald-600 hover:bg-emerald-700 text-white"
+              disabled={selfAssignMutation.isPending || Object.values(takeSelections).filter(Boolean).length === 0}
+              onClick={() => {
+                const selectedIds = Object.entries(takeSelections)
+                  .filter(([, selected]) => selected)
+                  .map(([itemId]) => itemId);
+                if (selectedIds.length > 0) {
+                  selfAssignMutation.mutate(selectedIds, {
+                    onSuccess: () => {
+                      setTakeDialog({ open: false, enquiry: null, items: [] });
+                      setTakeSelections({});
+                    },
+                  });
+                }
+              }}
+            >
+              <User className="h-4 w-4 mr-2" />
+              {selfAssignMutation.isPending ? 'Assigning...' : `Take (${Object.values(takeSelections).filter(Boolean).length} item${Object.values(takeSelections).filter(Boolean).length !== 1 ? 's' : ''})`}
             </Button>
           </DialogFooter>
         </DialogContent>
